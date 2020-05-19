@@ -1,0 +1,11 @@
+<entryDeclarationResponses>
+  <response>
+    <correlationId>1234567890</correlationId>
+    <link>/customs/imports/outcomes/1234567890</link>
+    <MRN>1234567890</MRN>
+  </response>
+  <response>
+    <correlationId>0987654321</correlationId>
+    <link>/customs/imports/outcomes/0987654321</link>
+  </response>
+</entryDeclarationResponses>

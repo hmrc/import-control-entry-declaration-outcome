@@ -1,0 +1,28 @@
+<outcomeResponse xmlns:cc3="http://ics.dgtaxud.ec/CC328A">
+    <response>
+        <cc3:CC328A>
+            <MesSenMES3>GB000012340003/1234567890</MesSenMES3>
+            <MesRecMES6>GB000012340003/1234567890</MesRecMES6>
+            <DatOfPreMES9>190114</DatOfPreMES9>
+            <TimOfPreMES10>0945</TimOfPreMES10>
+            <MesIdeMES19>MSUI11235227</MesIdeMES19>
+            <MesTypMES20>CC328A</MesTypMES20>
+            <CorIdeMES25>0JRF7UncK0t004</CorIdeMES25>
+            <HEAHEA>
+                <RefNumHEA4>Preeti_315A_TC001</RefNumHEA4>
+                <DocNumHEA5>10GB08I01234567891</DocNumHEA5>
+                <DecRegDatTimHEA115>201901140945</DecRegDatTimHEA115>
+            </HEAHEA>
+            <CUSOFFLON>
+                <RefNumCOL1>ES000055</RefNumCOL1>
+            </CUSOFFLON>
+            <PERLODSUMDEC>
+                <TINPLD1>GB000012340002</TINPLD1>
+            </PERLODSUMDEC>
+            <CUSOFFFENT730>
+                <RefNumCUSOFFFENT731>GB000011</RefNumCUSOFFFENT731>
+            </CUSOFFFENT730>
+        </cc3:CC328A>
+    </response>
+    <acknowledgement method='DELETE' href='/customs/imports/outcomes/0JRF7UncK0t004'/>
+</outcomeResponse>

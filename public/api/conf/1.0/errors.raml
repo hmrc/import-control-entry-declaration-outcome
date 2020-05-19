@@ -1,0 +1,19 @@
+#%RAML 1.0 Library
+
+uses:
+  types: https://developer.service.hmrc.gov.uk/api-documentation/assets/common/modules/types.raml
+
+traits:
+  noSuchOutcome:
+    responses:
+      404:
+        body:
+          application/xml:
+            type: types.errorResponse
+            examples:
+              eoriMismatch:
+                description: |
+                  No outcome for the submission with the specified Correlation ID is currently available or
+                  the outcome has already been acknowledged.
+                value:
+                  code: OUTCOME_NOT_FOUND

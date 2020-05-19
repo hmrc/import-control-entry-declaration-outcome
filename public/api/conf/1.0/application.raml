@@ -1,0 +1,119 @@
+#%RAML 1.0
+
+uses:
+  sec: https://developer.service.hmrc.gov.uk/api-documentation/assets/common/modules/securitySchemes.raml
+  headers: headers.raml
+  annotations: https://developer.service.hmrc.gov.uk/api-documentation/assets/common/modules/annotations.raml
+  types: https://developer.service.hmrc.gov.uk/api-documentation/assets/common/modules/types.raml
+  errors: errors.raml
+
+title: Safety and security import control entry summary declaration outcomes
+version: v1
+protocols: [ HTTPS ]
+baseUri: https://api.service.hmrc.gov.uk/
+mediaType: application/xml
+
+documentation:
+  - title: Overview
+    content: !include docs/overview.md
+  - title: Versioning
+    content: !include https://developer.service.hmrc.gov.uk/api-documentation/assets/common/docs/versioning.md
+  - title: Errors
+    content: !include https://developer.service.hmrc.gov.uk/api-documentation/assets/common/docs/errors.md
+
+/customs/imports:
+  /outcomes:
+    /:
+      get:
+        is:
+          - headers.acceptXml
+        displayName: Get a list of outcomes
+        description: |
+            This endpoint allows a developer to get a list of outcomes for submissions that are yet to be acknowledged.
+        (annotations.scope): "write:import-control-system"
+        securedBy: [ sec.oauth_2_0: { scopes: [ "write:import-control-system" ] } ]
+        responses:
+          200:
+            body:
+              application/xml:
+                example:
+                  (annotations.documentation): |
+                    A list of Correlation IDs for unacknowledged outcomes
+                    (schema [here](/api-documentation/docs/api/download/import-control-entry-declaration-outcome/1.0/schemas/outcomes.xsd)).
+                    These Correlation IDs correspond to values returned in responses to
+                    previously submitted ENS declarations.
+
+                    Outcomes that are successful (accepted) will have a Movement Reference Number (MRN) associated
+                    with the Correlation ID in the XML.
+                    Outcomes that are unsuccessful (rejected) will have no Movement Reference Number.
+
+                    This is an example response:
+                  value: !include examples/listOfOutcomes.xml
+
+          204:
+            body:
+              application/xml:
+                example:
+                  (annotations.documentation): There are no outcomes available.
+                  value: ""
+    /{correlationId}:
+      uriParameters:
+        correlationId:
+          description: 'The Correlation ID corresponding to an ENS declaration.'
+          required: true
+      get:
+        is:
+          - headers.acceptXml
+          - errors.noSuchOutcome
+        displayName: Retrieve an outcome
+        description: |
+          This endpoint allows a developer to get the outcome for given Correlation ID.
+        (annotations.scope): "write:import-control-system"
+        securedBy: [ sec.oauth_2_0: { scopes: [ "write:import-control-system" ] } ]
+        responses:
+          200:
+
+            body:
+              application/xml:
+                example:
+                  (annotations.documentation): |
+                    The outcome for the Correlation ID
+                    (schema [here](/api-documentation/docs/api/download/import-control-entry-declaration-outcome/1.0/schemas/pollingResponse.xsd)).
+
+                    An accepted outcome which is successful will contain a Movement Reference Number.
+                    A rejected outcome will contain one or more errors. Accordingly,
+                    the content of response element will be based on one of the following schemas:
+
+                    * New submission accepted: schema [http://ics.dgtaxud.ec/CC328A](/api-documentation/docs/api/download/import-control-entry-declaration-outcome/1.0/schemas/CC328A-v10-0.xsd).
+                    * New submission rejected: schema [http://ics.dgtaxud.ec/CC316A](/api-documentation/docs/api/download/import-control-entry-declaration-outcome/1.0/schemas/CC316A-v10-0.xsd).
+                    * Amended submission accepted: schema [http://ics.dgtaxud.ec/CC304A](/api-documentation/docs/api/download/import-control-entry-declaration-outcome/1.0/schemas/CC304A-v10-0.xsd).
+                    * Amended submission rejected: schema [http://ics.dgtaxud.ec/CC305A](/api-documentation/docs/api/download/import-control-entry-declaration-outcome/1.0/schemas/CC305A-v10-0.xsd).
+
+                    These schemas import a number of other schemas:
+
+                    * [http://ics.dgtaxud.ec/doc](/api-documentation/docs/api/download/import-control-entry-declaration-outcome/1.0/schemas/doc-v10-0.xsd)
+                    * [http://ics.dgtaxud.ec/complex_ics](/api-documentation/docs/api/download/import-control-entry-declaration-outcome/1.0/schemas/complex_types_ics-v10-0.xsd)
+                    * [http://ics.dgtaxud.ec/simple](/api-documentation/docs/api/download/import-control-entry-declaration-outcome/1.0/schemas/simple_types-v10-0.xsd)
+                    * [http://ics.dgtaxud.ec/simple_ics](/api-documentation/docs/api/download/import-control-entry-declaration-outcome/1.0/schemas/simple_types_ics-v10-0.xsd)
+                    * [http://ics.dgtaxud.ec/tcl](/api-documentation/docs/api/download/import-control-entry-declaration-outcome/1.0/schemas/tcl-v10-0.xsd)
+                    * [http://ics.dgtaxud.ec/tcl_ics](/api-documentation/docs/api/download/import-control-entry-declaration-outcome/1.0/schemas/tcl_ics-v10-0.xsd)
+
+                    This is an example response:
+                  value: !include examples/pollingResponse.xml
+      delete:
+        is:
+          - headers.acceptXml
+          - errors.noSuchOutcome
+        displayName: Acknowledge an outcome
+        description: |
+          This endpoint allows a developer to acknowledge an outcome using a given correlation ID.
+          After calling this endpoint the outcome will no longer be retrievable and will no longer appear in the list of outcomes.
+        (annotations.scope): "write:import-control-system"
+        securedBy: [ sec.oauth_2_0: { scopes: [ "write:import-control-system" ] } ]
+        responses:
+          200:
+            body:
+              application/xml:
+                example:
+                  (annotations.documentation): The outcome has successfully been acknowledged.
+                  value: |

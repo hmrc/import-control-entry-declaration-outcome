@@ -1,0 +1,9 @@
+# microservice specific routes
+
+POST       /import-control/outcome    uk.gov.hmrc.entrydeclarationoutcome.controllers.OutcomeSubmissionController.postOutcome
+
+GET        /            uk.gov.hmrc.entrydeclarationoutcome.controllers.OutcomeRetrievalController.listOutcomes
+
+GET        /:id         uk.gov.hmrc.entrydeclarationoutcome.controllers.OutcomeRetrievalController.getOutcome(id)
+
+DELETE     /:id         uk.gov.hmrc.entrydeclarationoutcome.controllers.OutcomeRetrievalController.acknowledgeOutcome(id)
