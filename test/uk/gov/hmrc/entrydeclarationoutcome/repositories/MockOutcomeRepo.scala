@@ -18,7 +18,7 @@ package uk.gov.hmrc.entrydeclarationoutcome.repositories
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
-import uk.gov.hmrc.entrydeclarationoutcome.models.{OutcomeMetadata, OutcomeReceived, OutcomeXml}
+import uk.gov.hmrc.entrydeclarationoutcome.models.{HousekeepingStatus, OutcomeMetadata, OutcomeReceived, OutcomeXml}
 import uk.gov.hmrc.entrydeclarationoutcome.utils.SaveError
 
 import scala.concurrent.Future
@@ -41,5 +41,11 @@ trait MockOutcomeRepo extends MockFactory {
 
     def listOutcomes(eori: String): CallHandler[Future[List[OutcomeMetadata]]] =
       outcomeRepo.listOutcomes _ expects eori
+
+    def enableHousekeeping(value: Boolean): CallHandler[Future[Boolean]] =
+      outcomeRepo.enableHousekeeping _ expects value
+
+    def getHousekeepingStatus: CallHandler[Future[HousekeepingStatus]] =
+      outcomeRepo.getHousekeepingStatus _ expects ()
   }
 }
