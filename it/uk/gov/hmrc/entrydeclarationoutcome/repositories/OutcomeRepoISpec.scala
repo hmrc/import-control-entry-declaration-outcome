@@ -18,10 +18,15 @@ package uk.gov.hmrc.entrydeclarationoutcome.repositories
 import java.time.Instant
 
 import org.scalatest.BeforeAndAfterAll
+import org.scalatest.concurrent.PatienceConfiguration.Timeout
+import org.scalatest.concurrent.{Eventually, IntegrationPatience}
+import org.scalatest.time.{Seconds, Span}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.libs.json.{JsObject, Json}
 import play.api.test.{DefaultAwaitTimeout, Injecting}
 import play.api.{Application, Environment, Mode}
+import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.entrydeclarationoutcome.models._
 import uk.gov.hmrc.entrydeclarationoutcome.utils.SaveError
 import uk.gov.hmrc.play.test.UnitSpec
@@ -33,7 +38,9 @@ class OutcomeRepoISpec
     with DefaultAwaitTimeout
     with GuiceOneAppPerSuite
     with BeforeAndAfterAll
-    with Injecting {
+    with Eventually
+    with Injecting
+    with IntegrationPatience {
 
   lazy val repository: OutcomeRepoImpl = inject[OutcomeRepoImpl]
 
@@ -43,6 +50,9 @@ class OutcomeRepoISpec
     await(repository.save(acknowledgedOutcome))
     await(repository.acknowledgeOutcome(acknowledgedEori, acknowledgedCorrelationId))
   }
+
+  override protected def afterAll(): Unit =
+    super.afterAll()
 
   override implicit lazy val app: Application = new GuiceApplicationBuilder()
     .in(Environment.simple(mode = Mode.Dev))
@@ -69,6 +79,7 @@ class OutcomeRepoISpec
     submissionId,
     outcomeXml
   )
+
   val acknowledgedOutcome: OutcomeReceived = OutcomeReceived(
     acknowledgedEori,
     acknowledgedCorrelationId,
@@ -253,20 +264,76 @@ class OutcomeRepoISpec
       }
     }
 
+    "housekeepingAt" must {
+      val time = Instant.now.plusSeconds(60)
+
+      "be settable" in {
+        await(repository.save(outcome))                         shouldBe None
+        await(repository.setHousekeepingAt(submissionId, time)) shouldBe true
+
+        await(
+          repository.collection
+            .find(Json.obj("submissionId" -> submissionId), Option.empty[JsObject])
+            .one[OutcomePersisted]
+            .map(_.map(_.housekeepingAt.toInstant))).get shouldBe time
+      }
+
+      "return true if no change is made" in {
+        await(repository.setHousekeepingAt(submissionId, time)) shouldBe true
+        await(repository.setHousekeepingAt(submissionId, time)) shouldBe true
+      }
+
+      "return false if no submission exists" in {
+        await(repository.setHousekeepingAt("unknownSubmissionId", time)) shouldBe false
+      }
+    }
+
     "expireAfterSeconds" must {
-      "initially be zero" in {
-        await(repository.getExpireAfterSeconds).get shouldBe 0
+      "report on when on" in {
+        await(repository.enableHousekeeping(true)) shouldBe true
+        await(repository.getHousekeepingStatus)    shouldBe HousekeepingStatus.On
+      }
+
+      "be effective when on" ignore {
+        await(repository.removeAll())
+        await(repository.save(outcome)) shouldBe None
+        repository.setHousekeepingAt(submissionId, Instant.now)
+
+        eventually(Timeout(Span(60, Seconds))) {
+          await(repository.lookupOutcomeXml(submissionId)) shouldBe None
+        }
       }
 
       "be updatable (to turn off housekeeping)" in {
-        val oneHundredYears = 3153600000L
-        await(repository.setExpireAfterSeconds(oneHundredYears)) shouldBe true
-        await(repository.getExpireAfterSeconds).get              shouldBe oneHundredYears
+        await(repository.enableHousekeeping(false)) shouldBe true
+        await(repository.getHousekeepingStatus)     shouldBe HousekeepingStatus.Off
       }
+
+      "allow turning off when already off" in {
+        await(repository.enableHousekeeping(false)) shouldBe true
+        await(repository.getHousekeepingStatus)     shouldBe HousekeepingStatus.Off
+      }
+
+      "not be effective when off" ignore {
+        await(repository.removeAll())
+        await(repository.save(outcome)) shouldBe None
+        repository.setHousekeepingAt(submissionId, Instant.now)
+
+        Thread.sleep(60000)
+        await(repository.lookupOutcomeXml(submissionId)) should not be None
+
+      }
+
       "be updatable (to turn on housekeeping)" in {
-        await(repository.setExpireAfterSeconds(0))  shouldBe true
-        await(repository.getExpireAfterSeconds).get shouldBe 0
+        await(repository.enableHousekeeping(true)) shouldBe true
+        await(repository.getHousekeepingStatus)    shouldBe HousekeepingStatus.On
+      }
+
+      "allow turning on when already on" in {
+        await(repository.enableHousekeeping(true)) shouldBe true
+        await(repository.getHousekeepingStatus)    shouldBe HousekeepingStatus.On
       }
     }
+
   }
 }

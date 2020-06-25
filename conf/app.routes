@@ -2,6 +2,9 @@
 
 POST       /import-control/outcome    uk.gov.hmrc.entrydeclarationoutcome.controllers.OutcomeSubmissionController.postOutcome
 
+GET         /import-control/housekeeping/status     uk.gov.hmrc.entrydeclarationoutcome.controllers.HousekeepingController.getStatus
+PUT         /import-control/housekeeping/status     uk.gov.hmrc.entrydeclarationoutcome.controllers.HousekeepingController.setStatus
+
 GET        /            uk.gov.hmrc.entrydeclarationoutcome.controllers.OutcomeRetrievalController.listOutcomes
 
 GET        /:id         uk.gov.hmrc.entrydeclarationoutcome.controllers.OutcomeRetrievalController.getOutcome(id)

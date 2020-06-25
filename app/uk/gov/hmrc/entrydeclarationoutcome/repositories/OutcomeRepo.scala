@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.entrydeclarationoutcome.repositories
 
+import java.time.Instant
+
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.libs.json.{JsObject, JsPath, Json}
@@ -23,13 +25,13 @@ import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.commands.Command
 import reactivemongo.api.indexes.Index
 import reactivemongo.api.indexes.IndexType.Ascending
-import reactivemongo.api.{Cursor, ReadPreference}
+import reactivemongo.api.{Cursor, ReadPreference, WriteConcern}
 import reactivemongo.bson.{BSONDocument, BSONObjectID, _}
 import reactivemongo.core.errors.DatabaseException
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import reactivemongo.play.json.JSONSerializationPack
 import uk.gov.hmrc.entrydeclarationoutcome.config.AppConfig
-import uk.gov.hmrc.entrydeclarationoutcome.models.{OutcomeMetadata, OutcomeReceived, OutcomeXml}
+import uk.gov.hmrc.entrydeclarationoutcome.models.{HousekeepingStatus, OutcomeMetadata, OutcomeReceived, OutcomeXml}
 import uk.gov.hmrc.entrydeclarationoutcome.utils.SaveError
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
@@ -50,9 +52,11 @@ trait OutcomeRepo {
 
   def listOutcomes(eori: String): Future[List[OutcomeMetadata]]
 
-  def setExpireAfterSeconds(value: Long): Future[Boolean]
+  def setHousekeepingAt(submissionId: String, time: Instant): Future[Boolean]
 
-  def getExpireAfterSeconds: Future[Option[Long]]
+  def enableHousekeeping(value: Boolean): Future[Boolean]
+
+  def getHousekeepingStatus: Future[HousekeepingStatus]
 }
 
 @Singleton
@@ -65,6 +69,9 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
       OutcomePersisted.format,
       ReactiveMongoFormats.objectIdFormats)
     with OutcomeRepo {
+
+  private val housekeepingOnTTLSecs  = 0
+  private val housekeepingOffTTLSecs = Long.MaxValue
 
   override def indexes: Seq[Index] = Seq(
     Index(Seq(("submissionId", Ascending)), name = Some("submissionIdIndex"), unique = true),
@@ -151,15 +158,28 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
       .cursor[OutcomeMetadata]()
       .collect[List](maxDocs = appConfig.listOutcomesLimit, err = Cursor.FailOnError[List[OutcomeMetadata]]())
 
-  def setExpireAfterSeconds(value: Long): Future[Boolean] = {
+  override def setHousekeepingAt(submissionId: String, time: Instant): Future[Boolean] =
+    collection
+      .update(ordered = false, WriteConcern.Default)
+      .one(
+        Json.obj("submissionId" -> submissionId),
+        Json.obj("$set"         -> Json.obj("housekeepingAt" -> PersistableDateTime(time)))
+      )
+      .map(result => result.n == 1)
+
+  // If pausing housekeeping is exposed as a simple switch,
+  // using collMod would seem more effective than a full index re-build when it is toggled on or off. See
+  // https://dba.stackexchange.com/questions/123761/drop-create-mongodb-ttl-index-vs-collmod-in-production
+  override def enableHousekeeping(value: Boolean): Future[Boolean] = {
+    val ttlSecs = if (value) housekeepingOnTTLSecs else housekeepingOffTTLSecs
+
     val commandDoc = Json.obj(
       "collMod" -> "outcome",
-      "index"   -> Json.obj("keyPattern" -> Json.obj("housekeepingAt" -> 1), "expireAfterSeconds" -> value))
+      "index"   -> Json.obj("keyPattern" -> Json.obj("housekeepingAt" -> 1), "expireAfterSeconds" -> ttlSecs))
 
     val runner = Command.CommandWithPackRunner(JSONSerializationPack)
     runner(mongo.mongoConnector.db(), runner.rawCommand(commandDoc))
-      .cursor[JsObject](ReadPreference.primaryPreferred)
-      .head
+      .one[JsObject](ReadPreference.primaryPreferred)
       .map { response =>
         {
           response.as((JsPath \ "ok").read[Double]) match {
@@ -177,13 +197,25 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
       }
   }
 
-  def getExpireAfterSeconds: Future[Option[Long]] =
+  override def getHousekeepingStatus: Future[HousekeepingStatus] =
     collection.indexesManager.list().map { indexes =>
-      for {
+      val optTtlSecs = for {
         idx <- indexes.find(_.key.map(_._1).contains("housekeepingAt"))
         // Read the expiry from JSON (rather than BSON) so that we can control widening to Long
         // (from the more strongly typed BSON values which can be either Int32 or Int64)
         value <- Json.toJson(idx.options).as((JsPath \ "expireAfterSeconds").readNullable[Long])
       } yield value
+
+      optTtlSecs match {
+        case Some(`housekeepingOnTTLSecs`)  => HousekeepingStatus.On
+        case Some(`housekeepingOffTTLSecs`) => HousekeepingStatus.Off
+        case Some(other) =>
+          Logger.warn(
+            s"Cannot get housekeeping status: expireAfterSeconds is $other (neither on: $housekeepingOnTTLSecs nor off: $housekeepingOffTTLSecs)")
+          HousekeepingStatus.Unknown
+        case None =>
+          Logger.warn(s"Cannot housekeeping status: expireAfterSeconds could not be determined")
+          HousekeepingStatus.Unknown
+      }
     }
 }
