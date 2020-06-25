@@ -278,6 +278,11 @@ class OutcomeRepoISpec
             .map(_.map(_.housekeepingAt.toInstant))).get shouldBe time
       }
 
+      "return true if no change is made" in {
+        await(repository.setHousekeepingAt(submissionId, time)) shouldBe true
+        await(repository.setHousekeepingAt(submissionId, time)) shouldBe true
+      }
+
       "return false if no submission exists" in {
         await(repository.setHousekeepingAt("unknownSubmissionId", time)) shouldBe false
       }

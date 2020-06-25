@@ -25,10 +25,9 @@ import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.commands.Command
 import reactivemongo.api.indexes.Index
 import reactivemongo.api.indexes.IndexType.Ascending
-import reactivemongo.api.{Cursor, ReadPreference}
+import reactivemongo.api.{Cursor, ReadPreference, WriteConcern}
 import reactivemongo.bson.{BSONDocument, BSONObjectID, _}
 import reactivemongo.core.errors.DatabaseException
-import reactivemongo.play.json.commands.JSONFindAndModifyCommand.Update
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import reactivemongo.play.json.JSONSerializationPack
 import uk.gov.hmrc.entrydeclarationoutcome.config.AppConfig
@@ -161,11 +160,12 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
 
   override def setHousekeepingAt(submissionId: String, time: Instant): Future[Boolean] =
     collection
-      .findAndModify(
-        selector = Json.obj("submissionId" -> submissionId),
-        modifier = Update(Json.obj("$set" -> Json.obj("housekeepingAt" -> PersistableDateTime(time))))
+      .update(ordered = false, WriteConcern.Default)
+      .one(
+        Json.obj("submissionId" -> submissionId),
+        Json.obj("$set"         -> Json.obj("housekeepingAt" -> PersistableDateTime(time)))
       )
-      .map(result => result.value.isDefined)
+      .map(result => result.n == 1)
 
   // If pausing housekeeping is exposed as a simple switch,
   // using collMod would seem more effective than a full index re-build when it is toggled on or off. See
