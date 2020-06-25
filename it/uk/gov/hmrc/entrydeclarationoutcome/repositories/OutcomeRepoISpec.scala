@@ -304,6 +304,11 @@ class OutcomeRepoISpec
         await(repository.getHousekeepingStatus)     shouldBe HousekeepingStatus.Off
       }
 
+      "allow turning off when already off" in {
+        await(repository.enableHousekeeping(false)) shouldBe true
+        await(repository.getHousekeepingStatus)     shouldBe HousekeepingStatus.Off
+      }
+
       "not be effective when off" ignore {
         await(repository.removeAll())
         await(repository.save(outcome)) shouldBe None
@@ -315,6 +320,11 @@ class OutcomeRepoISpec
       }
 
       "be updatable (to turn on housekeeping)" in {
+        await(repository.enableHousekeeping(true)) shouldBe true
+        await(repository.getHousekeepingStatus)    shouldBe HousekeepingStatus.On
+      }
+
+      "allow turning on when already on" in {
         await(repository.enableHousekeeping(true)) shouldBe true
         await(repository.getHousekeepingStatus)    shouldBe HousekeepingStatus.On
       }
