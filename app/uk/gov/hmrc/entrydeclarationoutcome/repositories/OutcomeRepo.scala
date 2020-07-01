@@ -140,11 +140,6 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
       update         = Json.obj("$set" -> Json.obj("acknowledged" -> true)),
       fetchNewObject = true
     ).map(result => result.result[OutcomePersisted].map(_.toOutcomeReceived))
-      .recover {
-        case e: DatabaseException =>
-          ContextLogger.error(s"Unable to acknowledge outcome", e)
-          None
-      }
 
   def listOutcomes(eori: String): Future[List[OutcomeMetadata]] =
     collection
