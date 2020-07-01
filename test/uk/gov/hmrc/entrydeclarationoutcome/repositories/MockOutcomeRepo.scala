@@ -18,6 +18,7 @@ package uk.gov.hmrc.entrydeclarationoutcome.repositories
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
+import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationoutcome.models.{HousekeepingStatus, OutcomeMetadata, OutcomeReceived, OutcomeXml}
 import uk.gov.hmrc.entrydeclarationoutcome.utils.SaveError
 
@@ -28,7 +29,7 @@ trait MockOutcomeRepo extends MockFactory {
 
   object MockOutcomeRepo {
     def saveOutcome(outcome: OutcomeReceived): CallHandler[Future[Option[SaveError]]] =
-      outcomeRepo.save _ expects outcome
+      (outcomeRepo.save(_: OutcomeReceived)(_: LoggingContext)) expects (outcome, *)
 
     def lookupOutcomeXml(submissionId: String): CallHandler[Future[Option[OutcomeXml]]] =
       (outcomeRepo.lookupOutcomeXml(_: String)) expects submissionId
@@ -37,7 +38,7 @@ trait MockOutcomeRepo extends MockFactory {
       (outcomeRepo.lookupOutcome(_: String, _: String)) expects (eori, correlationId)
 
     def acknowledgeOutcome(eori: String, correlationId: String): CallHandler[Future[Option[OutcomeReceived]]] =
-      outcomeRepo.acknowledgeOutcome _ expects (eori, correlationId)
+      (outcomeRepo.acknowledgeOutcome(_: String, _: String)(_: LoggingContext)) expects (eori, correlationId, *)
 
     def listOutcomes(eori: String): CallHandler[Future[List[OutcomeMetadata]]] =
       outcomeRepo.listOutcomes _ expects eori

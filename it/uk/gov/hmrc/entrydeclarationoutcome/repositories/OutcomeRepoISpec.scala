@@ -27,6 +27,7 @@ import play.api.libs.json.{JsObject, Json}
 import play.api.test.{DefaultAwaitTimeout, Injecting}
 import play.api.{Application, Environment, Mode}
 import reactivemongo.play.json.ImplicitBSONHandlers._
+import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationoutcome.models._
 import uk.gov.hmrc.entrydeclarationoutcome.utils.SaveError
 import uk.gov.hmrc.play.test.UnitSpec
@@ -58,6 +59,8 @@ class OutcomeRepoISpec
     .in(Environment.simple(mode = Mode.Dev))
     .configure("metrics.enabled" -> "false", "response.max.list" -> listOutcomesLimit.toString)
     .build()
+
+  implicit val lc: LoggingContext = LoggingContext("eori", "corrId", "subId")
 
   val listOutcomesLimit         = 2
   val correlationId             = "correlationId"

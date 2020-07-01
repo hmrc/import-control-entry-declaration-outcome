@@ -20,6 +20,7 @@ import java.time.Clock
 
 import com.google.inject.Inject
 import com.kenshoo.play.metrics.Metrics
+import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationoutcome.reporting.audit.{AuditEvent, AuditHandler}
 import uk.gov.hmrc.entrydeclarationoutcome.reporting.events.{Event, EventConnector}
 import uk.gov.hmrc.entrydeclarationoutcome.utils.{EventLogger, Timer}
@@ -34,7 +35,7 @@ class ReportSender @Inject()(
   override val metrics: Metrics)(implicit ec: ExecutionContext)
     extends Timer
     with EventLogger {
-  def sendReport[R: EventSources](report: R)(implicit hc: HeaderCarrier): Future[Unit] = {
+  def sendReport[R: EventSources](report: R)(implicit hc: HeaderCarrier, lc: LoggingContext): Future[Unit] = {
 
     val eventSources: EventSources[R] = implicitly
 
@@ -50,7 +51,7 @@ class ReportSender @Inject()(
       auditHandler.audit(event)
     }
 
-  private def sendEvent[R: EventSources](event: Event)(implicit hc: HeaderCarrier) =
+  private def sendEvent[R: EventSources](event: Event)(implicit hc: HeaderCarrier, lc: LoggingContext) =
     timeFuture("ReportSender send event", "reporting.sendEvent") {
       eventConnector.sendEvent(event)
     }
