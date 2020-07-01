@@ -65,6 +65,7 @@ class OutcomeSubmissionController @Inject()(
               ContextLogger.warn(s"Unable to persist Outcome due to ServerError")
               InternalServerError
             case None =>
+              ContextLogger.info("Outcome created")
               reportSender.sendReport(OutcomeReport(outcomeReceived, EventCode.ENS_RESP_READY))
               Created
           }

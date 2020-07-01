@@ -48,13 +48,16 @@ class OutcomeRetrievalController @Inject()(
   def getOutcome(correlationId: String): Action[AnyContent] = authorisedAction().async { implicit userRequest =>
     implicit val lc: LoggingContext = LoggingContext(eori = Some(userRequest.eori), correlationId = Some(correlationId))
 
-    ContextLogger.info("Getting outcome")
+    ContextLogger.info("Fetching outcome")
 
     service.retrieveOutcome(userRequest.eori, correlationId) map {
       case Some(outcome) =>
+        ContextLogger.info("Outcome fetched")
         reportSender.sendReport(OutcomeReport(outcome, EventCode.ENS_RESP_COLLECTED))
         Ok(outcome.outcomeXml).as(MimeTypes.XML)
-      case None => NotFound(StandardError.notFound).as(MimeTypes.XML)
+      case None =>
+        ContextLogger.info("Outcome not found")
+        NotFound(StandardError.notFound).as(MimeTypes.XML)
     }
   }
 
@@ -65,9 +68,12 @@ class OutcomeRetrievalController @Inject()(
 
     service.acknowledgeOutcome(userRequest.eori, correlationId) map {
       case Some(outcome) =>
+        ContextLogger.info("Outcome acknowledged")
         reportSender.sendReport(OutcomeReport(outcome, EventCode.ENS_RESP_ACK))
         Ok
-      case None => NotFound(StandardError.notFound).as(MimeTypes.XML)
+      case None =>
+        ContextLogger.info("Outcome not found")
+        NotFound(StandardError.notFound).as(MimeTypes.XML)
     }
   }
 
