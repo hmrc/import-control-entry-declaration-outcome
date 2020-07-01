@@ -18,16 +18,17 @@ package uk.gov.hmrc.entrydeclarationoutcome.utils
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
+import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
 
 trait MockPagerDutyLogger extends MockFactory {
   val mockPagerDutyLogger: PagerDutyLogger = stub[PagerDutyLogger]
 
   object MockPagerDutyLogger {
     def logEventFailure: CallHandler[Unit] =
-      (mockPagerDutyLogger.logEventFailure _).verify(*)
+      (mockPagerDutyLogger.logEventFailure(_: Int)(_: LoggingContext)).verify(*, *)
 
     def logEventError: CallHandler[Unit] =
-      (mockPagerDutyLogger.logEventError _).verify(*)
+      (mockPagerDutyLogger.logEventError(_: Throwable)(_: LoggingContext)).verify(*, *)
   }
 
 }

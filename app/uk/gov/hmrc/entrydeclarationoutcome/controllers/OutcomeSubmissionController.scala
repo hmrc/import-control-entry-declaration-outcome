@@ -17,8 +17,10 @@
 package uk.gov.hmrc.entrydeclarationoutcome.controllers
 
 import javax.inject.{Inject, Singleton}
+import play.api.Logger
 import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents}
+import uk.gov.hmrc.entrydeclarationoutcome.logging.{ContextLogger, LoggingContext}
 import uk.gov.hmrc.entrydeclarationoutcome.models.OutcomeReceived
 import uk.gov.hmrc.entrydeclarationoutcome.reporting.events.EventCode
 import uk.gov.hmrc.entrydeclarationoutcome.reporting.{OutcomeReport, ReportSender}
@@ -45,14 +47,22 @@ class OutcomeSubmissionController @Inject()(
   val postOutcome: Action[JsValue] = Action.async(parse.json) { implicit request =>
     request.body.validate[OutcomeReceived] match {
       case JsSuccess(outcomeReceived, _) =>
+        implicit val lc: LoggingContext =
+          LoggingContext(
+            eori          = outcomeReceived.eori,
+            correlationId = outcomeReceived.correlationId,
+            submissionId  = outcomeReceived.submissionId)
+
+        ContextLogger.info("Received outcome")
+
         service
           .saveOutcome(outcomeReceived)
           .map {
             case Some(SaveError.Duplicate) =>
-              logger.warn(s"Unable to persist Outcome due to Conflict")
+              ContextLogger.warn(s"Unable to persist Outcome due to Conflict")
               Conflict(duplicateErrorResponse)
             case Some(SaveError.ServerError) =>
-              logger.warn(s"Unable to persist Outcome due to ServerError")
+              ContextLogger.warn(s"Unable to persist Outcome due to ServerError")
               InternalServerError
             case None =>
               reportSender.sendReport(OutcomeReport(outcomeReceived, EventCode.ENS_RESP_READY))
@@ -60,7 +70,7 @@ class OutcomeSubmissionController @Inject()(
           }
 
       case JsError(errs) =>
-        logger.error(s"Unable to parse payload: $errs")
+        Logger.error(s"Unable to parse payload: $errs")
         Future.successful(BadRequest)
     }
   }

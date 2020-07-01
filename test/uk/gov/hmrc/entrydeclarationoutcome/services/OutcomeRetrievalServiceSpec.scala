@@ -21,6 +21,7 @@ import java.time.Instant
 import com.codahale.metrics.MetricRegistry
 import com.kenshoo.play.metrics.Metrics
 import org.scalatest.concurrent.ScalaFutures
+import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationoutcome.models._
 import uk.gov.hmrc.entrydeclarationoutcome.repositories.MockOutcomeRepo
 import uk.gov.hmrc.play.test.UnitSpec
@@ -39,6 +40,8 @@ class OutcomeRetrievalServiceSpec extends UnitSpec with MockOutcomeRepo with Sca
   }
 
   val service = new OutcomeRetrievalService(outcomeRepo, mockedMetrics)
+
+  implicit val lc: LoggingContext = LoggingContext("eori", "corrId", "subId")
 
   val submissionId             = "submissionId"
   val eori                     = "eori"

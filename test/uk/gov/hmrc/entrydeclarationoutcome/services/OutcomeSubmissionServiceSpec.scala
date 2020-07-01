@@ -21,6 +21,7 @@ import java.time.Instant
 import com.codahale.metrics.MetricRegistry
 import com.kenshoo.play.metrics.Metrics
 import org.scalatest.concurrent.ScalaFutures
+import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationoutcome.models.{MessageType, OutcomeReceived}
 import uk.gov.hmrc.entrydeclarationoutcome.repositories.MockOutcomeRepo
 import uk.gov.hmrc.entrydeclarationoutcome.utils.SaveError
@@ -38,6 +39,8 @@ class OutcomeSubmissionServiceSpec extends UnitSpec with MockOutcomeRepo with Sc
 
     override def toJson: String = throw new NotImplementedError
   }
+
+  implicit val lc: LoggingContext = LoggingContext("eori", "corrId", "subId")
 
   val service = new OutcomeSubmissionService(outcomeRepo, mockedMetrics)
 

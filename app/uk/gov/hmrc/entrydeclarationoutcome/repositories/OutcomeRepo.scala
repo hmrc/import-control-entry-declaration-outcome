@@ -31,6 +31,7 @@ import reactivemongo.core.errors.DatabaseException
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import reactivemongo.play.json.JSONSerializationPack
 import uk.gov.hmrc.entrydeclarationoutcome.config.AppConfig
+import uk.gov.hmrc.entrydeclarationoutcome.logging.{ContextLogger, LoggingContext}
 import uk.gov.hmrc.entrydeclarationoutcome.models.{HousekeepingStatus, OutcomeMetadata, OutcomeReceived, OutcomeXml}
 import uk.gov.hmrc.entrydeclarationoutcome.utils.SaveError
 import uk.gov.hmrc.mongo.ReactiveRepository
@@ -39,7 +40,7 @@ import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 import scala.concurrent.{ExecutionContext, Future}
 
 trait OutcomeRepo {
-  def save(outcome: OutcomeReceived): Future[Option[SaveError]]
+  def save(outcome: OutcomeReceived)(implicit lc: LoggingContext): Future[Option[SaveError]]
 
   def lookupOutcomeXml(submissionId: String): Future[Option[OutcomeXml]]
 
@@ -48,7 +49,8 @@ trait OutcomeRepo {
   /**
     * @return the acknowledged outcome
     */
-  def acknowledgeOutcome(eori: String, correlationId: String): Future[Option[OutcomeReceived]]
+  def acknowledgeOutcome(eori: String, correlationId: String)(
+    implicit lc: LoggingContext): Future[Option[OutcomeReceived]]
 
   def listOutcomes(eori: String): Future[List[OutcomeMetadata]]
 
@@ -100,7 +102,7 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
 
   val mongoErrorCodeForDuplicate: Int = 11000
 
-  def save(outcome: OutcomeReceived): Future[Option[SaveError]] = {
+  def save(outcome: OutcomeReceived)(implicit lc: LoggingContext): Future[Option[SaveError]] = {
     val outcomePersisted = OutcomePersisted.from(outcome)
 
     insert(outcomePersisted)
@@ -110,16 +112,10 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
           import outcome._
 
           if (e.code.contains(mongoErrorCodeForDuplicate)) {
-            logger.error(
-              s"Duplicate entry declaration outcome with eori=$eori, correlationId=$correlationId, submissionId=$submissionId",
-              e
-            )
+            ContextLogger.error(s"Duplicate entry declaration outcome", e)
             Some(SaveError.Duplicate)
           } else {
-            logger.error(
-              s"Unable to save entry declaration outcome with eori=$eori, correlationId=$correlationId, submissionId=$submissionId",
-              e
-            )
+            ContextLogger.error(s"Unable to save entry declaration outcome", e)
             Some(SaveError.ServerError)
           }
       }
@@ -137,7 +133,8 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
       .one[OutcomePersisted]
       .map(_.map(_.toOutcomeReceived))
 
-  def acknowledgeOutcome(eori: String, correlationId: String): Future[Option[OutcomeReceived]] =
+  def acknowledgeOutcome(eori: String, correlationId: String)(
+    implicit lc: LoggingContext): Future[Option[OutcomeReceived]] =
     findAndUpdate(
       query          = Json.obj("eori" -> eori, "correlationId" -> correlationId, "acknowledged" -> false),
       update         = Json.obj("$set" -> Json.obj("acknowledged" -> true)),
@@ -145,7 +142,7 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
     ).map(result => result.result[OutcomePersisted].map(_.toOutcomeReceived))
       .recover {
         case e: DatabaseException =>
-          logger.error(s"Unable to acknowledge outcome with eori=$eori and correlationId=$correlationId", e)
+          ContextLogger.error(s"Unable to acknowledge outcome", e)
           None
       }
 

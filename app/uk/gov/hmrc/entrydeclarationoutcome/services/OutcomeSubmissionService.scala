@@ -18,6 +18,7 @@ package uk.gov.hmrc.entrydeclarationoutcome.services
 
 import com.kenshoo.play.metrics.Metrics
 import javax.inject.{Inject, Singleton}
+import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationoutcome.models.OutcomeReceived
 import uk.gov.hmrc.entrydeclarationoutcome.repositories.OutcomeRepo
 import uk.gov.hmrc.entrydeclarationoutcome.utils.{EventLogger, SaveError, Timer}
@@ -30,7 +31,7 @@ class OutcomeSubmissionService @Inject()(outcomeRepo: OutcomeRepo, override val 
     extends Timer
     with EventLogger {
 
-  def saveOutcome(outcome: OutcomeReceived): Future[Option[SaveError]] =
+  def saveOutcome(outcome: OutcomeReceived)(implicit lc: LoggingContext): Future[Option[SaveError]] =
     timeFuture("Service saveOutcome", "saveOutcome.total") {
       outcomeRepo.save(outcome)
     }

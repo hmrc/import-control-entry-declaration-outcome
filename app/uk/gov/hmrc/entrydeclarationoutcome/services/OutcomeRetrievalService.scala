@@ -18,6 +18,7 @@ package uk.gov.hmrc.entrydeclarationoutcome.services
 
 import com.kenshoo.play.metrics.Metrics
 import javax.inject.{Inject, Singleton}
+import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationoutcome.repositories.OutcomeRepo
 import uk.gov.hmrc.entrydeclarationoutcome.utils.{EventLogger, Timer}
 
@@ -37,7 +38,8 @@ class OutcomeRetrievalService @Inject()(outcomeRepo: OutcomeRepo, override val m
       outcomeRepo.lookupOutcome(eori, correlationId)
     }
 
-  def acknowledgeOutcome(eori: String, correlationId: String): Future[Option[OutcomeReceived]] =
+  def acknowledgeOutcome(eori: String, correlationId: String)(
+    implicit lc: LoggingContext): Future[Option[OutcomeReceived]] =
     timeFuture("Service acknowledgeOutcome", "acknowledgeOutcome.total") {
       outcomeRepo.acknowledgeOutcome(eori, correlationId)
     }

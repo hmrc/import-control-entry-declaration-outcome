@@ -19,6 +19,7 @@ package uk.gov.hmrc.entrydeclarationoutcome.controllers
 import javax.inject.Inject
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import play.mvc.Http.MimeTypes
+import uk.gov.hmrc.entrydeclarationoutcome.logging.{ContextLogger, LoggingContext}
 import uk.gov.hmrc.entrydeclarationoutcome.models.{OutcomeMetadata, StandardError}
 import uk.gov.hmrc.entrydeclarationoutcome.reporting.events.EventCode
 import uk.gov.hmrc.entrydeclarationoutcome.reporting.{OutcomeReport, ReportSender}
@@ -34,6 +35,10 @@ class OutcomeRetrievalController @Inject()(
     extends AuthorisedController(cc) {
 
   def listOutcomes(): Action[AnyContent] = authorisedAction().async { userRequest =>
+    implicit val lc: LoggingContext = LoggingContext(eori = Some(userRequest.eori))
+
+    ContextLogger.info("Listing outcomes")
+
     service.listOutcomes(userRequest.eori).map {
       case Nil             => NoContent
       case outcomeMetadata => Ok(listXml(outcomeMetadata)).as(MimeTypes.XML)
@@ -41,6 +46,10 @@ class OutcomeRetrievalController @Inject()(
   }
 
   def getOutcome(correlationId: String): Action[AnyContent] = authorisedAction().async { implicit userRequest =>
+    implicit val lc: LoggingContext = LoggingContext(eori = Some(userRequest.eori), correlationId = Some(correlationId))
+
+    ContextLogger.info("Getting outcome")
+
     service.retrieveOutcome(userRequest.eori, correlationId) map {
       case Some(outcome) =>
         reportSender.sendReport(OutcomeReport(outcome, EventCode.ENS_RESP_COLLECTED))
@@ -50,6 +59,10 @@ class OutcomeRetrievalController @Inject()(
   }
 
   def acknowledgeOutcome(correlationId: String): Action[AnyContent] = authorisedAction().async { implicit userRequest =>
+    implicit val lc: LoggingContext = LoggingContext(eori = Some(userRequest.eori), correlationId = Some(correlationId))
+
+    ContextLogger.info("Acknowledging outcome")
+
     service.acknowledgeOutcome(userRequest.eori, correlationId) map {
       case Some(outcome) =>
         reportSender.sendReport(OutcomeReport(outcome, EventCode.ENS_RESP_ACK))

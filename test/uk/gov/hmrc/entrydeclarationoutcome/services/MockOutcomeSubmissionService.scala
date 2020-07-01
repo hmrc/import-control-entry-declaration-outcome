@@ -18,6 +18,7 @@ package uk.gov.hmrc.entrydeclarationoutcome.services
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
+import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationoutcome.models.OutcomeReceived
 import uk.gov.hmrc.entrydeclarationoutcome.utils.SaveError
 
@@ -28,6 +29,6 @@ trait MockOutcomeSubmissionService extends MockFactory {
 
   object MockOutcomeSubmissionService {
     def saveOutcome(outcome: OutcomeReceived): CallHandler[Future[Option[SaveError]]] =
-      (mockOutcomeSubmissionService.saveOutcome _).expects(outcome)
+      (mockOutcomeSubmissionService.saveOutcome(_: OutcomeReceived)(_: LoggingContext)).expects(outcome, *)
   }
 }

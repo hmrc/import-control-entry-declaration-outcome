@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.entrydeclarationoutcome.utils
 
-import play.api.Logger
+import uk.gov.hmrc.entrydeclarationoutcome.logging.{ContextLogger, LoggingContext}
 
 class PagerDutyLogger {
-  def logEventFailure(statusCode: Int): Unit =
-    Logger.error(s"Send event failed with status $statusCode")
+  def logEventFailure(statusCode: Int)(implicit lc: LoggingContext): Unit =
+    ContextLogger.error(s"Send event failed with status $statusCode")
 
-  def logEventError(e: Throwable): Unit =
-    Logger.error(s"Send event failed with error", e)
+  def logEventError(e: Throwable)(implicit lc: LoggingContext): Unit =
+    ContextLogger.error(s"Send event failed with error", e)
 }
