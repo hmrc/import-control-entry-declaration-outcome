@@ -19,7 +19,6 @@ package uk.gov.hmrc.entrydeclarationoutcome.controllers
 import play.api.libs.json.Json
 import play.api.test.Helpers.{contentType, _}
 import play.api.test.{FakeRequest, Helpers}
-import play.mvc.Http.MimeTypes
 import uk.gov.hmrc.entrydeclarationoutcome.models.{MessageType, OutcomeReceived}
 import uk.gov.hmrc.entrydeclarationoutcome.reporting.events.EventCode
 import uk.gov.hmrc.entrydeclarationoutcome.reporting.{MockReportSender, OutcomeReport}
@@ -70,14 +69,14 @@ class OutcomeSubmissionControllerSpec extends UnitSpec with MockOutcomeSubmissio
       }
     }
 
-    "return CONFLICT" when {
+    "return CREATED" when {
       "request is a duplicate" in {
         MockOutcomeSubmissionService.saveOutcome(outcome) returns Future.successful(Some(SaveError.Duplicate))
 
         val result = controller.postOutcome(fakeRequest)
 
-        status(result)      shouldBe CONFLICT
-        contentType(result) shouldBe Some(MimeTypes.JSON)
+        status(result)      shouldBe CREATED
+        contentType(result) shouldBe None
       }
     }
 
