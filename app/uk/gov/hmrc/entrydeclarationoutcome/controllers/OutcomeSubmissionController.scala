@@ -18,7 +18,7 @@ package uk.gov.hmrc.entrydeclarationoutcome.controllers
 
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
-import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
+import play.api.libs.json.{JsError, JsSuccess, JsValue}
 import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.entrydeclarationoutcome.logging.{ContextLogger, LoggingContext}
 import uk.gov.hmrc.entrydeclarationoutcome.models.OutcomeReceived
@@ -39,11 +39,6 @@ class OutcomeSubmissionController @Inject()(
     extends BackendController(cc)
     with EventLogger {
 
-  val duplicateErrorResponse: JsValue = Json.parse("""{
-    "errorCode" : "DUPLICATE",
-    "message" : "Duplicate"
-  }"""")
-
   val postOutcome: Action[JsValue] = Action.async(parse.json) { implicit request =>
     request.body.validate[OutcomeReceived] match {
       case JsSuccess(outcomeReceived, _) =>
@@ -59,8 +54,8 @@ class OutcomeSubmissionController @Inject()(
           .saveOutcome(outcomeReceived)
           .map {
             case Some(SaveError.Duplicate) =>
-              ContextLogger.warn(s"Unable to persist Outcome due to Conflict")
-              Conflict(duplicateErrorResponse)
+              ContextLogger.warn(s"Duplicate Outcome already exists")
+              Created
             case Some(SaveError.ServerError) =>
               ContextLogger.warn(s"Unable to persist Outcome due to ServerError")
               InternalServerError
