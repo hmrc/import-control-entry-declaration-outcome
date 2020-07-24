@@ -103,13 +103,12 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
   val mongoErrorCodeForDuplicate: Int = 11000
 
   def save(outcome: OutcomeReceived)(implicit lc: LoggingContext): Future[Option[SaveError]] = {
-    val outcomePersisted = OutcomePersisted.from(outcome)
+    val outcomePersisted = OutcomePersisted.from(outcome, appConfig.defaultTtl)
 
     insert(outcomePersisted)
       .map(_ => None)
       .recover {
         case e: DatabaseException =>
-          import outcome._
 
           if (e.code.contains(mongoErrorCodeForDuplicate)) {
             ContextLogger.error(s"Duplicate entry declaration outcome", e)

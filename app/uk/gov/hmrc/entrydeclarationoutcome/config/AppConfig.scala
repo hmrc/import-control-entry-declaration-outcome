@@ -20,6 +20,8 @@ import javax.inject.{Inject, Singleton}
 import play.api.Configuration
 import uk.gov.hmrc.play.bootstrap.config.{AppName, ServicesConfig}
 
+import scala.concurrent.duration.{Duration, FiniteDuration}
+
 trait AppConfig {
 
   def authBaseUrl: String
@@ -41,10 +43,21 @@ trait AppConfig {
   def apiSubscriptionFieldsHost: String
 
   def eventsHost: String
+
+  def defaultTtl: FiniteDuration
 }
 
 @Singleton
 class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesConfig) extends AppConfig {
+
+  private final def getFiniteDuration(config: Configuration, path: String): FiniteDuration = {
+    val string = config.get[String](path)
+
+    Duration.create(string) match {
+      case f: FiniteDuration => f
+      case _                 => throw new RuntimeException(s"Not a finite duration '$string' for $path")
+    }
+  }
 
   val authBaseUrl: String = servicesConfig.baseUrl("auth")
 
@@ -65,4 +78,6 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
   val apiSubscriptionFieldsHost: String = servicesConfig.baseUrl("api-subscription-fields")
 
   lazy val eventsHost: String = servicesConfig.baseUrl("import-control-entry-declaration-events")
+
+  lazy val defaultTtl: FiniteDuration = getFiniteDuration(config.get[Configuration](s"mongodb"), "defaultTtl")
 }
