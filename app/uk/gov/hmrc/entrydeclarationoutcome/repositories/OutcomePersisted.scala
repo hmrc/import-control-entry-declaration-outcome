@@ -45,11 +45,8 @@ private[repositories] case class OutcomePersisted(
 }
 
 private[repositories] object OutcomePersisted {
-  def from(outcomeReceived: OutcomeReceived): OutcomePersisted = {
+  def from(outcomeReceived: OutcomeReceived, defaultTtl: FiniteDuration): OutcomePersisted = {
     import outcomeReceived._
-
-    // FIXME add to app config (and pass into this method instead)...
-    val defaultTtl = 60.days
 
     val persistedDateTime = PersistableDateTime(receivedDateTime)
     OutcomePersisted(
