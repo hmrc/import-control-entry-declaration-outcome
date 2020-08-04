@@ -56,6 +56,8 @@ trait OutcomeRepo {
 
   def setHousekeepingAt(submissionId: String, time: Instant): Future[Boolean]
 
+  def setHousekeepingAt(eori: String, correlationId: String, time: Instant): Future[Boolean]
+
   def enableHousekeeping(value: Boolean): Future[Boolean]
 
   def getHousekeepingStatus: Future[HousekeepingStatus]
@@ -150,12 +152,15 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
       .collect[List](maxDocs = appConfig.listOutcomesLimit, err = Cursor.FailOnError[List[OutcomeMetadata]]())
 
   override def setHousekeepingAt(submissionId: String, time: Instant): Future[Boolean] =
+    setHousekeepingAt(time, Json.obj("submissionId" -> submissionId))
+
+  override def setHousekeepingAt(eori: String, correlationId: String, time: Instant): Future[Boolean] =
+    setHousekeepingAt(time, Json.obj("eori" -> eori, "correlationId" -> correlationId))
+
+  private def setHousekeepingAt(time: Instant, query: JsObject): Future[Boolean] =
     collection
       .update(ordered = false, WriteConcern.Default)
-      .one(
-        Json.obj("submissionId" -> submissionId),
-        Json.obj("$set"         -> Json.obj("housekeepingAt" -> PersistableDateTime(time)))
-      )
+      .one(query, Json.obj("$set" -> Json.obj("housekeepingAt" -> PersistableDateTime(time))))
       .map(result => result.n == 1)
 
   // If pausing housekeeping is exposed as a simple switch,

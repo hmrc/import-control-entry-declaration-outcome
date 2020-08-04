@@ -5,6 +5,9 @@ POST       /import-control/outcome    uk.gov.hmrc.entrydeclarationoutcome.contro
 GET         /import-control/housekeeping/status     uk.gov.hmrc.entrydeclarationoutcome.controllers.HousekeepingController.getStatus
 PUT         /import-control/housekeeping/status     uk.gov.hmrc.entrydeclarationoutcome.controllers.HousekeepingController.setStatus
 
+PUT         /import-control/housekeeping/submissionid/:submissionId                 uk.gov.hmrc.entrydeclarationoutcome.controllers.HousekeepingController.setShortTtlBySubmissionId(submissionId)
+PUT         /import-control/housekeeping/eoriandcorrelationid/:eori/:correlationId  uk.gov.hmrc.entrydeclarationoutcome.controllers.HousekeepingController.setShortTtlByEoriAndCorrelationId(eori, correlationId)
+
 GET        /            uk.gov.hmrc.entrydeclarationoutcome.controllers.OutcomeRetrievalController.listOutcomes
 
 GET        /:id         uk.gov.hmrc.entrydeclarationoutcome.controllers.OutcomeRetrievalController.getOutcome(id)

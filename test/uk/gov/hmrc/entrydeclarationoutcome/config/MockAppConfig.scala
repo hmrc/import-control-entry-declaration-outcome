@@ -19,6 +19,8 @@ package uk.gov.hmrc.entrydeclarationoutcome.config
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
 
+import scala.concurrent.duration.FiniteDuration
+
 trait MockAppConfig extends MockFactory {
   val mockAppConfig: AppConfig = mock[AppConfig]
 
@@ -32,5 +34,7 @@ trait MockAppConfig extends MockFactory {
     def apiGatewayContext: CallHandler[String] = mockAppConfig.apiGatewayContext _ expects ()
 
     def listOutcomesLimit: CallHandler[Int] = mockAppConfig.listOutcomesLimit _ expects ()
+
+    def shortTtl: CallHandler[FiniteDuration] = mockAppConfig.shortTtl _ expects ()
   }
 }

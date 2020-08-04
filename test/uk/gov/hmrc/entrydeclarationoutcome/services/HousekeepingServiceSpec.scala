@@ -16,14 +16,23 @@
 
 package uk.gov.hmrc.entrydeclarationoutcome.services
 
+import java.time.{Clock, Instant, ZoneOffset}
+
 import org.scalatest.concurrent.ScalaFutures
+import uk.gov.hmrc.entrydeclarationoutcome.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationoutcome.models.HousekeepingStatus
 import uk.gov.hmrc.entrydeclarationoutcome.repositories.MockOutcomeRepo
 import uk.gov.hmrc.play.test.UnitSpec
 
-class HousekeepingServiceSpec extends UnitSpec with MockOutcomeRepo with ScalaFutures {
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 
-  val service = new HousekeepingService(outcomeRepo)
+class HousekeepingServiceSpec extends UnitSpec with MockAppConfig with MockOutcomeRepo with ScalaFutures {
+
+  val time: Instant = Instant.now
+  val clock: Clock = Clock.fixed(time, ZoneOffset.UTC)
+
+  val service = new HousekeepingService(outcomeRepo, clock, mockAppConfig)
 
   "HousekeepingService" when {
     "getting housekeeping status" must {
@@ -46,6 +55,31 @@ class HousekeepingServiceSpec extends UnitSpec with MockOutcomeRepo with ScalaFu
         service.enableHousekeeping(value).futureValue shouldBe success
       }
     }
-  }
 
+    "setting a short ttl" must {
+      "set using the repo" when {
+        val success = true
+        val newTtl  = 1.day
+        "searching by submission" in {
+          val submissionId = "submissionId"
+
+          MockAppConfig.shortTtl returns newTtl
+          MockOutcomeRepo.setHousekeepingAt(submissionId, time.plusMillis(newTtl.toMillis)).returns(success)
+
+          service.setShortTtl(submissionId).futureValue shouldBe success
+        }
+        "searching by eori and correlation Id" in {
+          val eori          = "eori"
+          val correlationId = "correlationId"
+
+          MockAppConfig.shortTtl returns newTtl
+          MockOutcomeRepo
+            .setHousekeepingAt(eori, correlationId, time.plusMillis(newTtl.toMillis))
+            .returns(success)
+
+          service.setShortTtl(eori, correlationId).futureValue shouldBe success
+        }
+      }
+    }
+  }
 }

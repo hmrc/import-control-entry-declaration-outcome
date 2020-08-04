@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.entrydeclarationoutcome.repositories
 
+import java.time.Instant
+
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
 import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
@@ -48,5 +50,11 @@ trait MockOutcomeRepo extends MockFactory {
 
     def getHousekeepingStatus: CallHandler[Future[HousekeepingStatus]] =
       outcomeRepo.getHousekeepingStatus _ expects ()
+
+    def setHousekeepingAt(submissionId: String, time: Instant): CallHandler[Future[Boolean]] =
+      (outcomeRepo.setHousekeepingAt(_: String, _: Instant)) expects (submissionId, time)
+
+    def setHousekeepingAt(eori: String, correlationId: String, time: Instant): CallHandler[Future[Boolean]] =
+      (outcomeRepo.setHousekeepingAt(_: String, _: String, _: Instant)) expects (eori, correlationId, time)
   }
 }
