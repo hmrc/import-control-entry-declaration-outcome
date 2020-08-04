@@ -29,7 +29,8 @@ The Import Control Entry Declaration Outcome responsibilities:
 |```/import-control/housekeeping/status```| PUT    | Internal | Endpoint to set housekeeping status. |
 |```/import-control/housekeeping/submissionid/:submissionId```| PUT | Internal | Endpoint to set a short ttl on a specified record. |
 |```/import-control/housekeeping/eoriandcorrelationid/:eori/:correlationId```| PUT | Internal | Endpoint to set a short ttl on a specified record. |
-|```/test-only/outcomes/:submissionId```  | GET    | Test     | Endpoint to get decision XML by submission Id. |
+|```/import-control/test-only/outcomes/:submissionId```  | GET    | Test     | Endpoint to get decision XML by submission Id. |
+|```/import-control/test-only/fulloutcome/:eori/:correlationId``` | GET    | Test     | Endpoint to get the full stored outcome JSON by EORI and correlationId. |
 
 ## API Reference / Documentation 
 For more information on external API endpoints see the RAML at [Developer Hub]("https://developer.service.hmrc.gov.uk/api-documentation/docs/api/service/import-control-entry-declaration-outcome/1.0") or using the endpoint below

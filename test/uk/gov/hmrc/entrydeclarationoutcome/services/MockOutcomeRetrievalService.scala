@@ -19,7 +19,7 @@ package uk.gov.hmrc.entrydeclarationoutcome.services
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
 import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
-import uk.gov.hmrc.entrydeclarationoutcome.models.{OutcomeMetadata, OutcomeReceived, OutcomeXml}
+import uk.gov.hmrc.entrydeclarationoutcome.models.{FullOutcome, OutcomeMetadata, OutcomeReceived, OutcomeXml}
 
 import scala.concurrent.Future
 
@@ -32,6 +32,9 @@ trait MockOutcomeRetrievalService extends MockFactory {
 
     def retrieveOutcome(eori: String, correlationId: String): CallHandler[Future[Option[OutcomeReceived]]] =
       (mockOutcomeXmlRetrievalService.retrieveOutcome(_: String, _: String)) expects (eori, correlationId)
+
+    def retrieveFullOutcome(eori: String, correlationId: String): CallHandler[Future[Option[FullOutcome]]] =
+      (mockOutcomeXmlRetrievalService.retrieveFullOutcome(_: String, _: String)) expects (eori, correlationId)
 
     def acknowledgeOutcome(eori: String, correlationId: String): CallHandler[Future[Option[OutcomeReceived]]] =
       (mockOutcomeXmlRetrievalService

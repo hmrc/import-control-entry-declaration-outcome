@@ -32,7 +32,7 @@ import reactivemongo.play.json.ImplicitBSONHandlers._
 import reactivemongo.play.json.JSONSerializationPack
 import uk.gov.hmrc.entrydeclarationoutcome.config.AppConfig
 import uk.gov.hmrc.entrydeclarationoutcome.logging.{ContextLogger, LoggingContext}
-import uk.gov.hmrc.entrydeclarationoutcome.models.{HousekeepingStatus, OutcomeMetadata, OutcomeReceived, OutcomeXml}
+import uk.gov.hmrc.entrydeclarationoutcome.models.{FullOutcome, HousekeepingStatus, OutcomeMetadata, OutcomeReceived, OutcomeXml}
 import uk.gov.hmrc.entrydeclarationoutcome.utils.SaveError
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
@@ -45,6 +45,8 @@ trait OutcomeRepo {
   def lookupOutcomeXml(submissionId: String): Future[Option[OutcomeXml]]
 
   def lookupOutcome(eori: String, correlationId: String): Future[Option[OutcomeReceived]]
+
+  def lookupFullOutcome(eori: String, correlationId: String): Future[Option[FullOutcome]]
 
   /**
     * @return the acknowledged outcome
@@ -74,8 +76,8 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
       ReactiveMongoFormats.objectIdFormats)
     with OutcomeRepo {
 
-  private val housekeepingOnTTLSecs  = 0
-  private val housekeepingOffTTLSecs = Long.MaxValue
+  private val expireAfterSecondsOn  = 0
+  private val expireAfterSecondsOff = Long.MaxValue
 
   override def indexes: Seq[Index] = Seq(
     Index(Seq(("submissionId", Ascending)), name = Some("submissionIdIndex"), unique = true),
@@ -111,7 +113,6 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
       .map(_ => None)
       .recover {
         case e: DatabaseException =>
-
           if (e.code.contains(mongoErrorCodeForDuplicate)) {
             ContextLogger.error(s"Duplicate entry declaration outcome", e)
             Some(SaveError.Duplicate)
@@ -133,6 +134,12 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
       .find(Json.obj("eori" -> eori, "correlationId" -> correlationId, "acknowledged" -> false), Option.empty[JsObject])
       .one[OutcomePersisted]
       .map(_.map(_.toOutcomeReceived))
+
+  override def lookupFullOutcome(eori: String, correlationId: String): Future[Option[FullOutcome]] =
+    collection
+      .find(Json.obj("eori" -> eori, "correlationId" -> correlationId), Option.empty[JsObject])
+      .one[OutcomePersisted]
+      .map(_.map(_.toFullOutcome))
 
   def acknowledgeOutcome(eori: String, correlationId: String)(
     implicit lc: LoggingContext): Future[Option[OutcomeReceived]] =
@@ -167,7 +174,7 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
   // using collMod would seem more effective than a full index re-build when it is toggled on or off. See
   // https://dba.stackexchange.com/questions/123761/drop-create-mongodb-ttl-index-vs-collmod-in-production
   override def enableHousekeeping(value: Boolean): Future[Boolean] = {
-    val ttlSecs = if (value) housekeepingOnTTLSecs else housekeepingOffTTLSecs
+    val ttlSecs = if (value) expireAfterSecondsOn else expireAfterSecondsOff
 
     val commandDoc = Json.obj(
       "collMod" -> "outcome",
@@ -203,11 +210,11 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
       } yield value
 
       optTtlSecs match {
-        case Some(`housekeepingOnTTLSecs`)  => HousekeepingStatus.On
-        case Some(`housekeepingOffTTLSecs`) => HousekeepingStatus.Off
+        case Some(`expireAfterSecondsOn`)  => HousekeepingStatus.On
+        case Some(`expireAfterSecondsOff`) => HousekeepingStatus.Off
         case Some(other) =>
           Logger.warn(
-            s"Cannot get housekeeping status: expireAfterSeconds is $other (neither on: $housekeepingOnTTLSecs nor off: $housekeepingOffTTLSecs)")
+            s"Cannot get housekeeping status: expireAfterSeconds is $other (neither on: $expireAfterSecondsOn nor off: $expireAfterSecondsOff)")
           HousekeepingStatus.Unknown
         case None =>
           Logger.warn(s"Cannot housekeeping status: expireAfterSeconds could not be determined")

@@ -16,10 +16,13 @@
 
 package uk.gov.hmrc.entrydeclarationoutcome.controllers.test
 
+import java.time.Instant
+
+import play.api.libs.json.Json
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import play.mvc.Http.MimeTypes
-import uk.gov.hmrc.entrydeclarationoutcome.models.OutcomeXml
+import uk.gov.hmrc.entrydeclarationoutcome.models.{FullOutcome, MessageType, OutcomeReceived, OutcomeXml}
 import uk.gov.hmrc.entrydeclarationoutcome.services.MockOutcomeRetrievalService
 import uk.gov.hmrc.play.test.UnitSpec
 
@@ -34,27 +37,69 @@ class TestOutcomeRetrievalControllerSpec extends UnitSpec with MockOutcomeRetrie
   val outcomeXml: OutcomeXml = OutcomeXml("payloadXml")
   val payloadXml             = "payloadXml"
   val submissionId           = "submissionId"
+  val eori                   = "eori"
+  val correlationId          = "correlationId"
 
-  "TestOutcomeRetrievalController getOutcomeXmlBySubmissionId" should {
+  val fullOutcome: FullOutcome = FullOutcome(
+    OutcomeReceived(
+      eori,
+      correlationId,
+      Instant.now,
+      None,
+      MessageType.IE316,
+      submissionId,
+      payloadXml
+    ),
+    acknowledged   = true,
+    housekeepingAt = Instant.now
+  )
 
-    "return 200 with the XML" when {
-      "the outcome XML could be found" in {
-        MockOutcomeXmlRetrievalService.retrieveOutcome(submissionId) returns Future.successful(Some(outcomeXml))
+  "TestOutcomeRetrievalController" when {
 
-        val result = controller.getOutcomeXmlBySubmissionId(submissionId)(FakeRequest())
+    "getting outcome xml by submissionId" should {
+      "return 200 with the XML" when {
+        "the outcome XML could be found" in {
+          MockOutcomeXmlRetrievalService.retrieveOutcome(submissionId) returns Future.successful(Some(outcomeXml))
 
-        status(result)          shouldBe 200
-        contentAsString(result) shouldBe payloadXml
-        contentType(result)     shouldBe Some(MimeTypes.XML)
+          val result = controller.getOutcomeXmlBySubmissionId(submissionId)(FakeRequest())
+
+          status(result)          shouldBe 200
+          contentAsString(result) shouldBe payloadXml
+          contentType(result)     shouldBe Some(MimeTypes.XML)
+        }
+      }
+      "return 404" when {
+        "the outcome XML could not be found" in {
+          MockOutcomeXmlRetrievalService.retrieveOutcome(submissionId) returns Future.successful(None)
+
+          val result = controller.getOutcomeXmlBySubmissionId(submissionId)(FakeRequest())
+
+          status(result) shouldBe 404
+        }
       }
     }
-    "return 404" when {
-      "the outcome XML could not be found" in {
-        MockOutcomeXmlRetrievalService.retrieveOutcome(submissionId) returns Future.successful(None)
 
-        val result = controller.getOutcomeXmlBySubmissionId(submissionId)(FakeRequest())
+    "getting full outcome by eori and correlationId" should {
+      "return 200 with the JSNO" when {
+        "the outcome could be found" in {
+          MockOutcomeXmlRetrievalService.retrieveFullOutcome(eori, correlationId) returns Future.successful(
+            Some(fullOutcome))
 
-        status(result) shouldBe 404
+          val result = controller.getFullOutcome(eori, correlationId)(FakeRequest())
+
+          status(result)        shouldBe 200
+          contentAsJson(result) shouldBe Json.toJson(fullOutcome)
+          contentType(result)   shouldBe Some(MimeTypes.JSON)
+        }
+      }
+      "return 404" when {
+        "the outcome could not be found" in {
+          MockOutcomeXmlRetrievalService.retrieveFullOutcome(eori, correlationId) returns Future.successful(None)
+
+          val result = controller.getFullOutcome(eori, correlationId)(FakeRequest())
+
+          status(result) shouldBe 404
+        }
       }
     }
   }
