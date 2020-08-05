@@ -31,9 +31,7 @@ class HousekeepingControllerSpec extends UnitSpec with MockHousekeepingService {
   val controller = new HousekeepingController(Helpers.stubControllerComponents(), mockHousekeepingService)
 
   private def houseKeepingStatusJson(value: Boolean) =
-    Json.parse(s"""
-                  |{"housekeeping": $value}
-                  |""".stripMargin)
+    Json.parse(s"""{"housekeeping": $value}""".stripMargin)
 
   "HousekeepingController" when {
     "getting housekeeping state" when {
@@ -112,6 +110,43 @@ class HousekeepingControllerSpec extends UnitSpec with MockHousekeepingService {
           val result = controller.setStatus()(FakeRequest().withBody(badJson))
 
           status(result) shouldBe BAD_REQUEST
+        }
+      }
+    }
+
+    "setting a short ttl by submissionId" when {
+      val submissionId = "submissionId"
+      "setting is successful" must {
+        "return 204" in {
+          MockHousekeepingService.setShortTtl(submissionId) returns true
+
+          status(controller.setShortTtlBySubmissionId(submissionId = submissionId)(FakeRequest())) shouldBe NO_CONTENT
+        }
+      }
+      "setting fails" must {
+        "return 404" in {
+          MockHousekeepingService.setShortTtl(submissionId) returns false
+
+          status(controller.setShortTtlBySubmissionId(submissionId = submissionId)(FakeRequest())) shouldBe NOT_FOUND
+        }
+      }
+    }
+
+    "setting a short ttl by eori and correlationId" when {
+      val eori          = "eori"
+      val correlationId = "correlationId"
+      "setting is successful" must {
+        "return 204" in {
+          MockHousekeepingService.setShortTtl(eori, correlationId) returns true
+
+          status(controller.setShortTtlByEoriAndCorrelationId(eori = eori, correlationId = correlationId)(FakeRequest())) shouldBe NO_CONTENT
+        }
+      }
+      "setting fails" must {
+        "return 404" in {
+          MockHousekeepingService.setShortTtl(eori, correlationId) returns false
+
+          status(controller.setShortTtlByEoriAndCorrelationId(eori = eori, correlationId = correlationId)(FakeRequest())) shouldBe NOT_FOUND
         }
       }
     }

@@ -45,6 +45,8 @@ trait AppConfig {
   def eventsHost: String
 
   def defaultTtl: FiniteDuration
+
+  def shortTtl: FiniteDuration
 }
 
 @Singleton
@@ -80,4 +82,6 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
   lazy val eventsHost: String = servicesConfig.baseUrl("import-control-entry-declaration-events")
 
   lazy val defaultTtl: FiniteDuration = getFiniteDuration(config.get[Configuration](s"mongodb"), "defaultTtl")
+
+  lazy val shortTtl: FiniteDuration = getFiniteDuration(config.get[Configuration](s"mongodb"), "shortTtl")
 }
