@@ -23,7 +23,7 @@ import uk.gov.hmrc.entrydeclarationoutcome.repositories.OutcomeRepo
 import uk.gov.hmrc.entrydeclarationoutcome.utils.{EventLogger, Timer}
 
 import scala.concurrent.{ExecutionContext, Future}
-import uk.gov.hmrc.entrydeclarationoutcome.models.{OutcomeMetadata, OutcomeReceived, OutcomeXml}
+import uk.gov.hmrc.entrydeclarationoutcome.models.{FullOutcome, OutcomeMetadata, OutcomeReceived, OutcomeXml}
 
 @Singleton
 class OutcomeRetrievalService @Inject()(outcomeRepo: OutcomeRepo, override val metrics: Metrics)(
@@ -36,6 +36,11 @@ class OutcomeRetrievalService @Inject()(outcomeRepo: OutcomeRepo, override val m
   def retrieveOutcome(eori: String, correlationId: String): Future[Option[OutcomeReceived]] =
     timeFuture("Service retrieveOutcome", "retrieveOutcome.total") {
       outcomeRepo.lookupOutcome(eori, correlationId)
+    }
+
+  def retrieveFullOutcome(eori: String, correlationId: String): Future[Option[FullOutcome]] =
+    timeFuture("Service retrieveFullOutcome", "retrieveFullOutcome.total") {
+      outcomeRepo.lookupFullOutcome(eori, correlationId)
     }
 
   def acknowledgeOutcome(eori: String, correlationId: String)(

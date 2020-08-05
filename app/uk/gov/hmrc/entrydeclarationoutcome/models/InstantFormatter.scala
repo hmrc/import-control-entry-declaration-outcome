@@ -16,20 +16,16 @@
 
 package uk.gov.hmrc.entrydeclarationoutcome.models
 
-import java.time.Instant
+import java.time.format.DateTimeFormatter
+import java.time.{Instant, ZoneOffset}
 
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.{Format, Reads, Writes}
 
-case class OutcomeReceived(
-  eori: String,
-  correlationId: String,
-  receivedDateTime: Instant,
-  movementReferenceNumber: Option[String],
-  messageType: MessageType,
-  submissionId: String,
-  outcomeXml: String)
-    extends Outcome
+trait InstantFormatter {
+  val dateTimeWithMillis: DateTimeFormatter =
+    DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSS'Z'").withZone(ZoneOffset.UTC)
 
-object OutcomeReceived extends InstantFormatter {
-  implicit val format: Format[OutcomeReceived] = Json.format[OutcomeReceived]
+  implicit val instantWrites: Format[Instant] = {
+    Format(Reads.DefaultInstantReads, Writes.temporalWrites[Instant, DateTimeFormatter](dateTimeWithMillis))
+  }
 }

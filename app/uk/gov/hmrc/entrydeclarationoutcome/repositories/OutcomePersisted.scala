@@ -17,7 +17,7 @@
 package uk.gov.hmrc.entrydeclarationoutcome.repositories
 
 import play.api.libs.json._
-import uk.gov.hmrc.entrydeclarationoutcome.models.{MessageType, Outcome, OutcomeReceived}
+import uk.gov.hmrc.entrydeclarationoutcome.models.{FullOutcome, MessageType, Outcome, OutcomeReceived}
 
 import scala.concurrent.duration._
 
@@ -41,6 +41,13 @@ private[repositories] case class OutcomePersisted(
       messageType             = messageType,
       submissionId            = submissionId,
       outcomeXml              = outcomeXml
+    )
+
+  def toFullOutcome: FullOutcome =
+    FullOutcome(
+      toOutcomeReceived,
+      acknowledged   = acknowledged,
+      housekeepingAt = housekeepingAt.toInstant
     )
 }
 

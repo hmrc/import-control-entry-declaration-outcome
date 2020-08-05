@@ -18,18 +18,22 @@ package uk.gov.hmrc.entrydeclarationoutcome.models
 
 import java.time.Instant
 
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.{JsObject, Json, Writes}
 
-case class OutcomeReceived(
-  eori: String,
-  correlationId: String,
-  receivedDateTime: Instant,
-  movementReferenceNumber: Option[String],
-  messageType: MessageType,
-  submissionId: String,
-  outcomeXml: String)
-    extends Outcome
+case class FullOutcome(
+  outcomeReceived: OutcomeReceived,
+  acknowledged: Boolean,
+  housekeepingAt: Instant
+)
 
-object OutcomeReceived extends InstantFormatter {
-  implicit val format: Format[OutcomeReceived] = Json.format[OutcomeReceived]
+object FullOutcome extends InstantFormatter {
+  implicit val writes: Writes[FullOutcome] = Writes { fullOutcome =>
+    val outcomeReceivedJson = Json.toJson(fullOutcome.outcomeReceived).as[JsObject]
+
+    JsObject(outcomeReceivedJson.fields) ++
+      Json.obj(
+        "acknowledged"   -> fullOutcome.acknowledged,
+        "housekeepingAt" -> fullOutcome.housekeepingAt
+      )
+  }
 }

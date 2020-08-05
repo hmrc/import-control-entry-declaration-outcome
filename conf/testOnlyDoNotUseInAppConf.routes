@@ -9,7 +9,9 @@
 # !!!WARNING!!! Every route defined in this file MUST be prefixed with "/test-only/". This is because NGINX is blocking every uri containing the string "test-only" in production.
 # Failing to follow this rule may result in test routes deployed in production.
 
-GET        /import-control/test-only/outcomes/:submissionId     uk.gov.hmrc.entrydeclarationoutcome.controllers.test.TestOutcomeRetrievalController.getOutcomeXmlBySubmissionId(submissionId)
+GET        /import-control/test-only/outcomes/:submissionId                 uk.gov.hmrc.entrydeclarationoutcome.controllers.test.TestOutcomeRetrievalController.getOutcomeXmlBySubmissionId(submissionId)
+GET        /import-control/test-only/fulloutcome/:eori/:correlationId       uk.gov.hmrc.entrydeclarationoutcome.controllers.test.TestOutcomeRetrievalController.getFullOutcome(eori, correlationId)
+
 
 # Add all the application routes to the prod.routes file
 ->         /                          prod.Routes

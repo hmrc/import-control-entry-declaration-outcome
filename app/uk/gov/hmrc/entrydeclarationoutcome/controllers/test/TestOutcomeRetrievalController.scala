@@ -17,6 +17,7 @@
 package uk.gov.hmrc.entrydeclarationoutcome.controllers.test
 
 import javax.inject.Inject
+import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import play.mvc.Http.MimeTypes
 import uk.gov.hmrc.entrydeclarationoutcome.services.OutcomeRetrievalService
@@ -32,6 +33,14 @@ class TestOutcomeRetrievalController @Inject()(cc: ControllerComponents, service
     service.retrieveOutcomeXml(submissionId) map {
       case Some(outcomeXml) => Ok(outcomeXml.value).as(MimeTypes.XML)
       case None             => NotFound
+    }
+  }
+
+  //  Test method -> no auth
+  def getFullOutcome(eori: String, correlationId: String): Action[AnyContent] = Action.async { _ =>
+    service.retrieveFullOutcome(eori, correlationId) map {
+      case Some(fullOutcome) => Ok(Json.toJson(fullOutcome))
+      case None              => NotFound
     }
   }
 }

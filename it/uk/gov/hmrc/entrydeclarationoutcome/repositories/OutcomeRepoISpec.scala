@@ -27,6 +27,7 @@ import play.api.libs.json.{JsObject, Json}
 import play.api.test.{DefaultAwaitTimeout, Injecting}
 import play.api.{Application, Environment, Mode}
 import reactivemongo.play.json.ImplicitBSONHandlers._
+import uk.gov.hmrc.entrydeclarationoutcome.config.AppConfig
 import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationoutcome.models._
 import uk.gov.hmrc.entrydeclarationoutcome.utils.SaveError
@@ -44,6 +45,8 @@ class OutcomeRepoISpec
     with IntegrationPatience {
 
   lazy val repository: OutcomeRepoImpl = inject[OutcomeRepoImpl]
+
+  lazy val appConfig: AppConfig = inject[AppConfig]
 
   override def beforeAll(): Unit = {
     super.beforeAll()
@@ -92,10 +95,11 @@ class OutcomeRepoISpec
     acknowledgedSubmissionId,
     outcomeXml
   )
+
   val OutcomeXmlWrapper: OutcomeXml = OutcomeXml(outcomeXml)
 
-  def lookupOutcome(submissionId: String): Option[OutcomePersisted] =
-    await(repository.find("submissionId" -> submissionId)).headOption
+  def lookupOutcome(submissionId: String): Option[FullOutcome] =
+    await(repository.find("submissionId" -> submissionId)).headOption.map(_.toFullOutcome)
 
   "OutcomeRepo" when {
     "saving an outcome" when {
@@ -104,8 +108,12 @@ class OutcomeRepoISpec
           await(repository.save(outcome)) shouldBe None
         }
 
-        "store it in the database" in {
-          lookupOutcome(submissionId).map(_.toOutcomeReceived) shouldBe Some(outcome)
+        "store it in the database with the default TTL" in {
+          lookupOutcome(submissionId) shouldBe Some(
+            FullOutcome(
+              outcome,
+              acknowledged   = false,
+              housekeepingAt = receivedDateTime.plusMillis(appConfig.defaultTtl.toMillis)))
         }
       }
 
@@ -144,7 +152,7 @@ class OutcomeRepoISpec
       }
     }
 
-    "looking up by eori and correlation id" when {
+    "looking up outcome by eori and correlation id" when {
       "it exists in the database" must {
         "return it" in {
           await(repository.lookupOutcome(eori, correlationId)) shouldBe Some(outcome)
@@ -164,10 +172,36 @@ class OutcomeRepoISpec
       }
     }
 
+    "looking up full outcome by eori and correlation id" when {
+      "it exists in the database" must {
+        "return it" in {
+          await(repository.lookupFullOutcome(eori, correlationId)) shouldBe Some(
+            FullOutcome(
+              outcome,
+              acknowledged   = false,
+              housekeepingAt = receivedDateTime.plusMillis(appConfig.defaultTtl.toMillis)))
+        }
+      }
+
+      "it does not exist in the database" must {
+        "return None" in {
+          await(repository.lookupFullOutcome("unknownEori", "unknownSubmissionId")) shouldBe None
+        }
+      }
+    }
+
     "acknowledging an outcome" when {
       "outcome exists and is unacknowledged" must {
-        "return the updated outcome" in {
+        "return the outcome" in {
           await(repository.acknowledgeOutcome(eori, correlationId)) shouldBe Some(outcome)
+        }
+
+        "update the state to acknowledged" in {
+          lookupOutcome(submissionId) shouldBe Some(
+            FullOutcome(
+              outcome,
+              acknowledged   = true,
+              housekeepingAt = receivedDateTime.plusMillis(appConfig.defaultTtl.toMillis)))
         }
       }
 
