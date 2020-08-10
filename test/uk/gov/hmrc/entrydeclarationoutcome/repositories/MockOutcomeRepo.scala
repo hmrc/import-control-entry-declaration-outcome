@@ -39,8 +39,12 @@ trait MockOutcomeRepo extends MockFactory {
     def lookupOutcome(eori: String, correlationId: String): CallHandler[Future[Option[OutcomeReceived]]] =
       (outcomeRepo.lookupOutcome(_: String, _: String)) expects (eori, correlationId)
 
-    def acknowledgeOutcome(eori: String, correlationId: String): CallHandler[Future[Option[OutcomeReceived]]] =
-      (outcomeRepo.acknowledgeOutcome(_: String, _: String)(_: LoggingContext)) expects (eori, correlationId, *)
+    def acknowledgeOutcome(
+      eori: String,
+      correlationId: String,
+      time: Instant): CallHandler[Future[Option[OutcomeReceived]]] =
+      (outcomeRepo
+        .acknowledgeOutcome(_: String, _: String, _: Instant)(_: LoggingContext)) expects (eori, correlationId, time, *)
 
     def listOutcomes(eori: String): CallHandler[Future[List[OutcomeMetadata]]] =
       outcomeRepo.listOutcomes _ expects eori

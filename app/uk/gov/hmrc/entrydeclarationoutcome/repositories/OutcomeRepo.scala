@@ -51,7 +51,7 @@ trait OutcomeRepo {
   /**
     * @return the acknowledged outcome
     */
-  def acknowledgeOutcome(eori: String, correlationId: String)(
+  def acknowledgeOutcome(eori: String, correlationId: String, time: Instant)(
     implicit lc: LoggingContext): Future[Option[OutcomeReceived]]
 
   def listOutcomes(eori: String): Future[List[OutcomeMetadata]]
@@ -141,11 +141,11 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
       .one[OutcomePersisted]
       .map(_.map(_.toFullOutcome))
 
-  def acknowledgeOutcome(eori: String, correlationId: String)(
+  def acknowledgeOutcome(eori: String, correlationId: String, time: Instant)(
     implicit lc: LoggingContext): Future[Option[OutcomeReceived]] =
     findAndUpdate(
       query          = Json.obj("eori" -> eori, "correlationId" -> correlationId, "acknowledged" -> false),
-      update         = Json.obj("$set" -> Json.obj("acknowledged" -> true)),
+      update         = Json.obj("$set" -> Json.obj("acknowledged" -> true, "housekeepingAt" -> PersistableDateTime(time))),
       fetchNewObject = true
     ).map(result => result.result[OutcomePersisted].map(_.toOutcomeReceived))
 
