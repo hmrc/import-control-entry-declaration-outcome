@@ -128,5 +128,22 @@ class OutcomeRetrievalServiceSpec extends UnitSpec with MockOutcomeRepo with Moc
         service.listOutcomes(eori).futureValue shouldBe List.empty[OutcomeMetadata]
       }
     }
+
+    "retrieving full outcome" must {
+      "return the full outcome if an outcome exists in the database" in {
+        val fullOutcome =
+          FullOutcome(outcome, acknowledged = false, housekeepingAt = Instant.now)
+
+        MockOutcomeRepo.lookupFullOutcome(eori, correlationId) returns Future.successful(Some(fullOutcome))
+
+        service.retrieveFullOutcome(eori, correlationId).futureValue shouldBe Some(fullOutcome)
+      }
+
+      "return None if no outcome exists in the database" in {
+        MockOutcomeRepo.lookupFullOutcome(eori, correlationId) returns Future.successful(None)
+
+        service.retrieveFullOutcome(eori, correlationId).futureValue shouldBe None
+      }
+    }
   }
 }

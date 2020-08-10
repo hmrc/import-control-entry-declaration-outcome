@@ -21,7 +21,7 @@ import java.time.Instant
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
 import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
-import uk.gov.hmrc.entrydeclarationoutcome.models.{HousekeepingStatus, OutcomeMetadata, OutcomeReceived, OutcomeXml}
+import uk.gov.hmrc.entrydeclarationoutcome.models.{FullOutcome, HousekeepingStatus, OutcomeMetadata, OutcomeReceived, OutcomeXml}
 import uk.gov.hmrc.entrydeclarationoutcome.utils.SaveError
 
 import scala.concurrent.Future
@@ -60,5 +60,8 @@ trait MockOutcomeRepo extends MockFactory {
 
     def setHousekeepingAt(eori: String, correlationId: String, time: Instant): CallHandler[Future[Boolean]] =
       (outcomeRepo.setHousekeepingAt(_: String, _: String, _: Instant)) expects (eori, correlationId, time)
+
+    def lookupFullOutcome(eori: String, correlationId: String): CallHandler[Future[Option[FullOutcome]]] =
+      (outcomeRepo.lookupFullOutcome(_: String, _: String)) expects (eori, correlationId)
   }
 }
