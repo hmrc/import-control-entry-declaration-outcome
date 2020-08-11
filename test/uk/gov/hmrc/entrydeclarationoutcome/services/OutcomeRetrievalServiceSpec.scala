@@ -16,20 +16,25 @@
 
 package uk.gov.hmrc.entrydeclarationoutcome.services
 
-import java.time.Instant
+import java.time.{Clock, Instant, ZoneOffset}
 
 import com.codahale.metrics.MetricRegistry
 import com.kenshoo.play.metrics.Metrics
 import org.scalatest.concurrent.ScalaFutures
+import uk.gov.hmrc.entrydeclarationoutcome.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationoutcome.models._
 import uk.gov.hmrc.entrydeclarationoutcome.repositories.MockOutcomeRepo
 import uk.gov.hmrc.play.test.UnitSpec
+import scala.concurrent.duration._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class OutcomeRetrievalServiceSpec extends UnitSpec with MockOutcomeRepo with ScalaFutures {
+class OutcomeRetrievalServiceSpec extends UnitSpec with MockOutcomeRepo with MockAppConfig with ScalaFutures {
+
+  val time: Instant = Instant.now
+  val clock: Clock  = Clock.fixed(time, ZoneOffset.UTC)
 
   val mockedMetrics: Metrics = new MockMetrics
 
@@ -39,7 +44,7 @@ class OutcomeRetrievalServiceSpec extends UnitSpec with MockOutcomeRepo with Sca
     override def toJson: String = throw new NotImplementedError
   }
 
-  val service = new OutcomeRetrievalService(outcomeRepo, mockedMetrics)
+  val service = new OutcomeRetrievalService(outcomeRepo, clock, mockAppConfig, mockedMetrics)
 
   implicit val lc: LoggingContext = LoggingContext("eori", "corrId", "subId")
 
@@ -91,14 +96,20 @@ class OutcomeRetrievalServiceSpec extends UnitSpec with MockOutcomeRepo with Sca
     }
 
     "acknowledging outcome xml" must {
+      val newTtl = 1.day
+
       "return true if an outcome exists in the database" in {
-        MockOutcomeRepo.acknowledgeOutcome(eori, correlationId) returns Future.successful(Some(outcome))
+        MockAppConfig.shortTtl returns newTtl
+        MockOutcomeRepo.acknowledgeOutcome(eori, correlationId, time.plusMillis(newTtl.toMillis)) returns Future
+          .successful(Some(outcome))
 
         service.acknowledgeOutcome(eori, correlationId).futureValue shouldBe Some(outcome)
       }
 
       "return false if no outcome exists in the database" in {
-        MockOutcomeRepo.acknowledgeOutcome(eori, correlationId) returns Future.successful(None)
+        MockAppConfig.shortTtl returns newTtl
+        MockOutcomeRepo.acknowledgeOutcome(eori, correlationId, time.plusMillis(newTtl.toMillis)) returns Future
+          .successful(None)
 
         service.acknowledgeOutcome(eori, correlationId).futureValue shouldBe None
       }
@@ -115,6 +126,23 @@ class OutcomeRetrievalServiceSpec extends UnitSpec with MockOutcomeRepo with Sca
         MockOutcomeRepo.listOutcomes(eori) returns Future.successful(List.empty[OutcomeMetadata])
 
         service.listOutcomes(eori).futureValue shouldBe List.empty[OutcomeMetadata]
+      }
+    }
+
+    "retrieving full outcome" must {
+      "return the full outcome if an outcome exists in the database" in {
+        val fullOutcome =
+          FullOutcome(outcome, acknowledged = false, housekeepingAt = Instant.now)
+
+        MockOutcomeRepo.lookupFullOutcome(eori, correlationId) returns Future.successful(Some(fullOutcome))
+
+        service.retrieveFullOutcome(eori, correlationId).futureValue shouldBe Some(fullOutcome)
+      }
+
+      "return None if no outcome exists in the database" in {
+        MockOutcomeRepo.lookupFullOutcome(eori, correlationId) returns Future.successful(None)
+
+        service.retrieveFullOutcome(eori, correlationId).futureValue shouldBe None
       }
     }
   }

@@ -16,8 +16,11 @@
 
 package uk.gov.hmrc.entrydeclarationoutcome.services
 
+import java.time.{Clock, Instant}
+
 import com.kenshoo.play.metrics.Metrics
 import javax.inject.{Inject, Singleton}
+import uk.gov.hmrc.entrydeclarationoutcome.config.AppConfig
 import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationoutcome.repositories.OutcomeRepo
 import uk.gov.hmrc.entrydeclarationoutcome.utils.{EventLogger, Timer}
@@ -26,8 +29,11 @@ import scala.concurrent.{ExecutionContext, Future}
 import uk.gov.hmrc.entrydeclarationoutcome.models.{FullOutcome, OutcomeMetadata, OutcomeReceived, OutcomeXml}
 
 @Singleton
-class OutcomeRetrievalService @Inject()(outcomeRepo: OutcomeRepo, override val metrics: Metrics)(
-  implicit ec: ExecutionContext)
+class OutcomeRetrievalService @Inject()(
+  outcomeRepo: OutcomeRepo,
+  clock: Clock,
+  appConfig: AppConfig,
+  override val metrics: Metrics)(implicit ec: ExecutionContext)
     extends Timer
     with EventLogger {
   def retrieveOutcomeXml(submissionId: String): Future[Option[OutcomeXml]] =
@@ -46,11 +52,13 @@ class OutcomeRetrievalService @Inject()(outcomeRepo: OutcomeRepo, override val m
   def acknowledgeOutcome(eori: String, correlationId: String)(
     implicit lc: LoggingContext): Future[Option[OutcomeReceived]] =
     timeFuture("Service acknowledgeOutcome", "acknowledgeOutcome.total") {
-      outcomeRepo.acknowledgeOutcome(eori, correlationId)
+      outcomeRepo.acknowledgeOutcome(eori, correlationId, nowPlusShortTtl)
     }
 
   def listOutcomes(eori: String): Future[List[OutcomeMetadata]] =
     timeFuture("Service listOutcomes", "listOutcomes.total") {
       outcomeRepo.listOutcomes(eori)
     }
+
+  private def nowPlusShortTtl: Instant = clock.instant().plusMillis(appConfig.shortTtl.toMillis)
 }

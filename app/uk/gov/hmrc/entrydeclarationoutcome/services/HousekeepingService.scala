@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.entrydeclarationoutcome.services
 
-import java.time.Clock
+import java.time.{Clock, Instant}
 
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.entrydeclarationoutcome.config.AppConfig
@@ -32,8 +32,10 @@ class HousekeepingService @Inject()(outcomeRepo: OutcomeRepo, clock: Clock, appC
   def getHousekeepingStatus: Future[HousekeepingStatus] = outcomeRepo.getHousekeepingStatus
 
   def setShortTtl(submissionId: String): Future[Boolean] =
-    outcomeRepo.setHousekeepingAt(submissionId, clock.instant().plusMillis(appConfig.shortTtl.toMillis))
+    outcomeRepo.setHousekeepingAt(submissionId, nowPlusShortTtl)
 
   def setShortTtl(eori: String, correlationId: String): Future[Boolean] =
-    outcomeRepo.setHousekeepingAt(eori, correlationId, clock.instant().plusMillis(appConfig.shortTtl.toMillis))
+    outcomeRepo.setHousekeepingAt(eori, correlationId, nowPlusShortTtl)
+
+  private def nowPlusShortTtl: Instant = clock.instant().plusMillis(appConfig.shortTtl.toMillis)
 }

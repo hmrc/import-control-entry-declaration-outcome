@@ -52,7 +52,7 @@ class OutcomeRepoISpec
     super.beforeAll()
     await(repository.removeAll())
     await(repository.save(acknowledgedOutcome))
-    await(repository.acknowledgeOutcome(acknowledgedEori, acknowledgedCorrelationId))
+    await(repository.acknowledgeOutcome(acknowledgedEori, acknowledgedCorrelationId, Instant.now))
   }
 
   override protected def afterAll(): Unit =
@@ -191,29 +191,32 @@ class OutcomeRepoISpec
     }
 
     "acknowledging an outcome" when {
+      val time = Instant.now.plusSeconds(60)
+
       "outcome exists and is unacknowledged" must {
         "return the outcome" in {
-          await(repository.acknowledgeOutcome(eori, correlationId)) shouldBe Some(outcome)
+          await(repository.acknowledgeOutcome(eori, correlationId, time)) shouldBe Some(outcome)
         }
 
-        "update the state to acknowledged" in {
-          lookupOutcome(submissionId) shouldBe Some(
-            FullOutcome(
-              outcome,
-              acknowledged   = true,
-              housekeepingAt = receivedDateTime.plusMillis(appConfig.defaultTtl.toMillis)))
+        "update the state to acknowledged and set housekeepingAt" in {
+          lookupOutcome(submissionId) shouldBe Some(FullOutcome(outcome, acknowledged = true, housekeepingAt = time))
         }
       }
 
       "outcome exists and is acknowledged" must {
         "return None" in {
-          await(repository.acknowledgeOutcome(eori, correlationId)) shouldBe None
+          val otherTime = Instant.now.plusSeconds(120)
+          await(repository.acknowledgeOutcome(eori, correlationId, otherTime)) shouldBe None
+        }
+
+        "not update the housekeepingAt time" in {
+          lookupOutcome(submissionId) shouldBe Some(FullOutcome(outcome, acknowledged = true, housekeepingAt = time))
         }
       }
 
       "outcome does not exist" must {
         "return None" in {
-          await(repository.acknowledgeOutcome("unknownEori", "unknownCorrelationId")) shouldBe None
+          await(repository.acknowledgeOutcome("unknownEori", "unknownCorrelationId", time)) shouldBe None
         }
       }
     }
@@ -307,7 +310,7 @@ class OutcomeRepoISpec
 
         "be settable" in {
           await(repository.removeAll())
-          await(repository.save(outcome)) shouldBe None
+          await(repository.save(outcome))                         shouldBe None
           await(repository.setHousekeepingAt(submissionId, time)) shouldBe true
 
           await(
@@ -331,7 +334,7 @@ class OutcomeRepoISpec
 
         "be settable" in {
           await(repository.removeAll())
-          await(repository.save(outcome)) shouldBe None
+          await(repository.save(outcome))                                shouldBe None
           await(repository.setHousekeepingAt(eori, correlationId, time)) shouldBe true
 
           await(
