@@ -80,7 +80,7 @@ class TestOutcomeRetrievalControllerSpec extends UnitSpec with MockOutcomeRetrie
     }
 
     "getting full outcome by eori and correlationId" should {
-      "return 200 with the JSNO" when {
+      "return 200 with the JSON" when {
         "the outcome could be found" in {
           MockOutcomeXmlRetrievalService.retrieveFullOutcome(eori, correlationId) returns Future.successful(
             Some(fullOutcome))
