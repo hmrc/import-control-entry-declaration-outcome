@@ -46,7 +46,10 @@ class OutcomeSubmissionController @Inject()(
           LoggingContext(
             eori          = outcomeReceived.eori,
             correlationId = outcomeReceived.correlationId,
-            submissionId  = outcomeReceived.submissionId)
+            submissionId  = outcomeReceived.submissionId,
+            outcomeReceived.movementReferenceNumber,
+            outcomeReceived.messageType
+          )
 
         ContextLogger.info("Received outcome")
 

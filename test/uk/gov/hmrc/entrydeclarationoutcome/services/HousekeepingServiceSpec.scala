@@ -24,7 +24,6 @@ import uk.gov.hmrc.entrydeclarationoutcome.models.HousekeepingStatus
 import uk.gov.hmrc.entrydeclarationoutcome.repositories.MockOutcomeRepo
 import uk.gov.hmrc.play.test.UnitSpec
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
 class HousekeepingServiceSpec extends UnitSpec with MockAppConfig with MockOutcomeRepo with ScalaFutures {

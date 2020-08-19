@@ -16,19 +16,40 @@
 
 package uk.gov.hmrc.entrydeclarationoutcome.logging
 
+import uk.gov.hmrc.entrydeclarationoutcome.models.MessageType
+
 case class LoggingContext(
-  eori: Option[String]          = None,
-  correlationId: Option[String] = None,
-  submissionId: Option[String]  = None) {
+  eori: Option[String]                    = None,
+  correlationId: Option[String]           = None,
+  submissionId: Option[String]            = None,
+  movementReferenceNumber: Option[String] = None,
+  messageType: Option[MessageType]        = None) {
   private[logging] lazy val context: String = {
+    val messageTypeString = messageType.map {
+      case MessageType.IE304 => "CC304A"
+      case MessageType.IE305 => "CC305A"
+      case MessageType.IE316 => "CC316A"
+      case MessageType.IE328 => "CC328A"
+    }
     Seq(
-      eori.map(v => s"eori=$v"),
+      messageTypeString,
+      eori.map(v => s"(eori=$v"),
       correlationId.map(v => s"correlationId=$v"),
-      submissionId.map(v => s"submissionId=$v")).flatten.mkString(" ")
+      submissionId.map(v => s"submissionId=$v"),
+      movementReferenceNumber.map(v => s"movementReferenceNumber=$v")
+    ).flatten.mkString(start = "", sep = " ", end = ")")
   }
 }
 
 object LoggingContext {
   def apply(eori: String, correlationId: String, submissionId: String): LoggingContext =
     LoggingContext(Some(eori), Some(correlationId), Some(submissionId))
+  def apply(
+    eori: String,
+    correlationId: String,
+    submissionId: String,
+    movementReferenceNumber: Option[String],
+    messageType: MessageType): LoggingContext =
+    LoggingContext(Some(eori), Some(correlationId), Some(submissionId), movementReferenceNumber, Some(messageType))
+
 }
