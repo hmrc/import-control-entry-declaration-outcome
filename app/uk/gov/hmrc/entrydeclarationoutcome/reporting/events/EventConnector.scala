@@ -18,12 +18,11 @@ package uk.gov.hmrc.entrydeclarationoutcome.reporting.events
 
 import javax.inject.{Inject, Singleton}
 import play.api.http.Status._
-import play.api.libs.json.Json
 import uk.gov.hmrc.entrydeclarationoutcome.config.AppConfig
 import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationoutcome.utils.PagerDutyLogger
-import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
@@ -38,17 +37,14 @@ class EventConnectorImpl @Inject()(client: HttpClient, appConfig: AppConfig, pag
     extends EventConnector {
   val url: String = s"${appConfig.eventsHost}/import-control/event"
 
-  implicit def httpReads(implicit lc: LoggingContext): HttpReads[Unit] = new HttpReads[Unit] {
-    override def read(method: String, url: String, response: HttpResponse): Unit =
-      response.status match {
-        case CREATED => ()
-        case code    => pagerDutyLogger.logEventFailure(code)
-      }
-  }
-
   def sendEvent(event: Event)(implicit hc: HeaderCarrier, lc: LoggingContext): Future[Unit] =
     client
-      .POST(url, Json.toJson(event))
+      .POST[Event, HttpResponse](url, event)
+      .map(response =>
+        response.status match {
+          case CREATED => ()
+          case code    => pagerDutyLogger.logEventFailure(code)
+      })
       .recover {
         case NonFatal(e) => pagerDutyLogger.logEventError(e)
       }
