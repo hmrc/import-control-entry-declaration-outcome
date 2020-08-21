@@ -26,7 +26,7 @@ import uk.gov.hmrc.entrydeclarationoutcome.reporting.events.EventCode
 import uk.gov.hmrc.entrydeclarationoutcome.reporting.{OutcomeReport, ReportSender}
 import uk.gov.hmrc.entrydeclarationoutcome.services.OutcomeSubmissionService
 import uk.gov.hmrc.entrydeclarationoutcome.utils.{EventLogger, SaveError}
-import uk.gov.hmrc.play.bootstrap.controller.BackendController
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.{ExecutionContext, Future}
 

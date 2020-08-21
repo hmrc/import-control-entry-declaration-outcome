@@ -34,8 +34,8 @@ import uk.gov.hmrc.entrydeclarationoutcome.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationoutcome.models.MessageType
 import uk.gov.hmrc.entrydeclarationoutcome.utils.MockPagerDutyLogger
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+
 
 import scala.concurrent.ExecutionContext
 

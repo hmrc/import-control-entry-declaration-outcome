@@ -20,7 +20,7 @@ import play.api.mvc._
 import uk.gov.hmrc.entrydeclarationoutcome.models.StandardError
 import uk.gov.hmrc.entrydeclarationoutcome.services.AuthService
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.bootstrap.controller.BackendController
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.{ExecutionContext, Future}
 
