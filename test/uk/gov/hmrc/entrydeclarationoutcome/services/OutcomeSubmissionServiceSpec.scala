@@ -23,7 +23,7 @@ import org.scalatest.concurrent.ScalaFutures
 import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationoutcome.models.{MessageType, OutcomeReceived}
 import uk.gov.hmrc.entrydeclarationoutcome.repositories.MockOutcomeRepo
-import uk.gov.hmrc.entrydeclarationoutcome.utils.{MockMetrics, SaveError, Timer}
+import uk.gov.hmrc.entrydeclarationoutcome.utils.{MockMetrics, SaveError}
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
