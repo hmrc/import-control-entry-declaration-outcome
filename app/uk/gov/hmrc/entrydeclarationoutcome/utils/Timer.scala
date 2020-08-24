@@ -41,9 +41,9 @@ trait Timer {
     block andThen { case _ => stopAndLog(name, timer) }
   }
 
-  def timeFrom(name: String, startTime: Instant): Duration = {
+  def timeFrom(metric: String, startTime: Instant): Duration = {
     val duration     = Duration.between(startTime, Instant.now(clock))
-    metrics.defaultRegistry.timer(name).update(duration)
+    metrics.defaultRegistry.timer(metric).update(duration)
     duration
   }
 

@@ -38,7 +38,7 @@ class OutcomeSubmissionService @Inject()(
 
   def saveOutcome(outcome: OutcomeReceived)(implicit lc: LoggingContext): Future[Option[SaveError]] =
     timeFuture("Service saveOutcome", "saveOutcome.total") {
-      outcomeRepo.save(outcome).andThen { case Success(None) => timeFrom("E2E.total", outcome.receivedDateTime) }
+      outcomeRepo.save(outcome).andThen { case Success(None) => timeFrom("E2E.total-e2eTimer", outcome.receivedDateTime) }
     }
 
 }
