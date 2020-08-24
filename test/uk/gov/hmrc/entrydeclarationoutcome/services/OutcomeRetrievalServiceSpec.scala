@@ -44,7 +44,7 @@ class OutcomeRetrievalServiceSpec extends UnitSpec with MockOutcomeRepo with Moc
     override def toJson: String = throw new NotImplementedError
   }
 
-  val service = new OutcomeRetrievalService(outcomeRepo, clock, mockAppConfig, mockedMetrics)
+  val service = new OutcomeRetrievalService(outcomeRepo, mockAppConfig, clock, mockedMetrics)
 
   implicit val lc: LoggingContext = LoggingContext("eori", "corrId", "subId")
 

@@ -31,7 +31,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class ReportSender @Inject()(
   auditHandler: AuditHandler,
   eventConnector: EventConnector,
-  clock: Clock,
+  override val clock: Clock,
   override val metrics: Metrics)(implicit ec: ExecutionContext)
     extends Timer
     with EventLogger {

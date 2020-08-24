@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.entrydeclarationoutcome.services
 
-import java.time.Instant
+import java.time.{Clock, Instant, ZoneOffset}
 
 import com.codahale.metrics.MetricRegistry
 import com.kenshoo.play.metrics.Metrics
@@ -32,6 +32,9 @@ import scala.concurrent.Future
 
 class OutcomeSubmissionServiceSpec extends UnitSpec with MockOutcomeRepo with ScalaFutures {
 
+  val time: Instant = Instant.now
+  val clock: Clock  = Clock.fixed(time, ZoneOffset.UTC)
+
   val mockedMetrics: Metrics = new MockMetrics
 
   private class MockMetrics extends Metrics {
@@ -42,7 +45,7 @@ class OutcomeSubmissionServiceSpec extends UnitSpec with MockOutcomeRepo with Sc
 
   implicit val lc: LoggingContext = LoggingContext("eori", "corrId", "subId")
 
-  val service = new OutcomeSubmissionService(outcomeRepo, mockedMetrics)
+  val service = new OutcomeSubmissionService(outcomeRepo, clock, mockedMetrics)
 
   val outcome: OutcomeReceived = OutcomeReceived(
     "eori",

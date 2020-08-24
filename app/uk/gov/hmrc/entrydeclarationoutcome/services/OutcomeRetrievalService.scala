@@ -31,8 +31,8 @@ import uk.gov.hmrc.entrydeclarationoutcome.models.{FullOutcome, OutcomeMetadata,
 @Singleton
 class OutcomeRetrievalService @Inject()(
   outcomeRepo: OutcomeRepo,
-  clock: Clock,
   appConfig: AppConfig,
+  override val clock: Clock,
   override val metrics: Metrics)(implicit ec: ExecutionContext)
     extends Timer
     with EventLogger {

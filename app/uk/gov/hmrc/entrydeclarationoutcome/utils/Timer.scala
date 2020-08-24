@@ -16,8 +16,11 @@
 
 package uk.gov.hmrc.entrydeclarationoutcome.utils
 
+import java.time.{Duration, Instant}
+
 import com.codahale.metrics._
 import com.kenshoo.play.metrics.Metrics
+import java.time.Clock
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -26,6 +29,7 @@ trait Timer {
   type Metric = String
 
   val metrics: Metrics
+  val clock: Clock
   val localMetrics = new LocalMetrics
 
   class LocalMetrics {
@@ -35,6 +39,12 @@ trait Timer {
   def timeFuture[A](name: String, metric: Metric)(block: => Future[A])(implicit ec: ExecutionContext): Future[A] = {
     val timer = localMetrics.startTimer(metric)
     block andThen { case _ => stopAndLog(name, timer) }
+  }
+
+  def timeFrom(name: String, startTime: Instant): Duration = {
+    val duration     = Duration.between(startTime, Instant.now(clock))
+    metrics.defaultRegistry.timer(name).update(duration)
+    duration
   }
 
   def time[A](name: String, metric: Metric)(block: => A): A = {

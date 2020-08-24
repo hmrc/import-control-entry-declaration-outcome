@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.entrydeclarationoutcome.utils
 
+import java.time.{Clock, Duration, Instant, ZoneOffset}
+
 import com.codahale.metrics.MetricRegistry
 import com.kenshoo.play.metrics.Metrics
 import uk.gov.hmrc.play.test.UnitSpec
@@ -23,7 +25,10 @@ import uk.gov.hmrc.play.test.UnitSpec
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class TimerSpec extends UnitSpec with Timer with EventLogger {
-  val metrics: Metrics = new MockMetrics
+  val metrics: Metrics   = new MockMetrics
+  val startTime: Instant = Instant.now
+  val endTime: Instant   = startTime.plusSeconds(1)
+  val clock: Clock       = Clock.fixed(endTime, ZoneOffset.UTC)
 
   var timeMs: Long = _
 
@@ -53,6 +58,9 @@ class TimerSpec extends UnitSpec with Timer with EventLogger {
       })
       val beWithinTolerance = be >= sleepMs.toLong and be <= (sleepMs + 100).toLong
       timeMs should beWithinTolerance
+    }
+    "TimeFrom calculates the time correctly" in {
+      timeFrom("test timer", startTime) shouldBe Duration.between(startTime, endTime)
     }
   }
 }
