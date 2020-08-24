@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.entrydeclarationoutcome.services
 
+import java.time.Clock
+
 import com.kenshoo.play.metrics.Metrics
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
@@ -24,16 +26,19 @@ import uk.gov.hmrc.entrydeclarationoutcome.repositories.OutcomeRepo
 import uk.gov.hmrc.entrydeclarationoutcome.utils.{EventLogger, SaveError, Timer}
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Success
 
 @Singleton
-class OutcomeSubmissionService @Inject()(outcomeRepo: OutcomeRepo, override val metrics: Metrics)(
-  implicit ec: ExecutionContext)
+class OutcomeSubmissionService @Inject()(
+  outcomeRepo: OutcomeRepo,
+  override val clock: Clock,
+  override val metrics: Metrics)(implicit ec: ExecutionContext)
     extends Timer
     with EventLogger {
 
   def saveOutcome(outcome: OutcomeReceived)(implicit lc: LoggingContext): Future[Option[SaveError]] =
     timeFuture("Service saveOutcome", "saveOutcome.total") {
-      outcomeRepo.save(outcome)
+      outcomeRepo.save(outcome).andThen { case Success(None) => timeFrom("E2E.total-e2eTimer", outcome.receivedDateTime) }
     }
 
 }

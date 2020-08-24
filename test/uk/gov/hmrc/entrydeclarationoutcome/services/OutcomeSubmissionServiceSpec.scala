@@ -16,15 +16,14 @@
 
 package uk.gov.hmrc.entrydeclarationoutcome.services
 
-import java.time.Instant
+import java.time.{Clock, Instant, ZoneOffset}
 
-import com.codahale.metrics.MetricRegistry
 import com.kenshoo.play.metrics.Metrics
 import org.scalatest.concurrent.ScalaFutures
 import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationoutcome.models.{MessageType, OutcomeReceived}
 import uk.gov.hmrc.entrydeclarationoutcome.repositories.MockOutcomeRepo
-import uk.gov.hmrc.entrydeclarationoutcome.utils.SaveError
+import uk.gov.hmrc.entrydeclarationoutcome.utils.{MockMetrics, SaveError}
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -32,22 +31,24 @@ import scala.concurrent.Future
 
 class OutcomeSubmissionServiceSpec extends UnitSpec with MockOutcomeRepo with ScalaFutures {
 
-  val mockedMetrics: Metrics = new MockMetrics
+  val time: Instant         = Instant.now
+  val receivedTime: Instant = time.minusSeconds(1)
+  val clock: Clock          = Clock.fixed(time, ZoneOffset.UTC)
 
-  private class MockMetrics extends Metrics {
-    override val defaultRegistry: MetricRegistry = new MetricRegistry()
-
-    override def toJson: String = throw new NotImplementedError
-  }
+  val e2eTimerName = "E2E.total-e2eTimer"
 
   implicit val lc: LoggingContext = LoggingContext("eori", "corrId", "subId")
 
-  val service = new OutcomeSubmissionService(outcomeRepo, mockedMetrics)
+  class Test {
+    val mockedMetrics: Metrics = new MockMetrics
+
+    val service = new OutcomeSubmissionService(outcomeRepo, clock, mockedMetrics)
+  }
 
   val outcome: OutcomeReceived = OutcomeReceived(
     "eori",
     "correlationId",
-    Instant.parse("2020-12-31T23:59:00Z"),
+    receivedTime,
     Some("movementReferenceNumber"),
     MessageType.IE328,
     "submissionId",
@@ -56,26 +57,32 @@ class OutcomeSubmissionServiceSpec extends UnitSpec with MockOutcomeRepo with Sc
 
   "OutcomeSubmissionService" should {
     "return None" when {
-      "outcome successfully stored in database" in {
+      "outcome successfully stored in database" in new Test {
         MockOutcomeRepo.saveOutcome(outcome) returns Future.successful(None)
 
         service.saveOutcome(outcome).futureValue shouldBe None
+
+        mockedMetrics.defaultRegistry.timer(e2eTimerName).getCount shouldBe 1
       }
     }
 
     "return Some(SaveError.ServerError)" when {
-      "outcome could not be stored in database" in {
+      "outcome could not be stored in database" in new Test {
         MockOutcomeRepo.saveOutcome(outcome) returns Future.successful(Some(SaveError.ServerError))
 
         service.saveOutcome(outcome).futureValue shouldBe Some(SaveError.ServerError)
+
+        mockedMetrics.defaultRegistry.timer(e2eTimerName).getCount shouldBe 0
       }
     }
 
     "return Some(SaveError.Duplicate)" when {
-      "outcome database already contains the record" in {
+      "outcome database already contains the record" in new Test {
         MockOutcomeRepo.saveOutcome(outcome) returns Future.successful(Some(SaveError.Duplicate))
 
         service.saveOutcome(outcome).futureValue shouldBe Some(SaveError.Duplicate)
+
+        mockedMetrics.defaultRegistry.timer(e2eTimerName).getCount shouldBe 0
       }
     }
   }
