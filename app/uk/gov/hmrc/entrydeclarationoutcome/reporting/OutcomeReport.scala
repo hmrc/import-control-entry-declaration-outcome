@@ -18,7 +18,7 @@ package uk.gov.hmrc.entrydeclarationoutcome.reporting
 
 import java.time.{Clock, Instant}
 
-import uk.gov.hmrc.entrydeclarationoutcome.models.{MessageType, Outcome, OutcomeReceived}
+import uk.gov.hmrc.entrydeclarationoutcome.models.{MessageType, Outcome}
 import uk.gov.hmrc.entrydeclarationoutcome.reporting.audit.AuditEvent
 import uk.gov.hmrc.entrydeclarationoutcome.reporting.events.{Event, EventCode}
 
