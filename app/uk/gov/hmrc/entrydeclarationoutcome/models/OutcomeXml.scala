@@ -17,7 +17,6 @@
 package uk.gov.hmrc.entrydeclarationoutcome.models
 
 import play.api.libs.json.{Reads, __}
-import play.api.libs.functional.syntax._
 
 case class OutcomeXml(value: String) extends AnyVal
 
