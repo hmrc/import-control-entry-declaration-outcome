@@ -63,5 +63,8 @@ trait MockOutcomeRepo extends MockFactory {
 
     def lookupFullOutcome(eori: String, correlationId: String): CallHandler[Future[Option[FullOutcome]]] =
       (outcomeRepo.lookupFullOutcome(_: String, _: String)) expects (eori, correlationId)
+
+    def housekeep(time: Instant): CallHandler[Future[Int]] =
+      (outcomeRepo.housekeep(_: Instant)) expects (time)
   }
 }

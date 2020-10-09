@@ -16,8 +16,9 @@
 package uk.gov.hmrc.entrydeclarationoutcome.repositories
 
 import java.time.Instant
+import java.util.UUID
 
-import org.scalatest.BeforeAndAfterAll
+import org.scalatest.{Assertion, BeforeAndAfterAll}
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.concurrent.{Eventually, IntegrationPatience}
 import org.scalatest.time.{Seconds, Span}
@@ -33,16 +34,20 @@ import uk.gov.hmrc.entrydeclarationoutcome.models._
 import uk.gov.hmrc.entrydeclarationoutcome.utils.SaveError
 import uk.gov.hmrc.play.test.UnitSpec
 
+import scala.util.Random
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class OutcomeRepoISpec
-    extends UnitSpec
+  extends UnitSpec
     with DefaultAwaitTimeout
     with GuiceOneAppPerSuite
     with BeforeAndAfterAll
     with Eventually
     with Injecting
     with IntegrationPatience {
+
+  val housekeepingRunLimit: Int = 20
+  val housekeepingBatchSize: Int = 3
 
   lazy val repository: OutcomeRepoImpl = inject[OutcomeRepoImpl]
 
@@ -60,21 +65,25 @@ class OutcomeRepoISpec
 
   override implicit lazy val app: Application = new GuiceApplicationBuilder()
     .in(Environment.simple(mode = Mode.Dev))
-    .configure("metrics.enabled" -> "false", "response.max.list" -> listOutcomesLimit.toString)
+    .configure(
+      "metrics.enabled" -> "false",
+      "response.max.list" -> listOutcomesLimit.toString,
+      "mongodb.housekeepingRunLimit" -> housekeepingRunLimit,
+      "mongodb.housekeepingBatchSize" -> housekeepingBatchSize)
     .build()
 
   implicit val lc: LoggingContext = LoggingContext("eori", "corrId", "subId")
 
-  val listOutcomesLimit         = 2
-  val correlationId             = "correlationId"
-  val submissionId              = "submissionId"
-  val eori                      = "eori"
+  val listOutcomesLimit = 2
+  val correlationId = "correlationId"
+  val submissionId = "submissionId"
+  val eori = "eori"
   val acknowledgedCorrelationId = "acknowledgedCorrelationId"
-  val acknowledgedSubmissionId  = "acknowledgedsubmissionId"
-  val acknowledgedEori          = "acknowledgedEori"
-  val outcomeXml                = "somexml"
+  val acknowledgedSubmissionId = "acknowledgedsubmissionId"
+  val acknowledgedEori = "acknowledgedEori"
+  val outcomeXml = "somexml"
   val receivedDateTime: Instant = Instant.parse("2020-12-31T23:59:00Z")
-  val messageType: MessageType  = MessageType.IE328
+  val messageType: MessageType = MessageType.IE328
 
   val outcome: OutcomeReceived = OutcomeReceived(
     eori,
@@ -98,6 +107,16 @@ class OutcomeRepoISpec
 
   val OutcomeXmlWrapper: OutcomeXml = OutcomeXml(outcomeXml)
 
+  def randomOutcomeRecieved:OutcomeReceived = OutcomeReceived(
+    acknowledgedEori,
+    UUID.randomUUID.toString,
+    receivedDateTime,
+    None,
+    messageType,
+    UUID.randomUUID.toString,
+    outcomeXml
+  )
+  
   def lookupOutcome(submissionId: String): Option[FullOutcome] =
     await(repository.find("submissionId" -> submissionId)).headOption.map(_.toFullOutcome)
 
@@ -112,7 +131,7 @@ class OutcomeRepoISpec
           lookupOutcome(submissionId) shouldBe Some(
             FullOutcome(
               outcome,
-              acknowledged   = false,
+              acknowledged = false,
               housekeepingAt = receivedDateTime.plusMillis(appConfig.defaultTtl.toMillis)))
         }
       }
@@ -178,7 +197,7 @@ class OutcomeRepoISpec
           await(repository.lookupFullOutcome(eori, correlationId)) shouldBe Some(
             FullOutcome(
               outcome,
-              acknowledged   = false,
+              acknowledged = false,
               housekeepingAt = receivedDateTime.plusMillis(appConfig.defaultTtl.toMillis)))
         }
       }
@@ -245,9 +264,9 @@ class OutcomeRepoISpec
           await(
             repository.save(
               listedOutcome.copy(
-                correlationId           = "corId2",
-                submissionId            = "subId2",
-                receivedDateTime        = time1,
+                correlationId = "corId2",
+                submissionId = "subId2",
+                receivedDateTime = time1,
                 movementReferenceNumber = Some("mrn"))))
           await(repository.listOutcomes("testEori")) shouldBe List(
             OutcomeMetadata("corId2", Some("mrn")),
@@ -262,9 +281,9 @@ class OutcomeRepoISpec
           await(
             repository.save(
               listedOutcome.copy(
-                correlationId           = "corId2",
-                submissionId            = "subId2",
-                receivedDateTime        = time1,
+                correlationId = "corId2",
+                submissionId = "subId2",
+                receivedDateTime = time1,
                 movementReferenceNumber = Some("mrn"))))
           await(repository.listOutcomes("testEori")) shouldBe List(
             OutcomeMetadata("corId2", Some("mrn")),
@@ -310,7 +329,7 @@ class OutcomeRepoISpec
 
         "be settable" in {
           await(repository.removeAll())
-          await(repository.save(outcome))                         shouldBe None
+          await(repository.save(outcome)) shouldBe None
           await(repository.setHousekeepingAt(submissionId, time)) shouldBe true
 
           await(
@@ -334,7 +353,7 @@ class OutcomeRepoISpec
 
         "be settable" in {
           await(repository.removeAll())
-          await(repository.save(outcome))                                shouldBe None
+          await(repository.save(outcome)) shouldBe None
           await(repository.setHousekeepingAt(eori, correlationId, time)) shouldBe true
 
           await(
@@ -358,49 +377,96 @@ class OutcomeRepoISpec
     "expireAfterSeconds" must {
       "report on when on" in {
         await(repository.enableHousekeeping(true)) shouldBe true
-        await(repository.getHousekeepingStatus)    shouldBe HousekeepingStatus.On
-      }
-
-      "be effective when on" ignore {
-        await(repository.removeAll())
-        await(repository.save(outcome)) shouldBe None
-        repository.setHousekeepingAt(submissionId, Instant.now)
-
-        eventually(Timeout(Span(60, Seconds))) {
-          await(repository.lookupOutcomeXml(submissionId)) shouldBe None
-        }
+        await(repository.getHousekeepingStatus) shouldBe HousekeepingStatus.On
       }
 
       "be updatable (to turn off housekeeping)" in {
         await(repository.enableHousekeeping(false)) shouldBe true
-        await(repository.getHousekeepingStatus)     shouldBe HousekeepingStatus.Off
+        await(repository.getHousekeepingStatus) shouldBe HousekeepingStatus.Off
       }
 
       "allow turning off when already off" in {
         await(repository.enableHousekeeping(false)) shouldBe true
-        await(repository.getHousekeepingStatus)     shouldBe HousekeepingStatus.Off
-      }
-
-      "not be effective when off" ignore {
-        await(repository.removeAll())
-        await(repository.save(outcome)) shouldBe None
-        repository.setHousekeepingAt(submissionId, Instant.now)
-
-        Thread.sleep(60000)
-        await(repository.lookupOutcomeXml(submissionId)) should not be None
-
+        await(repository.getHousekeepingStatus) shouldBe HousekeepingStatus.Off
       }
 
       "be updatable (to turn on housekeeping)" in {
         await(repository.enableHousekeeping(true)) shouldBe true
-        await(repository.getHousekeepingStatus)    shouldBe HousekeepingStatus.On
+        await(repository.getHousekeepingStatus) shouldBe HousekeepingStatus.On
       }
 
       "allow turning on when already on" in {
         await(repository.enableHousekeeping(true)) shouldBe true
-        await(repository.getHousekeepingStatus)    shouldBe HousekeepingStatus.On
+        await(repository.getHousekeepingStatus) shouldBe HousekeepingStatus.On
       }
     }
 
+    "housekeep" when {
+      val t0 = Instant.now
+
+      def populateOutcomes(numOutcomes: Int): Seq[OutcomeReceived] = {
+        await(repository.removeAll())
+        (1 to numOutcomes).map { _ =>
+          val outcome = randomOutcomeRecieved
+          await(repository.save(outcome)) shouldBe None
+          outcome
+        }
+      }
+
+      def setHousekeepingAt(outcomes: Seq[OutcomeReceived], housekeepingTimes: Seq[Int]): Unit =
+        (outcomes zip housekeepingTimes).foreach {
+          case (outcome, i) =>
+            await(repository.setHousekeepingAt(outcome.submissionId, t0.plusSeconds(i))) shouldBe true
+        }
+
+      def assertNotHousekept(outcome: OutcomeReceived): Assertion =
+        await(repository.lookupOutcome(outcome.eori, outcome.correlationId)) should not be None
+
+      def assertHousekept(outcome: OutcomeReceived): Assertion =
+        await(repository.lookupOutcome(outcome.eori, outcome.correlationId)) shouldBe None
+
+      "the time has reached the housekeepingAt for some documents" must {
+        "delete only those documents" in {
+          val numOutcomes = 10
+          val outcomes    = populateOutcomes(numOutcomes)
+          setHousekeepingAt(outcomes, 1 to outcomes.size)
+
+          val elapsedSecs = 6
+
+          await(repository.housekeep(t0.plusSeconds(elapsedSecs))) shouldBe elapsedSecs
+
+          outcomes.take(elapsedSecs) foreach assertHousekept
+          outcomes.drop(elapsedSecs) foreach assertNotHousekept
+        }
+      }
+
+      "the time has not reached the housekeepingAt for any documents" must {
+        "delete nothing" in {
+          val numOutcomes = 10
+          val outcomes    = populateOutcomes(numOutcomes)
+          setHousekeepingAt(outcomes, 1 to outcomes.size)
+
+          await(repository.housekeep(t0)) shouldBe 0
+
+          outcomes foreach assertNotHousekept
+        }
+      }
+
+      "more records than the limit require deleting" must {
+        "delete only the oldest ones by housekeepingAt even if not created in that order" in {
+          val numOutcomes = housekeepingRunLimit * 2
+          val outcomes    = Random.shuffle(populateOutcomes(numOutcomes))
+
+          setHousekeepingAt(outcomes, 1 to outcomes.size)
+
+          val elapsedSecs = numOutcomes
+
+          await(repository.housekeep(t0.plusSeconds(elapsedSecs))) shouldBe housekeepingRunLimit
+
+          outcomes.take(housekeepingRunLimit) foreach assertHousekept
+          outcomes.drop(housekeepingRunLimit) foreach assertNotHousekept
+        }
+      }
+    }
   }
 }
