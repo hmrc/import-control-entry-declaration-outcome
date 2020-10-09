@@ -18,10 +18,12 @@ package uk.gov.hmrc.entrydeclarationoutcome.repositories
 
 import java.time.Instant
 
+import akka.stream.Materializer
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.libs.json.{JsObject, JsPath, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
+import reactivemongo.akkastream.cursorProducer
 import reactivemongo.api.commands.Command
 import reactivemongo.api.indexes.Index
 import reactivemongo.api.indexes.IndexType.Ascending
@@ -63,20 +65,23 @@ trait OutcomeRepo {
   def enableHousekeeping(value: Boolean): Future[Boolean]
 
   def getHousekeepingStatus: Future[HousekeepingStatus]
+
+  def housekeep(now: Instant): Future[Int]
 }
 
 @Singleton
 class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
   implicit mongo: ReactiveMongoComponent,
-  ec: ExecutionContext
+  ec: ExecutionContext,
+  mat: Materializer
 ) extends ReactiveRepository[OutcomePersisted, BSONObjectID](
-      "outcome",
-      mongo.mongoConnector.db,
-      OutcomePersisted.format,
-      ReactiveMongoFormats.objectIdFormats)
-    with OutcomeRepo {
+  "outcome",
+  mongo.mongoConnector.db,
+  OutcomePersisted.format,
+  ReactiveMongoFormats.objectIdFormats)
+  with OutcomeRepo {
 
-  private val expireAfterSecondsOn  = 0
+  private val expireAfterSecondsOn = 0
   private val expireAfterSecondsOff = Long.MaxValue
 
   override def indexes: Seq[Index] = Seq(
@@ -84,7 +89,7 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
     //TTL index
     Index(
       Seq("housekeepingAt" -> Ascending),
-      name    = Some("housekeepingIndex"),
+      name = Some("housekeepingIndex"),
       options = BSONDocument("expireAfterSeconds" -> 0)),
     // Covering index for list...
     Index(
@@ -94,12 +99,12 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
         ("receivedDateTime", Ascending),
         ("correlationId", Ascending),
         ("movementReferenceNumber", Ascending)),
-      name   = Some("listIndex"),
+      name = Some("listIndex"),
       unique = false
     ),
     Index(
       Seq(("eori", Ascending), ("correlationId", Ascending)),
-      name   = Some("eoriPlusCorrelationIdIndex"),
+      name = Some("eoriPlusCorrelationIdIndex"),
       unique = true
     )
   )
@@ -144,8 +149,8 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
   def acknowledgeOutcome(eori: String, correlationId: String, time: Instant)(
     implicit lc: LoggingContext): Future[Option[OutcomeReceived]] =
     findAndUpdate(
-      query          = Json.obj("eori" -> eori, "correlationId" -> correlationId, "acknowledged" -> false),
-      update         = Json.obj("$set" -> Json.obj("acknowledged" -> true, "housekeepingAt" -> PersistableDateTime(time))),
+      query = Json.obj("eori" -> eori, "correlationId" -> correlationId, "acknowledged" -> false),
+      update = Json.obj("$set" -> Json.obj("acknowledged" -> true, "housekeepingAt" -> PersistableDateTime(time))),
       fetchNewObject = true
     ).map(result => result.result[OutcomePersisted].map(_.toOutcomeReceived))
 
@@ -178,25 +183,24 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
 
     val commandDoc = Json.obj(
       "collMod" -> "outcome",
-      "index"   -> Json.obj("keyPattern" -> Json.obj("housekeepingAt" -> 1), "expireAfterSeconds" -> ttlSecs))
+      "index" -> Json.obj("keyPattern" -> Json.obj("housekeepingAt" -> 1), "expireAfterSeconds" -> ttlSecs))
 
     val runner = Command.CommandWithPackRunner(JSONSerializationPack)
     runner(mongo.mongoConnector.db(), runner.rawCommand(commandDoc))
       .one[JsObject](ReadPreference.primaryPreferred)
-      .map { response =>
-        {
-          response.as((JsPath \ "ok").read[Double]) match {
-            case 1.0 =>
-              for {
-                oldTtl <- response.as((JsPath \ "expireAfterSeconds_old").readNullable[Double])
-                newTtl <- response.as((JsPath \ "expireAfterSeconds_new").readNullable[Double])
-              } yield Logger.warn(s"Change to TTL: old TTL $oldTtl, new TTL $newTtl")
-              true
-            case _ =>
-              Logger.warn(s"Change to TTL failed. response: $response")
-              false
-          }
+      .map { response => {
+        response.as((JsPath \ "ok").read[Double]) match {
+          case 1.0 =>
+            for {
+              oldTtl <- response.as((JsPath \ "expireAfterSeconds_old").readNullable[Double])
+              newTtl <- response.as((JsPath \ "expireAfterSeconds_new").readNullable[Double])
+            } yield Logger.warn(s"Change to TTL: old TTL $oldTtl, new TTL $newTtl")
+            true
+          case _ =>
+            Logger.warn(s"Change to TTL failed. response: $response")
+            false
         }
+      }
       }
   }
 
@@ -210,7 +214,7 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
       } yield value
 
       optTtlSecs match {
-        case Some(`expireAfterSecondsOn`)  => HousekeepingStatus.On
+        case Some(`expireAfterSecondsOn`) => HousekeepingStatus.On
         case Some(`expireAfterSecondsOff`) => HousekeepingStatus.Off
         case Some(other) =>
           Logger.warn(
@@ -221,4 +225,30 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
           HousekeepingStatus.Unknown
       }
     }
+
+  override def housekeep(now: Instant): Future[Int] = {
+    val deleteBuilder = collection.delete(ordered = false)
+
+    collection
+      .find(
+        selector   = Json.obj("housekeepingAt" -> Json.obj("$lte" -> PersistableDateTime(now))),
+        projection = Some(Json.obj("_id" -> 1))
+      )
+      .sort(Json.obj("housekeepingAt" -> 1))
+      .cursor[JsObject]()
+      .documentSource(maxDocs = appConfig.housekeepingRunLimit)
+      .mapAsync(1) { idDoc =>
+        deleteBuilder.element(q = idDoc, limit = Some(1), collation = None)
+      }
+      .batch(appConfig.housekeepingBatchSize, List(_)) { (deletions, element) =>
+        element :: deletions
+      }
+      .mapAsync(1) { deletions =>
+        collection
+          .delete()
+          .many(deletions)
+          .map(_.n)
+      }
+      .runFold(0)(_ + _)
+  }
 }

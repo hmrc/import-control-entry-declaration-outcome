@@ -18,20 +18,25 @@ package uk.gov.hmrc.entrydeclarationoutcome.services
 
 import java.time.{Clock, Instant, ZoneOffset}
 
+import com.kenshoo.play.metrics.Metrics
 import org.scalatest.concurrent.ScalaFutures
 import uk.gov.hmrc.entrydeclarationoutcome.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationoutcome.models.HousekeepingStatus
 import uk.gov.hmrc.entrydeclarationoutcome.repositories.MockOutcomeRepo
+import uk.gov.hmrc.entrydeclarationoutcome.utils.MockMetrics
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.duration._
+
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class HousekeepingServiceSpec extends UnitSpec with MockAppConfig with MockOutcomeRepo with ScalaFutures {
 
   val time: Instant = Instant.now
   val clock: Clock = Clock.fixed(time, ZoneOffset.UTC)
 
-  val service = new HousekeepingService(outcomeRepo, clock, mockAppConfig)
+  val mockedMetrics: Metrics = new MockMetrics
+  val service = new HousekeepingService(outcomeRepo, clock, mockAppConfig, mockedMetrics)
 
   "HousekeepingService" when {
     "getting housekeeping status" must {
@@ -78,6 +83,15 @@ class HousekeepingServiceSpec extends UnitSpec with MockAppConfig with MockOutco
 
           service.setShortTtl(eori, correlationId).futureValue shouldBe success
         }
+      }
+    }
+
+    "performing housekeeping" must {
+      "use the current date" in {
+        val numDeleted = 123
+        MockOutcomeRepo.housekeep(time) returns numDeleted
+
+        service.housekeep().futureValue shouldBe numDeleted
       }
     }
   }
