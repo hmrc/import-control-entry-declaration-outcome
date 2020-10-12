@@ -19,9 +19,7 @@ import java.time.Instant
 import java.util.UUID
 
 import org.scalatest.{Assertion, BeforeAndAfterAll}
-import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.concurrent.{Eventually, IntegrationPatience}
-import org.scalatest.time.{Seconds, Span}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsObject, Json}
@@ -371,33 +369,6 @@ class OutcomeRepoISpec
         "return false if no submission exists" in {
           await(repository.setHousekeepingAt(eori, "unknownCorrelationId", time)) shouldBe false
         }
-      }
-    }
-
-    "expireAfterSeconds" must {
-      "report on when on" in {
-        await(repository.enableHousekeeping(true)) shouldBe true
-        await(repository.getHousekeepingStatus) shouldBe HousekeepingStatus.On
-      }
-
-      "be updatable (to turn off housekeeping)" in {
-        await(repository.enableHousekeeping(false)) shouldBe true
-        await(repository.getHousekeepingStatus) shouldBe HousekeepingStatus.Off
-      }
-
-      "allow turning off when already off" in {
-        await(repository.enableHousekeeping(false)) shouldBe true
-        await(repository.getHousekeepingStatus) shouldBe HousekeepingStatus.Off
-      }
-
-      "be updatable (to turn on housekeeping)" in {
-        await(repository.enableHousekeeping(true)) shouldBe true
-        await(repository.getHousekeepingStatus) shouldBe HousekeepingStatus.On
-      }
-
-      "allow turning on when already on" in {
-        await(repository.enableHousekeeping(true)) shouldBe true
-        await(repository.getHousekeepingStatus) shouldBe HousekeepingStatus.On
       }
     }
 

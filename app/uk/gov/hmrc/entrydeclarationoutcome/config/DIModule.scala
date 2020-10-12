@@ -21,13 +21,14 @@ import java.time.Clock
 import com.google.inject.AbstractModule
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.entrydeclarationoutcome.reporting.events.{EventConnector, EventConnectorImpl}
-import uk.gov.hmrc.entrydeclarationoutcome.repositories.{OutcomeRepo, OutcomeRepoImpl}
+import uk.gov.hmrc.entrydeclarationoutcome.repositories.{HousekeepingRepo, HousekeepingRepoImpl, OutcomeRepo, OutcomeRepoImpl}
 import uk.gov.hmrc.play.bootstrap.auth.DefaultAuthConnector
 
 class DIModule extends AbstractModule {
 
   override def configure(): Unit = {
     bind(classOf[AppConfig]).to(classOf[AppConfigImpl]).asEagerSingleton()
+    bind(classOf[HousekeepingRepo]).to(classOf[HousekeepingRepoImpl])
     bind(classOf[OutcomeRepo]).to(classOf[OutcomeRepoImpl])
     bind(classOf[AuthConnector]).to(classOf[DefaultAuthConnector])
     bind(classOf[EventConnector]).to(classOf[EventConnectorImpl])

@@ -20,21 +20,18 @@ import java.time.Instant
 
 import akka.stream.Materializer
 import javax.inject.{Inject, Singleton}
-import play.api.Logger
 import play.api.libs.json.{JsObject, JsPath, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.akkastream.cursorProducer
-import reactivemongo.api.commands.Command
 import reactivemongo.api.indexes.Index
 import reactivemongo.api.indexes.IndexType.Ascending
 import reactivemongo.api.{Cursor, ReadPreference, WriteConcern}
-import reactivemongo.bson.{BSONDocument, BSONObjectID, _}
+import reactivemongo.bson.{BSONObjectID, _}
 import reactivemongo.core.errors.DatabaseException
 import reactivemongo.play.json.ImplicitBSONHandlers._
-import reactivemongo.play.json.JSONSerializationPack
 import uk.gov.hmrc.entrydeclarationoutcome.config.AppConfig
 import uk.gov.hmrc.entrydeclarationoutcome.logging.{ContextLogger, LoggingContext}
-import uk.gov.hmrc.entrydeclarationoutcome.models.{FullOutcome, HousekeepingStatus, OutcomeMetadata, OutcomeReceived, OutcomeXml}
+import uk.gov.hmrc.entrydeclarationoutcome.models.{FullOutcome, OutcomeMetadata, OutcomeReceived, OutcomeXml}
 import uk.gov.hmrc.entrydeclarationoutcome.utils.SaveError
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
@@ -62,10 +59,6 @@ trait OutcomeRepo {
 
   def setHousekeepingAt(eori: String, correlationId: String, time: Instant): Future[Boolean]
 
-  def enableHousekeeping(value: Boolean): Future[Boolean]
-
-  def getHousekeepingStatus: Future[HousekeepingStatus]
-
   def housekeep(now: Instant): Future[Int]
 }
 
@@ -75,22 +68,15 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
   ec: ExecutionContext,
   mat: Materializer
 ) extends ReactiveRepository[OutcomePersisted, BSONObjectID](
-  "outcome",
-  mongo.mongoConnector.db,
-  OutcomePersisted.format,
-  ReactiveMongoFormats.objectIdFormats)
-  with OutcomeRepo {
-
-  private val expireAfterSecondsOn = 0
-  private val expireAfterSecondsOff = Long.MaxValue
+      "outcome",
+      mongo.mongoConnector.db,
+      OutcomePersisted.format,
+      ReactiveMongoFormats.objectIdFormats)
+    with OutcomeRepo {
 
   override def indexes: Seq[Index] = Seq(
     Index(Seq(("submissionId", Ascending)), name = Some("submissionIdIndex"), unique = true),
-    //TTL index
-    Index(
-      Seq("housekeepingAt" -> Ascending),
-      name = Some("housekeepingIndex"),
-      options = BSONDocument("expireAfterSeconds" -> 0)),
+    Index(Seq("housekeepingAt" -> Ascending), name = Some("housekeepingIndex")),
     // Covering index for list...
     Index(
       Seq(
@@ -99,12 +85,12 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
         ("receivedDateTime", Ascending),
         ("correlationId", Ascending),
         ("movementReferenceNumber", Ascending)),
-      name = Some("listIndex"),
+      name   = Some("listIndex"),
       unique = false
     ),
     Index(
       Seq(("eori", Ascending), ("correlationId", Ascending)),
-      name = Some("eoriPlusCorrelationIdIndex"),
+      name   = Some("eoriPlusCorrelationIdIndex"),
       unique = true
     )
   )
@@ -149,8 +135,8 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
   def acknowledgeOutcome(eori: String, correlationId: String, time: Instant)(
     implicit lc: LoggingContext): Future[Option[OutcomeReceived]] =
     findAndUpdate(
-      query = Json.obj("eori" -> eori, "correlationId" -> correlationId, "acknowledged" -> false),
-      update = Json.obj("$set" -> Json.obj("acknowledged" -> true, "housekeepingAt" -> PersistableDateTime(time))),
+      query          = Json.obj("eori" -> eori, "correlationId" -> correlationId, "acknowledged" -> false),
+      update         = Json.obj("$set" -> Json.obj("acknowledged" -> true, "housekeepingAt" -> PersistableDateTime(time))),
       fetchNewObject = true
     ).map(result => result.result[OutcomePersisted].map(_.toOutcomeReceived))
 
@@ -174,57 +160,6 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
       .update(ordered = false, WriteConcern.Default)
       .one(query, Json.obj("$set" -> Json.obj("housekeepingAt" -> PersistableDateTime(time))))
       .map(result => result.n == 1)
-
-  // If pausing housekeeping is exposed as a simple switch,
-  // using collMod would seem more effective than a full index re-build when it is toggled on or off. See
-  // https://dba.stackexchange.com/questions/123761/drop-create-mongodb-ttl-index-vs-collmod-in-production
-  override def enableHousekeeping(value: Boolean): Future[Boolean] = {
-    val ttlSecs = if (value) expireAfterSecondsOn else expireAfterSecondsOff
-
-    val commandDoc = Json.obj(
-      "collMod" -> "outcome",
-      "index" -> Json.obj("keyPattern" -> Json.obj("housekeepingAt" -> 1), "expireAfterSeconds" -> ttlSecs))
-
-    val runner = Command.CommandWithPackRunner(JSONSerializationPack)
-    runner(mongo.mongoConnector.db(), runner.rawCommand(commandDoc))
-      .one[JsObject](ReadPreference.primaryPreferred)
-      .map { response => {
-        response.as((JsPath \ "ok").read[Double]) match {
-          case 1.0 =>
-            for {
-              oldTtl <- response.as((JsPath \ "expireAfterSeconds_old").readNullable[Double])
-              newTtl <- response.as((JsPath \ "expireAfterSeconds_new").readNullable[Double])
-            } yield Logger.warn(s"Change to TTL: old TTL $oldTtl, new TTL $newTtl")
-            true
-          case _ =>
-            Logger.warn(s"Change to TTL failed. response: $response")
-            false
-        }
-      }
-      }
-  }
-
-  override def getHousekeepingStatus: Future[HousekeepingStatus] =
-    collection.indexesManager.list().map { indexes =>
-      val optTtlSecs = for {
-        idx <- indexes.find(_.key.map(_._1).contains("housekeepingAt"))
-        // Read the expiry from JSON (rather than BSON) so that we can control widening to Long
-        // (from the more strongly typed BSON values which can be either Int32 or Int64)
-        value <- Json.toJson(idx.options).as((JsPath \ "expireAfterSeconds").readNullable[Long])
-      } yield value
-
-      optTtlSecs match {
-        case Some(`expireAfterSecondsOn`) => HousekeepingStatus.On
-        case Some(`expireAfterSecondsOff`) => HousekeepingStatus.Off
-        case Some(other) =>
-          Logger.warn(
-            s"Cannot get housekeeping status: expireAfterSeconds is $other (neither on: $expireAfterSecondsOn nor off: $expireAfterSecondsOff)")
-          HousekeepingStatus.Unknown
-        case None =>
-          Logger.warn(s"Cannot housekeeping status: expireAfterSeconds could not be determined")
-          HousekeepingStatus.Unknown
-      }
-    }
 
   override def housekeep(now: Instant): Future[Int] = {
     val deleteBuilder = collection.delete(ordered = false)

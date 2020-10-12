@@ -18,12 +18,11 @@ package uk.gov.hmrc.entrydeclarationoutcome.services
 
 import java.time.{Clock, Instant}
 
-import com.codahale.metrics.Gauge
 import com.kenshoo.play.metrics.Metrics
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.entrydeclarationoutcome.config.AppConfig
 import uk.gov.hmrc.entrydeclarationoutcome.models.HousekeepingStatus
-import uk.gov.hmrc.entrydeclarationoutcome.repositories.OutcomeRepo
+import uk.gov.hmrc.entrydeclarationoutcome.repositories.{HousekeepingRepo, OutcomeRepo}
 import uk.gov.hmrc.entrydeclarationoutcome.utils.{EventLogger, Timer}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -31,18 +30,19 @@ import scala.util.Success
 
 @Singleton
 class HousekeepingService @Inject()(
-                                     outcomeRepo: OutcomeRepo,
-                                     override val clock: Clock,
-                                     appConfig: AppConfig,
-                                     override val metrics: Metrics)(implicit ec: ExecutionContext)
-  extends Timer
+  outcomeRepo: OutcomeRepo,
+  housekeepingRepo: HousekeepingRepo,
+  override val clock: Clock,
+  appConfig: AppConfig,
+  override val metrics: Metrics)(implicit ec: ExecutionContext)
+    extends Timer
     with EventLogger {
 
   private lazy val numDeletedHistogram = metrics.defaultRegistry.histogram("housekeep-num-deleted")
 
-  def enableHousekeeping(value: Boolean): Future[Boolean] = outcomeRepo.enableHousekeeping(value)
+  def enableHousekeeping(value: Boolean): Future[Unit] = housekeepingRepo.enableHousekeeping(value)
 
-  def getHousekeepingStatus: Future[HousekeepingStatus] = outcomeRepo.getHousekeepingStatus
+  def getHousekeepingStatus: Future[HousekeepingStatus] = housekeepingRepo.getHousekeepingStatus
 
   def setShortTtl(submissionId: String): Future[Boolean] =
     outcomeRepo.setHousekeepingAt(submissionId, nowPlusShortTtl)
