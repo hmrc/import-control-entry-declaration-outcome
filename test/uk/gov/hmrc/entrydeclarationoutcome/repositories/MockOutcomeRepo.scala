@@ -49,12 +49,6 @@ trait MockOutcomeRepo extends MockFactory {
     def listOutcomes(eori: String): CallHandler[Future[List[OutcomeMetadata]]] =
       outcomeRepo.listOutcomes _ expects eori
 
-    def enableHousekeeping(value: Boolean): CallHandler[Future[Boolean]] =
-      outcomeRepo.enableHousekeeping _ expects value
-
-    def getHousekeepingStatus: CallHandler[Future[HousekeepingStatus]] =
-      outcomeRepo.getHousekeepingStatus _ expects ()
-
     def setHousekeepingAt(submissionId: String, time: Instant): CallHandler[Future[Boolean]] =
       (outcomeRepo.setHousekeepingAt(_: String, _: Instant)) expects (submissionId, time)
 
@@ -65,6 +59,6 @@ trait MockOutcomeRepo extends MockFactory {
       (outcomeRepo.lookupFullOutcome(_: String, _: String)) expects (eori, correlationId)
 
     def housekeep(time: Instant): CallHandler[Future[Int]] =
-      (outcomeRepo.housekeep(_: Instant)) expects (time)
+      outcomeRepo.housekeep _ expects time
   }
 }
