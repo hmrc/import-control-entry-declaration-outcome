@@ -65,7 +65,7 @@ class AuthService @Inject()(
         }
 
     for {
-      clientId <- EitherT.fromOption[Future](hc.headers.find(_._1 == X_CLIENT_ID).map(_._2), NoClientId)
+      clientId <- EitherT.fromOption[Future](hc.headers.find(_._1.equalsIgnoreCase(X_CLIENT_ID)).map(_._2), NoClientId)
       _        <- EitherT.fromOptionF(auth, AuthFail)
       eori     <- EitherT.fromOptionF(apiSubscriptionFieldsConnector.getAuthenticatedEoriField(clientId), NoEori: AuthError)
     } yield eori
