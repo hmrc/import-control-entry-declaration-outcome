@@ -186,9 +186,4 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
       }
       .runFold(0)(_ + _)
   }
-
-  override def ensureIndexes(implicit ec: ExecutionContext): Future[Seq[Boolean]] =
-    collection.indexesManager
-      .drop("housekeepingIndex")
-      .flatMap(_ => super.ensureIndexes)
 }
