@@ -5,6 +5,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits, Injecting}
 import play.api.{Application, Environment, Mode}
+import uk.gov.hmrc.entrydeclarationoutcome.housekeeping.HousekeepingScheduler
 import uk.gov.hmrc.entrydeclarationoutcome.models.HousekeepingStatus
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -21,6 +22,7 @@ class HousekeepingRepoISpec
   override lazy val app: Application = new GuiceApplicationBuilder()
     .in(Environment.simple(mode = Mode.Dev))
     .configure("metrics.enabled" -> "false")
+    .disable[HousekeepingScheduler]
     .build()
 
   lazy val repository: HousekeepingRepoImpl = inject[HousekeepingRepoImpl]

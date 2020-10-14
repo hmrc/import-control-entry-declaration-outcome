@@ -18,20 +18,29 @@ package uk.gov.hmrc.entrydeclarationoutcome.config
 
 import java.time.Clock
 
-import com.google.inject.AbstractModule
+import akka.actor.{ActorSystem, Scheduler}
+import com.google.inject.{AbstractModule, Provides}
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.entrydeclarationoutcome.housekeeping.{Housekeeper, HousekeepingScheduler}
 import uk.gov.hmrc.entrydeclarationoutcome.reporting.events.{EventConnector, EventConnectorImpl}
 import uk.gov.hmrc.entrydeclarationoutcome.repositories.{HousekeepingRepo, HousekeepingRepoImpl, OutcomeRepo, OutcomeRepoImpl}
+import uk.gov.hmrc.entrydeclarationoutcome.services.HousekeepingService
 import uk.gov.hmrc.play.bootstrap.auth.DefaultAuthConnector
 
 class DIModule extends AbstractModule {
 
   override def configure(): Unit = {
     bind(classOf[AppConfig]).to(classOf[AppConfigImpl]).asEagerSingleton()
+    bind(classOf[HousekeepingScheduler]).asEagerSingleton()
+    bind(classOf[Housekeeper]).to(classOf[HousekeepingService])
     bind(classOf[HousekeepingRepo]).to(classOf[HousekeepingRepoImpl])
     bind(classOf[OutcomeRepo]).to(classOf[OutcomeRepoImpl])
     bind(classOf[AuthConnector]).to(classOf[DefaultAuthConnector])
     bind(classOf[EventConnector]).to(classOf[EventConnectorImpl])
     bind(classOf[Clock]).toInstance(Clock.systemDefaultZone)
   }
+
+  @Provides
+  def akkaScheduler(actorSystem: ActorSystem): Scheduler =
+    actorSystem.scheduler
 }

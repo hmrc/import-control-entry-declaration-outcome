@@ -31,11 +31,11 @@ import play.api.test.{DefaultAwaitTimeout, FutureAwaits, Injecting}
 import play.api.{Application, Environment, Mode}
 import play.mvc.Http.Status.{BAD_REQUEST, CREATED}
 import uk.gov.hmrc.entrydeclarationoutcome.config.MockAppConfig
+import uk.gov.hmrc.entrydeclarationoutcome.housekeeping.HousekeepingScheduler
 import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationoutcome.models.MessageType
 import uk.gov.hmrc.entrydeclarationoutcome.utils.MockPagerDutyLogger
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
-
 
 import scala.concurrent.ExecutionContext
 
@@ -53,6 +53,7 @@ class EventConnectorSpec
   override lazy val app: Application = new GuiceApplicationBuilder()
     .in(Environment.simple(mode = Mode.Dev))
     .configure("metrics.enabled" -> "false")
+    .disable[HousekeepingScheduler]
     .build()
 
   val httpClient: HttpClient = inject[HttpClient]
