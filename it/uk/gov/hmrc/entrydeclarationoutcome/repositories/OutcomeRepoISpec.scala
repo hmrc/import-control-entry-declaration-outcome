@@ -27,6 +27,7 @@ import play.api.test.{DefaultAwaitTimeout, Injecting}
 import play.api.{Application, Environment, Mode}
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.entrydeclarationoutcome.config.AppConfig
+import uk.gov.hmrc.entrydeclarationoutcome.housekeeping.HousekeepingScheduler
 import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationoutcome.models._
 import uk.gov.hmrc.entrydeclarationoutcome.utils.SaveError
@@ -63,6 +64,7 @@ class OutcomeRepoISpec
 
   override implicit lazy val app: Application = new GuiceApplicationBuilder()
     .in(Environment.simple(mode = Mode.Dev))
+    .disable[HousekeepingScheduler]
     .configure(
       "metrics.enabled" -> "false",
       "response.max.list" -> listOutcomesLimit.toString,

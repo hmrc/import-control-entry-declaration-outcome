@@ -19,11 +19,12 @@ import sbt._
 object AppDependencies {
 
   val compile: Seq[ModuleID] = Seq(
-    "uk.gov.hmrc"         %% "simple-reactivemongo"      % "7.30.0-play-26",
-    "uk.gov.hmrc"         %% "bootstrap-backend-play-26" % "2.24.0",
-    "org.typelevel"       %% "cats-core"                 % "2.0.0",
-    "com.chuusai"         %% "shapeless"                 % "2.3.3",
-    "org.reactivemongo"   %% "reactivemongo-akkastream"  % "0.18.8"
+    "uk.gov.hmrc"       %% "simple-reactivemongo"      % "7.30.0-play-26",
+    "uk.gov.hmrc"       %% "mongo-lock"                % "6.23.0-play-26",
+    "uk.gov.hmrc"       %% "bootstrap-backend-play-26" % "2.24.0",
+    "org.typelevel"     %% "cats-core"                 % "2.0.0",
+    "com.chuusai"       %% "shapeless"                 % "2.3.3",
+    "org.reactivemongo" %% "reactivemongo-akkastream"  % "0.18.8"
   )
 
   val test: Seq[ModuleID] = Seq(
@@ -35,7 +36,9 @@ object AppDependencies {
     "org.scalamock"          %% "scalamock"                 % "4.4.0"         % "test, it",
     "org.scalacheck"         %% "scalacheck"                % "1.14.3"        % "test, it",
     "com.github.tomakehurst" % "wiremock"                   % "2.26.3"        % "test, it",
-    "uk.gov.hmrc"            %% "hmrctest"                  % "3.9.0-play-26" % "test, it"
+    "uk.gov.hmrc"            %% "hmrctest"                  % "3.9.0-play-26" % "test, it",
+    "com.miguno.akka"        %% "akka-mock-scheduler"       % "0.5.5"         % "test, it",
+    "com.typesafe.akka"      %% "akka-testkit"              % "2.5.23"        % "test, it"
   )
 
   // Fixes a transitive dependency clash after upgrading to sbt 1.3.4
