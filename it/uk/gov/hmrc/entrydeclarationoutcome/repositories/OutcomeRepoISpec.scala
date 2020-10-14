@@ -136,19 +136,19 @@ class OutcomeRepoISpec
         }
       }
 
-//      "unique submissionId constraint violated" must {
-//        "return Some(SaveError.Duplicate)" in {
-//          val duplicate = outcome.copy(eori = "otherEori")
-//          await(repository.save(duplicate)) shouldBe Some(SaveError.Duplicate)
-//        }
-//      }
+      "unique submissionId constraint violated" must {
+        "return Some(SaveError.Duplicate)" in {
+          val duplicate = outcome.copy(eori = "otherEori")
+          await(repository.save(duplicate)) shouldBe Some(SaveError.Duplicate)
+        }
+      }
 
-//      "unique eori + correlationId constraint violated" must {
-//        "return duplicate error" in {
-//          val duplicate = outcome.copy(submissionId = "other")
-//          await(repository.save(duplicate)) shouldBe Some(SaveError.Duplicate)
-//        }
-//      }
+      "unique eori + correlationId constraint violated" must {
+        "return duplicate error" in {
+          val duplicate = outcome.copy(submissionId = "other")
+          await(repository.save(duplicate)) shouldBe Some(SaveError.Duplicate)
+        }
+      }
     }
 
     "looking up xml by submission id" when {
@@ -223,10 +223,10 @@ class OutcomeRepoISpec
       }
 
       "outcome exists and is acknowledged" must {
-//        "return None" in {
-//          val otherTime = Instant.now.plusSeconds(120)
-//          await(repository.acknowledgeOutcome(eori, correlationId, otherTime)) shouldBe None
-//        }
+        "return None" in {
+          val otherTime = Instant.now.plusSeconds(120)
+          await(repository.acknowledgeOutcome(eori, correlationId, otherTime)) shouldBe None
+        }
 
         "not update the housekeepingAt time" in {
           lookupOutcome(submissionId) shouldBe Some(FullOutcome(outcome, acknowledged = true, housekeepingAt = time))
