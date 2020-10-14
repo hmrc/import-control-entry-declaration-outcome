@@ -52,7 +52,7 @@ class HousekeepingService @Inject()(
 
   private def nowPlusShortTtl: Instant = clock.instant().plusMillis(appConfig.shortTtl.toMillis)
 
-  def housekeep(): Future[Int] = timeFuture("Housekeeping", "housekeep") {
+  def housekeep(): Future[Int] = timeFuture("Housekeeping", "housekeep.total", "hkTimer") {
     outcomeRepo.housekeep(clock.instant).andThen {
       case Success(numDeleted) => numDeletedHistogram.update(numDeleted)
     }
