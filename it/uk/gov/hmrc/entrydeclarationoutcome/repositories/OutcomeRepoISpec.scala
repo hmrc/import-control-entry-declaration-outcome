@@ -16,6 +16,7 @@
 package uk.gov.hmrc.entrydeclarationoutcome.repositories
 
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 import org.scalatest.{Assertion, BeforeAndAfterAll}
@@ -37,7 +38,7 @@ import scala.util.Random
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class OutcomeRepoISpec
-  extends UnitSpec
+    extends UnitSpec
     with DefaultAwaitTimeout
     with GuiceOneAppPerSuite
     with BeforeAndAfterAll
@@ -45,7 +46,7 @@ class OutcomeRepoISpec
     with Injecting
     with IntegrationPatience {
 
-  val housekeepingRunLimit: Int = 20
+  val housekeepingRunLimit: Int  = 20
   val housekeepingBatchSize: Int = 3
 
   lazy val repository: OutcomeRepoImpl = inject[OutcomeRepoImpl]
@@ -66,24 +67,25 @@ class OutcomeRepoISpec
     .in(Environment.simple(mode = Mode.Dev))
     .disable[HousekeepingScheduler]
     .configure(
-      "metrics.enabled" -> "false",
-      "response.max.list" -> listOutcomesLimit.toString,
-      "mongodb.housekeepingRunLimit" -> housekeepingRunLimit,
-      "mongodb.housekeepingBatchSize" -> housekeepingBatchSize)
+      "metrics.enabled"               -> "false",
+      "response.max.list"             -> listOutcomesLimit.toString,
+      "mongodb.housekeepingRunLimit"  -> housekeepingRunLimit,
+      "mongodb.housekeepingBatchSize" -> housekeepingBatchSize
+    )
     .build()
 
   implicit val lc: LoggingContext = LoggingContext("eori", "corrId", "subId")
 
-  val listOutcomesLimit = 2
-  val correlationId = "correlationId"
-  val submissionId = "submissionId"
-  val eori = "eori"
+  val listOutcomesLimit         = 2
+  val correlationId             = "correlationId"
+  val submissionId              = "submissionId"
+  val eori                      = "eori"
   val acknowledgedCorrelationId = "acknowledgedCorrelationId"
-  val acknowledgedSubmissionId = "acknowledgedsubmissionId"
-  val acknowledgedEori = "acknowledgedEori"
-  val outcomeXml = "somexml"
+  val acknowledgedSubmissionId  = "acknowledgedsubmissionId"
+  val acknowledgedEori          = "acknowledgedEori"
+  val outcomeXml                = "somexml"
   val receivedDateTime: Instant = Instant.parse("2020-12-31T23:59:00Z")
-  val messageType: MessageType = MessageType.IE328
+  val messageType: MessageType  = MessageType.IE328
 
   val outcome: OutcomeReceived = OutcomeReceived(
     eori,
@@ -107,7 +109,7 @@ class OutcomeRepoISpec
 
   val OutcomeXmlWrapper: OutcomeXml = OutcomeXml(outcomeXml)
 
-  def randomOutcomeRecieved:OutcomeReceived = OutcomeReceived(
+  def randomOutcomeRecieved: OutcomeReceived = OutcomeReceived(
     acknowledgedEori,
     UUID.randomUUID.toString,
     receivedDateTime,
@@ -116,7 +118,7 @@ class OutcomeRepoISpec
     UUID.randomUUID.toString,
     outcomeXml
   )
-  
+
   def lookupOutcome(submissionId: String): Option[FullOutcome] =
     await(repository.find("submissionId" -> submissionId)).headOption.map(_.toFullOutcome)
 
@@ -131,7 +133,7 @@ class OutcomeRepoISpec
           lookupOutcome(submissionId) shouldBe Some(
             FullOutcome(
               outcome,
-              acknowledged = false,
+              acknowledged   = false,
               housekeepingAt = receivedDateTime.plusMillis(appConfig.defaultTtl.toMillis)))
         }
       }
@@ -197,7 +199,7 @@ class OutcomeRepoISpec
           await(repository.lookupFullOutcome(eori, correlationId)) shouldBe Some(
             FullOutcome(
               outcome,
-              acknowledged = false,
+              acknowledged   = false,
               housekeepingAt = receivedDateTime.plusMillis(appConfig.defaultTtl.toMillis)))
         }
       }
@@ -217,8 +219,9 @@ class OutcomeRepoISpec
           await(repository.acknowledgeOutcome(eori, correlationId, time)) shouldBe Some(outcome)
         }
 
-        "update the state to acknowledged and set housekeepingAt" in {
-          lookupOutcome(submissionId) shouldBe Some(FullOutcome(outcome, acknowledged = true, housekeepingAt = time))
+        "update the state to acknowledged and set housekeepingAt (up to mongo millisecs precision)" in {
+          lookupOutcome(submissionId) shouldBe Some(
+            FullOutcome(outcome, acknowledged = true, housekeepingAt = time.truncatedTo(ChronoUnit.MILLIS)))
         }
       }
 
@@ -229,7 +232,8 @@ class OutcomeRepoISpec
         }
 
         "not update the housekeepingAt time" in {
-          lookupOutcome(submissionId) shouldBe Some(FullOutcome(outcome, acknowledged = true, housekeepingAt = time))
+          lookupOutcome(submissionId) shouldBe Some(
+            FullOutcome(outcome, acknowledged = true, housekeepingAt = time.truncatedTo(ChronoUnit.MILLIS)))
         }
       }
 
@@ -264,9 +268,9 @@ class OutcomeRepoISpec
           await(
             repository.save(
               listedOutcome.copy(
-                correlationId = "corId2",
-                submissionId = "subId2",
-                receivedDateTime = time1,
+                correlationId           = "corId2",
+                submissionId            = "subId2",
+                receivedDateTime        = time1,
                 movementReferenceNumber = Some("mrn"))))
           await(repository.listOutcomes("testEori")) shouldBe List(
             OutcomeMetadata("corId2", Some("mrn")),
@@ -281,9 +285,9 @@ class OutcomeRepoISpec
           await(
             repository.save(
               listedOutcome.copy(
-                correlationId = "corId2",
-                submissionId = "subId2",
-                receivedDateTime = time1,
+                correlationId           = "corId2",
+                submissionId            = "subId2",
+                receivedDateTime        = time1,
                 movementReferenceNumber = Some("mrn"))))
           await(repository.listOutcomes("testEori")) shouldBe List(
             OutcomeMetadata("corId2", Some("mrn")),
@@ -327,16 +331,16 @@ class OutcomeRepoISpec
       "searching by submissionId" must {
         val time = Instant.now.plusSeconds(60)
 
-        "be settable" in {
+        "be settable (up to mongo millisecs precision)" in {
           await(repository.removeAll())
-          await(repository.save(outcome)) shouldBe None
+          await(repository.save(outcome))                         shouldBe None
           await(repository.setHousekeepingAt(submissionId, time)) shouldBe true
 
           await(
             repository.collection
               .find(Json.obj("submissionId" -> submissionId), Option.empty[JsObject])
               .one[OutcomePersisted]
-              .map(_.map(_.housekeepingAt.toInstant))).get shouldBe time
+              .map(_.map(_.housekeepingAt.toInstant))).get shouldBe time.truncatedTo(ChronoUnit.MILLIS)
         }
 
         "return true if no change is made" in {
@@ -351,16 +355,16 @@ class OutcomeRepoISpec
       "searching by eori and correlationId" must {
         val time = Instant.now.plusSeconds(60)
 
-        "be settable" in {
+        "be settable (up to mongo millisecs precision)" in {
           await(repository.removeAll())
-          await(repository.save(outcome)) shouldBe None
+          await(repository.save(outcome))                                shouldBe None
           await(repository.setHousekeepingAt(eori, correlationId, time)) shouldBe true
 
           await(
             repository.collection
               .find(Json.obj("eori" -> eori, "correlationId" -> correlationId), Option.empty[JsObject])
               .one[OutcomePersisted]
-              .map(_.map(_.housekeepingAt.toInstant))).get shouldBe time
+              .map(_.map(_.housekeepingAt.toInstant))).get shouldBe time.truncatedTo(ChronoUnit.MILLIS)
         }
 
         "return true if no change is made" in {
