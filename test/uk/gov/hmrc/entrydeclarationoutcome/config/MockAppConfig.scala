@@ -36,5 +36,8 @@ trait MockAppConfig extends MockFactory {
     def listOutcomesLimit: CallHandler[Int] = mockAppConfig.listOutcomesLimit _ expects ()
 
     def shortTtl: CallHandler[FiniteDuration] = mockAppConfig.shortTtl _ expects ()
+
+    def newSSEnrolmentEnabled: CallHandler[Boolean] =   mockAppConfig.newSSEnrolmentEnabled _ stubs() returns(true)
+
   }
 }

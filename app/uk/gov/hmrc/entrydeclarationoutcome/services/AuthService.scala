@@ -23,6 +23,7 @@ import play.api.Logger
 import uk.gov.hmrc.auth.core.retrieve.EmptyRetrieval
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.allEnrolments
 import uk.gov.hmrc.auth.core._
+import uk.gov.hmrc.entrydeclarationoutcome.config.AppConfig
 import uk.gov.hmrc.entrydeclarationoutcome.connectors.ApiSubscriptionFieldsConnector
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -31,7 +32,8 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class AuthService @Inject()(
   val authConnector: AuthConnector,
-  apiSubscriptionFieldsConnector: ApiSubscriptionFieldsConnector)(implicit ec: ExecutionContext)
+  apiSubscriptionFieldsConnector: ApiSubscriptionFieldsConnector,
+  appConfig: AppConfig)(implicit ec: ExecutionContext)
     extends AuthorisedFunctions {
 
   private val X_CLIENT_ID = "X-Client-Id"
@@ -74,11 +76,12 @@ class AuthService @Inject()(
   private def authNonCSP(implicit hc: HeaderCarrier): EitherT[Future, AuthError, Eori] =
     EitherT(authorised(AuthProviders(AuthProvider.GovernmentGateway))
       .retrieve(allEnrolments) { usersEnrolments =>
-        val icsEnrolments =
-          usersEnrolments.enrolments.filter(enrolment => enrolment.isActivated && enrolment.key == "HMRC-ICS-ORG")
+        val enrolmentKey = if(appConfig.newSSEnrolmentEnabled) "HMRC-SS-ORG" else "HMRC-ICS-ORG"
+        val ssEnrolments =
+          usersEnrolments.enrolments.filter(enrolment => enrolment.isActivated && enrolment.key == enrolmentKey)
 
         val eoris = for {
-          enrolment <- icsEnrolments
+          enrolment <- ssEnrolments
           eoriId    <- enrolment.getIdentifier("EoriTin")
         } yield eoriId.value
 
