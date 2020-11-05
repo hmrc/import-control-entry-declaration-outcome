@@ -23,6 +23,7 @@ import org.scalatest.time.{Millis, Span}
 import uk.gov.hmrc.auth.core.retrieve.EmptyRetrieval
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core.{AuthProvider, AuthProviders, Enrolment, EnrolmentIdentifier, Enrolments, InsufficientEnrolments}
+import uk.gov.hmrc.entrydeclarationoutcome.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationoutcome.connectors.{MockApiSubscriptionFieldsConnector, MockAuthConnector}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
@@ -35,13 +36,14 @@ class AuthServiceSpec
     with MockAuthConnector
     with MockApiSubscriptionFieldsConnector
     with ScalaFutures
+    with MockAppConfig
     with Inside {
 
   implicit override val patienceConfig: PatienceConfig = PatienceConfig(timeout = Span(500, Millis))
 
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.global
 
-  val service  = new AuthService(mockAuthConnector, mockApiSubscriptionFieldsConnector)
+  val service  = new AuthService(mockAuthConnector, mockApiSubscriptionFieldsConnector, mockAppConfig)
   val eori     = "GB123"
   val clientId = "someClientId"
 
@@ -50,7 +52,7 @@ class AuthServiceSpec
 
   def validICSEnrolment(eori: String): Enrolment =
     Enrolment(
-      key               = "HMRC-ICS-ORG",
+      key               = "HMRC-SS-ORG",
       identifiers       = Seq(EnrolmentIdentifier("EoriTin", eori)),
       state             = "Activated",
       delegatedAuthRule = None)
@@ -88,7 +90,8 @@ class AuthServiceSpec
       }
 
       "CSP authentication fails" should {
-        authenticateBasedOnICSEnrolment { () =>
+        authenticateBasedOnSsEnrolment { () =>
+          MockAppConfig.newSSEnrolmentEnabled
           stubCSPAuth returns Future.failed(authException)
         }
       }
@@ -96,8 +99,9 @@ class AuthServiceSpec
 
     "no X-Client-Id header present" should {
       implicit val hc: HeaderCarrier = HeaderCarrier()
-      authenticateBasedOnICSEnrolment { () =>
-        }
+      authenticateBasedOnSsEnrolment { () =>
+        MockAppConfig.newSSEnrolmentEnabled
+      }
     }
 
     "X-Client-Id header present with different case" must {
@@ -111,9 +115,9 @@ class AuthServiceSpec
       }
     }
 
-    def authenticateBasedOnICSEnrolment(stubbings: () => Unit)(implicit hc: HeaderCarrier): Unit = {
+    def authenticateBasedOnSsEnrolment(stubbings: () => Unit)(implicit hc: HeaderCarrier): Unit = {
       "return Some(eori)" when {
-        "ICS enrolment with an eori" in {
+        "SS enrolment with an eori" in {
           stubbings()
           stubAuth returns Enrolments(Set(validICSEnrolment(eori)))
           service.authenticate().futureValue shouldBe Some(eori)
@@ -121,13 +125,13 @@ class AuthServiceSpec
       }
 
       "return None" when {
-        "ICS enrolment with no identifiers" in {
+        "SS enrolment with no identifiers" in {
           stubbings()
           stubAuth returns Enrolments(Set(validICSEnrolment(eori).copy(identifiers = Nil)))
           service.authenticate().futureValue shouldBe None
         }
 
-        "no ICS enrolment in authorization header" in {
+        "no SS enrolment in authorization header" in {
           stubbings()
           stubAuth returns Enrolments(
             Set(
@@ -144,7 +148,7 @@ class AuthServiceSpec
           service.authenticate().futureValue shouldBe None
         }
 
-        "ICS enrolment not activated" in {
+        "SS enrolment not activated" in {
           stubbings()
           stubAuth returns Enrolments(Set(validICSEnrolment(eori).copy(state = "inactive")))
           service.authenticate().futureValue shouldBe None

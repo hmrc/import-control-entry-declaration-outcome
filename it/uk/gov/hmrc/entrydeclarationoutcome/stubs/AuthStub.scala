@@ -24,8 +24,8 @@ object AuthStub {
 
   private val authoriseUri: String = "/auth/authorise"
 
-  private val IcsEnrolment: JsObject = Json.obj(
-    "key" -> "HMRC-ICS-ORG",
+  private val SsEnrolment: JsObject = Json.obj(
+    "key" -> "HMRC-SS-ORG",
     "identifiers" -> Json.arr(
       Json.obj(
         "key"   -> "EoriTin",
@@ -34,7 +34,7 @@ object AuthStub {
       "state" -> "Activated"
     )
   )
-  private val NoIcsEnrolment: JsObject = Json.obj(
+  private val NoSsEnrolment: JsObject = Json.obj(
     "key" -> "HMRC-MTD-IT",
     "identifiers" -> Json.arr(
       Json.obj(
@@ -50,15 +50,15 @@ object AuthStub {
         .willReturn(
           aResponse()
             .withStatus(OK)
-            .withBody(successfulAuthResponse(IcsEnrolment).toString)))
+            .withBody(successfulAuthResponse(SsEnrolment).toString)))
 
-  def authorisedNoIcsEnrolment(): StubMapping =
+  def authorisedNoSsEnrolment(): StubMapping =
     stubFor(
       get(urlPathMatching(authoriseUri))
         .willReturn(
           aResponse()
             .withStatus(OK)
-            .withBody(successfulAuthResponse(NoIcsEnrolment).toString)))
+            .withBody(successfulAuthResponse(NoSsEnrolment).toString)))
 
   def unauthorisedNotLoggedIn(): StubMapping =
     stubFor(
