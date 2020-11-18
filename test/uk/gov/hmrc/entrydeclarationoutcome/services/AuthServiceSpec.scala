@@ -50,10 +50,13 @@ class AuthServiceSpec
   // WLOG - any AuthorisationException will do
   val authException = new InsufficientEnrolments with NoStackTrace
 
+  val enrolmentKey = "HMRC-SS-ORG"
+  val identifier   = "EORINumber"
+
   def validICSEnrolment(eori: String): Enrolment =
     Enrolment(
-      key               = "HMRC-SS-ORG",
-      identifiers       = Seq(EnrolmentIdentifier("EoriTin", eori)),
+      key               = enrolmentKey,
+      identifiers       = Seq(EnrolmentIdentifier(identifier, eori)),
       state             = "Activated",
       delegatedAuthRule = None)
 
@@ -137,7 +140,7 @@ class AuthServiceSpec
             Set(
               Enrolment(
                 key               = "OTHER",
-                identifiers       = Seq(EnrolmentIdentifier("EoriTin", eori)),
+                identifiers       = Seq(EnrolmentIdentifier(identifier, eori)),
                 state             = "Activated",
                 delegatedAuthRule = None)))
           service.authenticate().futureValue shouldBe None
