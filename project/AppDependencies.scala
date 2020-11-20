@@ -21,20 +21,20 @@ object AppDependencies {
   val compile: Seq[ModuleID] = Seq(
     "uk.gov.hmrc"       %% "simple-reactivemongo"      % "7.30.0-play-26",
     "uk.gov.hmrc"       %% "mongo-lock"                % "6.23.0-play-26",
-    "uk.gov.hmrc"       %% "bootstrap-backend-play-26" % "2.24.0",
-    "org.typelevel"     %% "cats-core"                 % "2.0.0",
+    "uk.gov.hmrc"       %% "bootstrap-backend-play-26" % "3.0.0",
+    "org.typelevel"     %% "cats-core"                 % "2.2.0",
     "com.chuusai"       %% "shapeless"                 % "2.3.3",
     "org.reactivemongo" %% "reactivemongo-akkastream"  % "0.18.8"
   )
 
   val test: Seq[ModuleID] = Seq(
-    "uk.gov.hmrc"            %% "bootstrap-backend-play-26" % "2.24.0"        % "test, it",
-    "org.scalatest"          %% "scalatest"                 % "3.0.8"         % "test, it",
+    "uk.gov.hmrc"            %% "bootstrap-backend-play-26" % "3.0.0"        % "test, it",
+    "org.scalatest"          %% "scalatest"                 % "3.0.9"         % "test, it",
     "com.typesafe.play"      %% "play-test"                 % current         % "test",
     "org.pegdown"            % "pegdown"                    % "1.6.0"         % "test, it",
     "org.scalatestplus.play" %% "scalatestplus-play"        % "3.1.3"         % "test, it",
     "org.scalamock"          %% "scalamock"                 % "4.4.0"         % "test, it",
-    "org.scalacheck"         %% "scalacheck"                % "1.14.3"        % "test, it",
+    "org.scalacheck"         %% "scalacheck"                % "1.15.1"        % "test, it",
     "com.github.tomakehurst" % "wiremock"                   % "2.26.3"        % "test, it",
     "uk.gov.hmrc"            %% "hmrctest"                  % "3.9.0-play-26" % "test, it",
     "com.miguno.akka"        %% "akka-mock-scheduler"       % "0.5.5"         % "test, it",
