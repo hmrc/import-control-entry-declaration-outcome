@@ -18,7 +18,8 @@ package uk.gov.hmrc.entrydeclarationoutcome.reporting
 
 import java.time.{Clock, Instant, ZoneOffset}
 
-import play.api.libs.json.Json
+import org.scalatest.Assertion
+import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.entrydeclarationoutcome.models.MessageType
 import uk.gov.hmrc.entrydeclarationoutcome.reporting.events.EventCode
 import uk.gov.hmrc.entrydeclarationoutcome.utils.Values.MkValues
@@ -38,25 +39,34 @@ class OutcomeReportSpec extends UnitSpec {
   )
 
   "OutcomeReport" must {
-    def correctJson(eventCode: EventCode) =
-      s"have the correct associated JSON event for $eventCode" in {
-        val event = implicitly[EventSources[OutcomeReport]].eventFor(clock, report(eventCode)).get
+    def correctJson(eventCode: EventCode): Unit = s"have the correct associated JSON event for $eventCode" in {
+      val event = implicitly[EventSources[OutcomeReport]].eventFor(clock, report(eventCode)).get
 
-        Json.toJson(event) shouldBe
-          Json.parse(s"""
-                        |{
-                        |    "eventCode" : "$eventCode",
-                        |    "eventTimestamp" : "${now.toString}",
-                        |    "submissionId" : "submissionId",
-                        |    "eori" : "eori",
-                        |    "correlationId" : "correlationId",
-                        |    "messageType": "IE305"
-                        |}
-                        |""".stripMargin)
-      }
+      Json.toJson(event) shouldBe
+        Json.parse(s"""
+                      |{
+                      |    "eventCode" : "$eventCode",
+                      |    "eventTimestamp" : "${now.toString}",
+                      |    "submissionId" : "submissionId",
+                      |    "eori" : "eori",
+                      |    "correlationId" : "correlationId",
+                      |    "messageType": "IE305"
+                      |}
+                      |""".stripMargin)
+    }
 
     "all event codes" must {
       implicitly[MkValues[EventCode]].values.foreach(correctJson)
+    }
+
+    "ENS_RESP_ACK" must {
+      "have the correct audit event" in {
+        val event = implicitly[EventSources[OutcomeReport]].auditEventFor(report(EventCode.ENS_RESP_ACK)).get
+
+        event.auditType       shouldBe "SubmissionAcknowledged"
+        event.transactionName shouldBe "ENS submission acknowledged"
+        event.detail          shouldBe JsObject.empty
+      }
     }
   }
 }

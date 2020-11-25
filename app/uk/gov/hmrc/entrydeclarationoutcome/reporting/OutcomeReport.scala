@@ -18,6 +18,7 @@ package uk.gov.hmrc.entrydeclarationoutcome.reporting
 
 import java.time.{Clock, Instant}
 
+import play.api.libs.json.JsObject
 import uk.gov.hmrc.entrydeclarationoutcome.models.{MessageType, Outcome}
 import uk.gov.hmrc.entrydeclarationoutcome.reporting.audit.AuditEvent
 import uk.gov.hmrc.entrydeclarationoutcome.reporting.events.{Event, EventCode}
@@ -59,6 +60,10 @@ object OutcomeReport {
       Some(event)
     }
 
-    override def auditEventFor(report: OutcomeReport): Option[AuditEvent] = None
+    override def auditEventFor(report: OutcomeReport): Option[AuditEvent] =
+      report.eventCode match {
+        case EventCode.ENS_RESP_ACK => Some(AuditEvent("SubmissionAcknowledged", "ENS submission acknowledged", JsObject.empty))
+        case _ => None
+      }
   }
 }
