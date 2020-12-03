@@ -26,7 +26,6 @@ import uk.gov.hmrc.entrydeclarationoutcome.repositories.OutcomeRepo
 import uk.gov.hmrc.entrydeclarationoutcome.utils.{EventLogger, SaveError, Timer}
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Success
 
 @Singleton
 class OutcomeSubmissionService @Inject()(
@@ -38,7 +37,7 @@ class OutcomeSubmissionService @Inject()(
 
   def saveOutcome(outcome: OutcomeReceived)(implicit lc: LoggingContext): Future[Option[SaveError]] =
     timeFuture("Service saveOutcome", "saveOutcome.total") {
-      outcomeRepo.save(outcome).andThen { case Success(None) => timeFrom("E2E.total-e2eTimer", outcome.receivedDateTime) }
+      outcomeRepo.save(outcome)
     }
 
 }

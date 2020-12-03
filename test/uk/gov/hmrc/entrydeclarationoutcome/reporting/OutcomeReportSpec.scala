@@ -16,10 +16,9 @@
 
 package uk.gov.hmrc.entrydeclarationoutcome.reporting
 
-import java.time.{Clock, Instant, ZoneOffset}
+import java.time.{Clock, Duration, Instant, ZoneOffset}
 
-import org.scalatest.Assertion
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.{JsNumber, JsObject, Json}
 import uk.gov.hmrc.entrydeclarationoutcome.models.MessageType
 import uk.gov.hmrc.entrydeclarationoutcome.reporting.events.EventCode
 import uk.gov.hmrc.entrydeclarationoutcome.utils.Values.MkValues
@@ -30,17 +29,18 @@ class OutcomeReportSpec extends UnitSpec {
   val now: Instant = Instant.now
   val clock: Clock = Clock.fixed(now, ZoneOffset.UTC)
 
-  def report(eventCode: EventCode): OutcomeReport = OutcomeReport(
+  def report(eventCode: EventCode, seconds:Int): OutcomeReport = OutcomeReport(
     eventCode     = eventCode,
     eori          = "eori",
     correlationId = "correlationId",
     submissionId  = "submissionId",
-    messageType   = MessageType.IE305
+    messageType   = MessageType.IE305,
+    e2EDuration = Some(Duration.ofSeconds(seconds))
   )
 
   "OutcomeReport" must {
     def correctJson(eventCode: EventCode): Unit = s"have the correct associated JSON event for $eventCode" in {
-      val event = implicitly[EventSources[OutcomeReport]].eventFor(clock, report(eventCode)).get
+      val event = implicitly[EventSources[OutcomeReport]].eventFor(clock, report(eventCode, 1)).get
 
       Json.toJson(event) shouldBe
         Json.parse(s"""
@@ -61,11 +61,29 @@ class OutcomeReportSpec extends UnitSpec {
 
     "ENS_RESP_ACK" must {
       "have the correct audit event" in {
-        val event = implicitly[EventSources[OutcomeReport]].auditEventFor(report(EventCode.ENS_RESP_ACK)).get
+        val event = implicitly[EventSources[OutcomeReport]].auditEventFor(report(EventCode.ENS_RESP_ACK, 1)).get
 
         event.auditType       shouldBe "SubmissionAcknowledged"
         event.transactionName shouldBe "ENS submission acknowledged"
         event.detail          shouldBe JsObject.empty
+      }
+    }
+
+    "ENS_RESP_READY" must {
+      "return an OutcomeReceivedGreaterThanSLA correct audit event" in {
+        val event = implicitly[EventSources[OutcomeReport]].auditEventFor(report(EventCode.ENS_RESP_READY,31)).get
+
+        event.auditType       shouldBe "OutcomeReceivedGreaterThanSLA"
+        event.transactionName shouldBe "ENS Outcome Received"
+        event.detail          shouldBe JsObject(Map("e2eTime"-> JsNumber(31000)))
+      }
+
+      "return an OutcomeReceivedLessThanSLA correct audit event" in {
+        val event = implicitly[EventSources[OutcomeReport]].auditEventFor(report(EventCode.ENS_RESP_READY, 1)).get
+
+        event.auditType       shouldBe "OutcomeReceivedLessThanSLA"
+        event.transactionName shouldBe "ENS Outcome Received"
+        event.detail          shouldBe JsObject(Map("e2eTime"-> JsNumber(1000)))
       }
     }
   }

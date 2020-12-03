@@ -16,6 +16,9 @@
 
 package uk.gov.hmrc.entrydeclarationoutcome.reporting
 
+import java.time.{Duration, Instant}
+
+import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
 import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
 import uk.gov.hmrc.http.HeaderCarrier
@@ -27,6 +30,9 @@ trait MockReportSender extends MockFactory {
     def sendReport[R](report: R): Unit =
       (mockReportSender
         .sendReport(_: R)(_: EventSources[R], _: HeaderCarrier, _: LoggingContext)) expects (report, *, *, *)
-  }
 
+    def timeFrom(metric: String, startTime: Instant): CallHandler[Duration] =
+      (mockReportSender.
+        timeFrom(_: String, _: Instant)) expects(metric, startTime)
+  }
 }

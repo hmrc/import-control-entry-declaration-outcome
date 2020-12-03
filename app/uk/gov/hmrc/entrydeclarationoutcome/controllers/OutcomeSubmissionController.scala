@@ -64,7 +64,11 @@ class OutcomeSubmissionController @Inject()(
               InternalServerError
             case None =>
               ContextLogger.info("Outcome created")
-              reportSender.sendReport(OutcomeReport(outcomeReceived, EventCode.ENS_RESP_READY))
+              reportSender.sendReport(
+                OutcomeReport(
+                  outcomeReceived,
+                  EventCode.ENS_RESP_READY,
+                  reportSender.timeFrom("E2E.total-e2eTimer", outcomeReceived.receivedDateTime)))
               Created
           }
 

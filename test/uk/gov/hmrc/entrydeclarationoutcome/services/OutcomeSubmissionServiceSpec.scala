@@ -61,8 +61,6 @@ class OutcomeSubmissionServiceSpec extends UnitSpec with MockOutcomeRepo with Sc
         MockOutcomeRepo.saveOutcome(outcome) returns Future.successful(None)
 
         service.saveOutcome(outcome).futureValue shouldBe None
-
-        mockedMetrics.defaultRegistry.timer(e2eTimerName).getCount shouldBe 1
       }
     }
 
@@ -71,8 +69,6 @@ class OutcomeSubmissionServiceSpec extends UnitSpec with MockOutcomeRepo with Sc
         MockOutcomeRepo.saveOutcome(outcome) returns Future.successful(Some(SaveError.ServerError))
 
         service.saveOutcome(outcome).futureValue shouldBe Some(SaveError.ServerError)
-
-        mockedMetrics.defaultRegistry.timer(e2eTimerName).getCount shouldBe 0
       }
     }
 
@@ -81,8 +77,6 @@ class OutcomeSubmissionServiceSpec extends UnitSpec with MockOutcomeRepo with Sc
         MockOutcomeRepo.saveOutcome(outcome) returns Future.successful(Some(SaveError.Duplicate))
 
         service.saveOutcome(outcome).futureValue shouldBe Some(SaveError.Duplicate)
-
-        mockedMetrics.defaultRegistry.timer(e2eTimerName).getCount shouldBe 0
       }
     }
   }
