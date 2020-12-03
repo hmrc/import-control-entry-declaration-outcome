@@ -54,7 +54,9 @@ class OutcomeSubmissionControllerSpec extends UnitSpec with MockOutcomeSubmissio
   "OutcomeSubmissionController postOutcome" should {
     "return CREATED" when {
       "request is handled successfully" in {
-        MockReportSender.timeFrom("E2E.total-e2eTimer", outcome.receivedDateTime)
+        val e2eDuration: Duration = Duration.ofSeconds(2)
+
+        MockReportSender.timeFrom("E2E.total-e2eTimer", outcome.receivedDateTime) returns e2eDuration
         MockOutcomeSubmissionService.saveOutcome(outcome) returns Future.successful(None)
 
 
@@ -65,7 +67,7 @@ class OutcomeSubmissionControllerSpec extends UnitSpec with MockOutcomeSubmissio
             "someCorrelationId",
             "someSubmissionId",
             MessageType.IE328,
-            Some(null)))
+            Some(e2eDuration)))
 
         val result = controller.postOutcome(fakeRequest)
 

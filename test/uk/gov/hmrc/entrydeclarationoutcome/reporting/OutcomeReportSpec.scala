@@ -18,7 +18,6 @@ package uk.gov.hmrc.entrydeclarationoutcome.reporting
 
 import java.time.{Clock, Duration, Instant, ZoneOffset}
 
-import org.scalatest.Assertion
 import play.api.libs.json.{JsNumber, JsObject, Json}
 import uk.gov.hmrc.entrydeclarationoutcome.models.MessageType
 import uk.gov.hmrc.entrydeclarationoutcome.reporting.events.EventCode
