@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.entrydeclarationoutcome.controllers
 
+import java.time.Duration
+
 import play.api.libs.json.Json
 import play.api.test.Helpers.{contentType, _}
 import play.api.test.{FakeRequest, Helpers}
@@ -52,7 +54,9 @@ class OutcomeSubmissionControllerSpec extends UnitSpec with MockOutcomeSubmissio
   "OutcomeSubmissionController postOutcome" should {
     "return CREATED" when {
       "request is handled successfully" in {
+        MockReportSender.timeFrom("E2E.total-e2eTimer", outcome.receivedDateTime)
         MockOutcomeSubmissionService.saveOutcome(outcome) returns Future.successful(None)
+
 
         MockReportSender.sendReport(
           OutcomeReport(
@@ -60,7 +64,8 @@ class OutcomeSubmissionControllerSpec extends UnitSpec with MockOutcomeSubmissio
             "someEori",
             "someCorrelationId",
             "someSubmissionId",
-            MessageType.IE328))
+            MessageType.IE328,
+            Some(null)))
 
         val result = controller.postOutcome(fakeRequest)
 

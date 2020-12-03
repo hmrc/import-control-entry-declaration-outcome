@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.entrydeclarationoutcome.reporting
 
-import java.time.{Clock, Instant}
+import java.time.{Clock, Duration, Instant}
 
-import play.api.libs.json.JsObject
+import play.api.libs.json.{JsNumber, JsObject}
 import uk.gov.hmrc.entrydeclarationoutcome.models.{MessageType, Outcome}
 import uk.gov.hmrc.entrydeclarationoutcome.reporting.audit.AuditEvent
 import uk.gov.hmrc.entrydeclarationoutcome.reporting.events.{Event, EventCode}
@@ -29,10 +29,21 @@ case class OutcomeReport(
   eori: String,
   correlationId: String,
   submissionId: String,
-  messageType: MessageType
+  messageType: MessageType,
+  e2EDuration: Option[Duration] = None
 ) extends Report
 
 object OutcomeReport {
+
+  def apply(outcome: Outcome, eventCode: EventCode, e2eDuration: Duration): OutcomeReport =
+    OutcomeReport(
+      eventCode     = eventCode,
+      eori          = outcome.eori,
+      correlationId = outcome.correlationId,
+      submissionId  = outcome.submissionId,
+      messageType   = outcome.messageType,
+      e2EDuration   = Some(e2eDuration)
+    )
 
   def apply(outcome: Outcome, eventCode: EventCode): OutcomeReport =
     OutcomeReport(
@@ -62,7 +73,24 @@ object OutcomeReport {
 
     override def auditEventFor(report: OutcomeReport): Option[AuditEvent] =
       report.eventCode match {
-        case EventCode.ENS_RESP_ACK => Some(AuditEvent("SubmissionAcknowledged", "ENS submission acknowledged", JsObject.empty))
+        case EventCode.ENS_RESP_ACK =>
+          Some(AuditEvent("SubmissionAcknowledged", "ENS submission acknowledged", JsObject.empty))
+        case EventCode.ENS_RESP_READY =>
+          report.e2EDuration.map { duration =>
+          val slaRequirementSeconds = 30
+            val difference = duration.compareTo(Duration.ofSeconds(slaRequirementSeconds))
+            if (difference > 0) {
+              AuditEvent(
+                "OutcomeReceivedGreaterThanSLA",
+                "ENS Outcome Received",
+                JsObject(Map("e2eTime" -> JsNumber(duration.toMillis))))
+            } else {
+              AuditEvent(
+                "OutcomeReceivedLessThanSLA",
+                "ENS Outcome Received",
+                JsObject(Map("e2eTime" -> JsNumber(duration.toMillis))))
+            }
+          }
         case _ => None
       }
   }
