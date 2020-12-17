@@ -33,11 +33,19 @@ trait MockAppConfig extends MockFactory {
 
     def apiGatewayContext: CallHandler[String] = mockAppConfig.apiGatewayContext _ expects ()
 
+    def apiStatus: CallHandler[String] = mockAppConfig.apiStatus _ expects ()
+
+    def apiEndpointsEnabled: CallHandler[Boolean] = mockAppConfig.apiEndpointsEnabled _ expects ()
+
+    def allowListEnabled: CallHandler[Boolean] = mockAppConfig.allowListEnabled _ expects ()
+
+    def allowListApplicationIds: CallHandler[Seq[String]] = mockAppConfig.allowListApplicationIds _ expects ()
+
     def listOutcomesLimit: CallHandler[Int] = mockAppConfig.listOutcomesLimit _ expects ()
 
     def shortTtl: CallHandler[FiniteDuration] = mockAppConfig.shortTtl _ expects ()
 
-    def newSSEnrolmentEnabled: CallHandler[Boolean] =   mockAppConfig.newSSEnrolmentEnabled _ stubs() returns(true)
+    def newSSEnrolmentEnabled: CallHandler[Boolean] = mockAppConfig.newSSEnrolmentEnabled _ stubs () returns true
 
   }
 }
