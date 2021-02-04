@@ -18,22 +18,20 @@ package uk.gov.hmrc.entrydeclarationoutcome.services
 
 import cats.data.EitherT
 import cats.implicits._
-import javax.inject.{Inject, Singleton}
 import play.api.Logger
+import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.EmptyRetrieval
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.allEnrolments
-import uk.gov.hmrc.auth.core._
-import uk.gov.hmrc.entrydeclarationoutcome.config.AppConfig
 import uk.gov.hmrc.entrydeclarationoutcome.connectors.ApiSubscriptionFieldsConnector
 import uk.gov.hmrc.http.HeaderCarrier
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class AuthService @Inject()(
   val authConnector: AuthConnector,
-  apiSubscriptionFieldsConnector: ApiSubscriptionFieldsConnector,
-  appConfig: AppConfig)(implicit ec: ExecutionContext)
+  apiSubscriptionFieldsConnector: ApiSubscriptionFieldsConnector)(implicit ec: ExecutionContext)
     extends AuthorisedFunctions {
 
   private val X_CLIENT_ID = "X-Client-Id"
