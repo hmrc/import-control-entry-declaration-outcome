@@ -59,8 +59,6 @@ trait AppConfig {
   def housekeepingRunInterval: FiniteDuration
 
   def housekeepingLockDuration: FiniteDuration
-
-  def newSSEnrolmentEnabled: Boolean
 }
 
 @Singleton
@@ -112,6 +110,4 @@ class AppConfigImpl @Inject()(config: Configuration, servicesConfig: ServicesCon
 
   lazy val housekeepingLockDuration: FiniteDuration =
     getFiniteDuration(config.get[Configuration](s"mongodb"), "housekeepingLockDuration")
-
-  lazy val newSSEnrolmentEnabled: Boolean = config.get[Boolean]("feature-switch.new-ss-enrolment")
 }

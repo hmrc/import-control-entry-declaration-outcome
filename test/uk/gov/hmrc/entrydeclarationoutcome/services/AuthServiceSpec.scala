@@ -94,7 +94,6 @@ class AuthServiceSpec
 
       "CSP authentication fails" should {
         authenticateBasedOnSsEnrolment { () =>
-          MockAppConfig.newSSEnrolmentEnabled
           stubCSPAuth returns Future.failed(authException)
         }
       }
@@ -103,8 +102,7 @@ class AuthServiceSpec
     "no X-Client-Id header present" should {
       implicit val hc: HeaderCarrier = HeaderCarrier()
       authenticateBasedOnSsEnrolment { () =>
-        MockAppConfig.newSSEnrolmentEnabled
-      }
+        }
     }
 
     "X-Client-Id header present with different case" must {

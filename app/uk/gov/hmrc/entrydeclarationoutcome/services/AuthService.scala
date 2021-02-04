@@ -76,15 +76,12 @@ class AuthService @Inject()(
   private def authNonCSP(implicit hc: HeaderCarrier): EitherT[Future, AuthError, Eori] =
     EitherT(authorised(AuthProviders(AuthProvider.GovernmentGateway))
       .retrieve(allEnrolments) { usersEnrolments =>
-        val enrolmentKey = if (appConfig.newSSEnrolmentEnabled) "HMRC-SS-ORG" else "HMRC-ICS-ORG"
-        val identifier   = if (appConfig.newSSEnrolmentEnabled) "EORINumber" else "EoriTin"
-
         val ssEnrolments =
-          usersEnrolments.enrolments.filter(enrolment => enrolment.isActivated && enrolment.key == enrolmentKey)
+          usersEnrolments.enrolments.filter(enrolment => enrolment.isActivated && enrolment.key == "HMRC-SS-ORG")
 
         val eoris = for {
           enrolment <- ssEnrolments
-          eoriId    <- enrolment.getIdentifier(identifier)
+          eoriId    <- enrolment.getIdentifier("EORINumber")
         } yield eoriId.value
 
         val eori = eoris.headOption
