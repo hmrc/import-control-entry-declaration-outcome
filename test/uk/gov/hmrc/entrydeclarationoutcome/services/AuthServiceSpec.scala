@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,8 +22,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Span}
 import uk.gov.hmrc.auth.core.retrieve.EmptyRetrieval
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
-import uk.gov.hmrc.auth.core.{AuthProvider, AuthProviders, Enrolment, EnrolmentIdentifier, Enrolments, InsufficientEnrolments}
-import uk.gov.hmrc.entrydeclarationoutcome.config.MockAppConfig
+import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.entrydeclarationoutcome.connectors.{MockApiSubscriptionFieldsConnector, MockAuthConnector}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
@@ -36,14 +35,13 @@ class AuthServiceSpec
     with MockAuthConnector
     with MockApiSubscriptionFieldsConnector
     with ScalaFutures
-    with MockAppConfig
     with Inside {
 
   implicit override val patienceConfig: PatienceConfig = PatienceConfig(timeout = Span(500, Millis))
 
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.global
 
-  val service  = new AuthService(mockAuthConnector, mockApiSubscriptionFieldsConnector, mockAppConfig)
+  val service  = new AuthService(mockAuthConnector, mockApiSubscriptionFieldsConnector)
   val eori     = "GB123"
   val clientId = "someClientId"
 
@@ -94,7 +92,6 @@ class AuthServiceSpec
 
       "CSP authentication fails" should {
         authenticateBasedOnSsEnrolment { () =>
-          MockAppConfig.newSSEnrolmentEnabled
           stubCSPAuth returns Future.failed(authException)
         }
       }
@@ -103,8 +100,7 @@ class AuthServiceSpec
     "no X-Client-Id header present" should {
       implicit val hc: HeaderCarrier = HeaderCarrier()
       authenticateBasedOnSsEnrolment { () =>
-        MockAppConfig.newSSEnrolmentEnabled
-      }
+        }
     }
 
     "X-Client-Id header present with different case" must {

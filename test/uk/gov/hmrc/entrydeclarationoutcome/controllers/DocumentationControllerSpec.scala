@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.HttpErrorHandler
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.JsValue
-import play.api.mvc.Result
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers, Injecting}
 import play.api.{Application, Environment, Mode}
@@ -30,8 +29,6 @@ import play.mvc.Http.MimeTypes
 import uk.gov.hmrc.entrydeclarationoutcome.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationoutcome.housekeeping.HousekeepingScheduler
 import uk.gov.hmrc.play.test.UnitSpec
-
-import scala.concurrent.Future
 
 class DocumentationControllerSpec extends UnitSpec with MockAppConfig with Injecting with GuiceOneAppPerSuite {
   override lazy val app: Application = new GuiceApplicationBuilder()

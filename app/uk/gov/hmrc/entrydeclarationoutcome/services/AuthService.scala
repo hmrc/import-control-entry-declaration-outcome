@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,22 +18,20 @@ package uk.gov.hmrc.entrydeclarationoutcome.services
 
 import cats.data.EitherT
 import cats.implicits._
-import javax.inject.{Inject, Singleton}
 import play.api.Logger
+import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.EmptyRetrieval
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.allEnrolments
-import uk.gov.hmrc.auth.core._
-import uk.gov.hmrc.entrydeclarationoutcome.config.AppConfig
 import uk.gov.hmrc.entrydeclarationoutcome.connectors.ApiSubscriptionFieldsConnector
 import uk.gov.hmrc.http.HeaderCarrier
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class AuthService @Inject()(
   val authConnector: AuthConnector,
-  apiSubscriptionFieldsConnector: ApiSubscriptionFieldsConnector,
-  appConfig: AppConfig)(implicit ec: ExecutionContext)
+  apiSubscriptionFieldsConnector: ApiSubscriptionFieldsConnector)(implicit ec: ExecutionContext)
     extends AuthorisedFunctions {
 
   private val X_CLIENT_ID = "X-Client-Id"
@@ -76,15 +74,12 @@ class AuthService @Inject()(
   private def authNonCSP(implicit hc: HeaderCarrier): EitherT[Future, AuthError, Eori] =
     EitherT(authorised(AuthProviders(AuthProvider.GovernmentGateway))
       .retrieve(allEnrolments) { usersEnrolments =>
-        val enrolmentKey = if (appConfig.newSSEnrolmentEnabled) "HMRC-SS-ORG" else "HMRC-ICS-ORG"
-        val identifier   = if (appConfig.newSSEnrolmentEnabled) "EORINumber" else "EoriTin"
-
         val ssEnrolments =
-          usersEnrolments.enrolments.filter(enrolment => enrolment.isActivated && enrolment.key == enrolmentKey)
+          usersEnrolments.enrolments.filter(enrolment => enrolment.isActivated && enrolment.key == "HMRC-SS-ORG")
 
         val eoris = for {
           enrolment <- ssEnrolments
-          eoriId    <- enrolment.getIdentifier(identifier)
+          eoriId    <- enrolment.getIdentifier("EORINumber")
         } yield eoriId.value
 
         val eori = eoris.headOption
