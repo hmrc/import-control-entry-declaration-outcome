@@ -17,20 +17,23 @@
 package uk.gov.hmrc.entrydeclarationoutcome.housekeeping
 
 import akka.actor.Scheduler
+
 import javax.inject.{Inject, Singleton}
 import org.joda.time.{Duration => JodaDuration}
+import play.api.Logger
 import play.modules.reactivemongo.ReactiveMongoComponent
 import uk.gov.hmrc.entrydeclarationoutcome.config.AppConfig
 import uk.gov.hmrc.lock.{ExclusiveTimePeriodLock, LockRepository}
 
 import scala.concurrent.ExecutionContext
+import scala.util.Failure
 
 @Singleton
 class HousekeepingScheduler @Inject()(
-                                       scheduler: Scheduler,
-                                       housekeeper: Housekeeper,
-                                       appConfig: AppConfig
-                                     )(implicit reactiveMongoComponent: ReactiveMongoComponent, ec: ExecutionContext) {
+  scheduler: Scheduler,
+  housekeeper: Housekeeper,
+  appConfig: AppConfig
+)(implicit reactiveMongoComponent: ReactiveMongoComponent, ec: ExecutionContext) {
 
   private val lockRepository = new LockRepository()(reactiveMongoComponent.mongoConnector.db)
 
@@ -46,6 +49,9 @@ class HousekeepingScheduler @Inject()(
     exclusiveTimePeriodLock
       .tryToAcquireOrRenewLock {
         housekeeper.housekeep()
+      }
+      .andThen {
+        case Failure(e) => Logger.error("Failed housekeeping", e)
       }
   }
 }
