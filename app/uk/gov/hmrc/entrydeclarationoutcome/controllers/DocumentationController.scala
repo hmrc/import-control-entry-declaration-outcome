@@ -17,36 +17,21 @@
 package uk.gov.hmrc.entrydeclarationoutcome.controllers
 
 import controllers.Assets
-import javax.inject.{Inject, Singleton}
-import play.api.http.HttpErrorHandler
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.entrydeclarationoutcome.config.AppConfig
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
+import javax.inject.{Inject, Singleton}
+
 @Singleton
-class DocumentationController @Inject()(
-  cc: ControllerComponents,
-  assets: Assets,
-  appConfig: AppConfig,
-  errorHandler: HttpErrorHandler)
+class DocumentationController @Inject()(cc: ControllerComponents, assets: Assets, appConfig: AppConfig)
     extends BackendController(cc) {
 
   def documentation(version: String, endpointName: String): Action[AnyContent] =
     assets.at(s"/public/api/documentation/$version", s"${endpointName.replaceAll(" ", "-")}.xml")
 
   def definition(): Action[AnyContent] = Action {
-
-    val allowListAccess =
-      if (appConfig.allowListEnabled) {
-        s""""access": {
-           |  "type": "PRIVATE",
-           |  "whitelistedApplicationIds": ${Json.toJson(appConfig.allowListApplicationIds)}
-           |},""".stripMargin
-      } else {
-        ""
-      }
-
     Ok(Json.parse(s"""{
                      |  "scopes": [
                      |    {
@@ -67,7 +52,6 @@ class DocumentationController @Inject()(
                      |        "version": "1.0",
                      |        "status": "${appConfig.apiStatus}",
                      |        "endpointsEnabled": ${appConfig.apiEndpointsEnabled},
-                     |        $allowListAccess
                      |        "fieldDefinitions": [
                      |          {
                      |            "name": "authenticatedEori",
