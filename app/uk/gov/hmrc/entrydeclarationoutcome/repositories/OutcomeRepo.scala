@@ -32,6 +32,7 @@ import uk.gov.hmrc.entrydeclarationoutcome.models.{FullOutcome, OutcomeMetadata,
 import uk.gov.hmrc.entrydeclarationoutcome.utils.SaveError
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
+import uk.gov.hmrc.play.http.logging.Mdc
 
 import java.time.Instant
 import javax.inject.{Inject, Singleton}
@@ -99,7 +100,8 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
   def save(outcome: OutcomeReceived)(implicit lc: LoggingContext): Future[Option[SaveError]] = {
     val outcomePersisted = OutcomePersisted.from(outcome, appConfig.defaultTtl)
 
-    insert(outcomePersisted)
+    Mdc
+      .preservingMdc(insert(outcomePersisted))
       .map(_ => None)
       .recover {
         case e: DatabaseException =>
@@ -115,38 +117,50 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
 
   //Test only -> so can retrieve even if acknowledged
   def lookupOutcomeXml(submissionId: String): Future[Option[OutcomeXml]] =
-    collection
-      .find(Json.obj("submissionId" -> submissionId), Some(Json.obj("outcomeXml" -> 1)))
-      .one[OutcomeXml]
+    Mdc
+      .preservingMdc(
+        collection
+          .find(Json.obj("submissionId" -> submissionId), Some(Json.obj("outcomeXml" -> 1)))
+          .one[OutcomeXml])
 
   def lookupOutcome(eori: String, correlationId: String): Future[Option[OutcomeReceived]] =
-    collection
-      .find(Json.obj("eori" -> eori, "correlationId" -> correlationId, "acknowledged" -> false), Option.empty[JsObject])
-      .one[OutcomePersisted]
+    Mdc
+      .preservingMdc(
+        collection
+          .find(
+            Json.obj("eori" -> eori, "correlationId" -> correlationId, "acknowledged" -> false),
+            Option.empty[JsObject])
+          .one[OutcomePersisted])
       .map(_.map(_.toOutcomeReceived))
 
   override def lookupFullOutcome(eori: String, correlationId: String): Future[Option[FullOutcome]] =
-    collection
-      .find(Json.obj("eori" -> eori, "correlationId" -> correlationId), Option.empty[JsObject])
-      .one[OutcomePersisted]
+    Mdc
+      .preservingMdc(
+        collection
+          .find(Json.obj("eori" -> eori, "correlationId" -> correlationId), Option.empty[JsObject])
+          .one[OutcomePersisted])
       .map(_.map(_.toFullOutcome))
 
   def acknowledgeOutcome(eori: String, correlationId: String, time: Instant)(
     implicit lc: LoggingContext): Future[Option[OutcomeReceived]] =
-    findAndUpdate(
-      query          = Json.obj("eori" -> eori, "correlationId" -> correlationId, "acknowledged" -> false),
-      update         = Json.obj("$set" -> Json.obj("acknowledged" -> true, "housekeepingAt" -> PersistableDateTime(time))),
-      fetchNewObject = true
-    ).map(result => result.result[OutcomePersisted].map(_.toOutcomeReceived))
+    Mdc
+      .preservingMdc(
+        findAndUpdate(
+          query          = Json.obj("eori" -> eori, "correlationId" -> correlationId, "acknowledged" -> false),
+          update         = Json.obj("$set" -> Json.obj("acknowledged" -> true, "housekeepingAt" -> PersistableDateTime(time))),
+          fetchNewObject = true
+        ))
+      .map(result => result.result[OutcomePersisted].map(_.toOutcomeReceived))
 
   def listOutcomes(eori: String): Future[List[OutcomeMetadata]] =
-    collection
-      .find(
-        Json.obj("eori" -> eori, "acknowledged" -> false),
-        Some(Json.obj("correlationId" -> 1, "movementReferenceNumber" -> 1)))
-      .sort(Json.obj("receivedDateTime" -> 1))
-      .cursor[OutcomeMetadata]()
-      .collect[List](maxDocs = appConfig.listOutcomesLimit, err = Cursor.FailOnError[List[OutcomeMetadata]]())
+    Mdc.preservingMdc(
+      collection
+        .find(
+          Json.obj("eori" -> eori, "acknowledged" -> false),
+          Some(Json.obj("correlationId" -> 1, "movementReferenceNumber" -> 1)))
+        .sort(Json.obj("receivedDateTime" -> 1))
+        .cursor[OutcomeMetadata]()
+        .collect[List](maxDocs = appConfig.listOutcomesLimit, err = Cursor.FailOnError[List[OutcomeMetadata]]()))
 
   override def setHousekeepingAt(submissionId: String, time: Instant): Future[Boolean] =
     setHousekeepingAt(time, Json.obj("submissionId" -> submissionId))
@@ -155,34 +169,38 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
     setHousekeepingAt(time, Json.obj("eori" -> eori, "correlationId" -> correlationId))
 
   private def setHousekeepingAt(time: Instant, query: JsObject): Future[Boolean] =
-    collection
-      .update(ordered = false, WriteConcern.Default)
-      .one(query, Json.obj("$set" -> Json.obj("housekeepingAt" -> PersistableDateTime(time))))
+    Mdc
+      .preservingMdc(
+        collection
+          .update(ordered = false, WriteConcern.Default)
+          .one(query, Json.obj("$set" -> Json.obj("housekeepingAt" -> PersistableDateTime(time)))))
       .map(result => result.n == 1)
 
   override def housekeep(now: Instant): Future[Int] = {
     val deleteBuilder = collection.delete(ordered = false)
 
-    collection
-      .find(
-        selector   = Json.obj("housekeepingAt" -> Json.obj("$lte" -> PersistableDateTime(now))),
-        projection = Some(Json.obj("_id" -> 1))
-      )
-      .sort(Json.obj("housekeepingAt" -> 1))
-      .cursor[JsObject]()
-      .documentSource(maxDocs = appConfig.housekeepingRunLimit)
-      .mapAsync(1) { idDoc =>
-        deleteBuilder.element(q = idDoc, limit = Some(1), collation = None)
-      }
-      .batch(appConfig.housekeepingBatchSize, List(_)) { (deletions, element) =>
-        element :: deletions
-      }
-      .mapAsync(1) { deletions =>
+    Mdc
+      .preservingMdc(
         collection
-          .delete()
-          .many(deletions)
-          .map(_.n)
-      }
-      .runFold(0)(_ + _)
+          .find(
+            selector   = Json.obj("housekeepingAt" -> Json.obj("$lte" -> PersistableDateTime(now))),
+            projection = Some(Json.obj("_id" -> 1))
+          )
+          .sort(Json.obj("housekeepingAt" -> 1))
+          .cursor[JsObject]()
+          .documentSource(maxDocs = appConfig.housekeepingRunLimit)
+          .mapAsync(1) { idDoc =>
+            deleteBuilder.element(q = idDoc, limit = Some(1), collation = None)
+          }
+          .batch(appConfig.housekeepingBatchSize, List(_)) { (deletions, element) =>
+            element :: deletions
+          }
+          .mapAsync(1) { deletions =>
+            collection
+              .delete()
+              .many(deletions)
+              .map(_.n)
+          }
+          .runFold(0)(_ + _))
   }
 }
