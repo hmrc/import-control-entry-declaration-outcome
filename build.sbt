@@ -49,7 +49,7 @@ lazy val microservice = Project(appName, file("."))
   .configs(IntegrationTest)
   .settings(integrationTestSettings(): _*)
   .settings(
-    scalacOptions += "-P:silencer:pathFilters=views;routes",
+    scalacOptions ++= Seq("-P:silencer:pathFilters=views;routes", "-Ywarn-unused:-implicits"),
     libraryDependencies ++= Seq(
       compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full),
       "com.github.ghik" % "silencer-lib" % silencerVersion % Provided cross CrossVersion.full
