@@ -78,7 +78,10 @@ class OutcomeRetrievalController @Inject()(
   }
 
   private def listXml(outcomes: List[OutcomeMetadata]): String = {
-    val prettyPrinter = new scala.xml.PrettyPrinter(100, 4)
+    val width: Int = 100
+    val step: Int = 4
+
+    val prettyPrinter = new scala.xml.PrettyPrinter(width, step)
 
     val xml = <entryDeclarationResponses>{outcomes.map { outcomeMetadata =>
       <response>
