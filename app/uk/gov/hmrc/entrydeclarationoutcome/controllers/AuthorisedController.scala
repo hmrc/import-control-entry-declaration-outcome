@@ -39,6 +39,7 @@ abstract class AuthorisedController(cc: ControllerComponents) extends BackendCon
       override def invokeBlock[A](request: Request[A], block: UserRequest[A] => Future[Result]): Future[Result] = {
 
         implicit val headerCarrier: HeaderCarrier = hc(request)
+        implicit val headers: Headers             = request.headers
         authService.authenticate().flatMap {
           case Some(eori) => block(UserRequest(eori, request))
           case None       => Future.successful(Unauthorized(StandardError.unauthorised))

@@ -18,21 +18,22 @@ package uk.gov.hmrc.entrydeclarationoutcome.services
 
 import cats.data.EitherT
 import cats.implicits._
-import play.api.Logger
+import play.api.Logging
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.EmptyRetrieval
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.allEnrolments
 import uk.gov.hmrc.entrydeclarationoutcome.connectors.ApiSubscriptionFieldsConnector
 import uk.gov.hmrc.http.HeaderCarrier
-
 import javax.inject.{Inject, Singleton}
+import play.api.mvc.Headers
+
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class AuthService @Inject()(
   val authConnector: AuthConnector,
   apiSubscriptionFieldsConnector: ApiSubscriptionFieldsConnector)(implicit ec: ExecutionContext)
-    extends AuthorisedFunctions {
+    extends AuthorisedFunctions with Logging {
 
   private val X_CLIENT_ID = "X-Client-Id"
 
@@ -43,7 +44,7 @@ class AuthService @Inject()(
   case object NoEori extends AuthError
   case object AuthFail extends AuthError
 
-  def authenticate()(implicit hc: HeaderCarrier): Future[Option[Eori]] =
+  def authenticate()(implicit hc: HeaderCarrier, headers: Headers): Future[Option[Eori]] =
     authCSP
       .recoverWith {
         case AuthFail | NoClientId => authNonCSP
@@ -51,27 +52,27 @@ class AuthService @Inject()(
       .toOption
       .value
 
-  private def authCSP(implicit hc: HeaderCarrier): EitherT[Future, AuthError, Eori] = {
+  private def authCSP(implicit hc: HeaderCarrier, headers: Headers): EitherT[Future, AuthError, Eori] = {
     def auth: Future[Option[Unit]] =
       authorised(AuthProviders(AuthProvider.PrivilegedApplication))
         .retrieve(EmptyRetrieval) { _ =>
-          Logger.debug(s"Successfully authorised CSP PrivilegedApplication")
+          logger.debug(s"Successfully authorised CSP PrivilegedApplication")
           Future.successful(Some(()))
         }
         .recover {
           case ae: AuthorisationException =>
-            Logger.debug(s"No authorisation for CSP PrivilegedApplication", ae)
+            logger.debug(s"No authorisation for CSP PrivilegedApplication", ae)
             None
         }
 
     for {
-      clientId <- EitherT.fromOption[Future](hc.headers.find(_._1.equalsIgnoreCase(X_CLIENT_ID)).map(_._2), NoClientId)
+      clientId <- EitherT.fromOption[Future](headers.get(X_CLIENT_ID), NoClientId)
       _        <- EitherT.fromOptionF(auth, AuthFail)
       eori     <- EitherT.fromOptionF(apiSubscriptionFieldsConnector.getAuthenticatedEoriField(clientId), NoEori: AuthError)
     } yield eori
   }
 
-  private def authNonCSP(implicit hc: HeaderCarrier): EitherT[Future, AuthError, Eori] =
+  private def authNonCSP(implicit hc: HeaderCarrier, headers: Headers): EitherT[Future, AuthError, Eori] =
     EitherT(authorised(AuthProviders(AuthProvider.GovernmentGateway))
       .retrieve(allEnrolments) { usersEnrolments =>
         val ssEnrolments =
@@ -89,13 +90,13 @@ class AuthService @Inject()(
           case None       => NoEori.asLeft
         }
 
-        Logger.debug(
+        logger.debug(
           s"Successfully authorised non-CSP GovernmentGateway with enrolments ${usersEnrolments.enrolments} and eori $eori")
         Future.successful(result)
       }
       .recover {
         case ae: AuthorisationException =>
-          Logger.debug(s"No authorisation for non-CSP GovernmentGateway", ae)
+          logger.debug(s"No authorisation for non-CSP GovernmentGateway", ae)
           AuthFail.asLeft
       })
 }

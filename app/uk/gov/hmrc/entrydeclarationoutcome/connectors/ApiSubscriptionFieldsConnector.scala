@@ -19,7 +19,7 @@ package uk.gov.hmrc.entrydeclarationoutcome.connectors
 import java.net.URLEncoder
 
 import javax.inject.{Inject, Singleton}
-import play.api.Logger
+import play.api.Logging
 import play.api.libs.json.JsObject
 import uk.gov.hmrc.entrydeclarationoutcome.config.AppConfig
 import uk.gov.hmrc.http.HttpReads.Implicits._
@@ -29,12 +29,12 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ApiSubscriptionFieldsConnector @Inject()(client: HttpClient, appConfig: AppConfig)(
-  implicit ec: ExecutionContext) {
+  implicit ec: ExecutionContext) extends Logging {
 
   def getAuthenticatedEoriField(clientId: String): Future[Option[String]] = {
     val url: String =
       s"${appConfig.apiSubscriptionFieldsHost}/field/application/$clientId/context/${URLEncoder.encode(appConfig.apiGatewayContext, "UTF-8")}/version/1.0"
-    Logger.info(s"sending GET request to $url")
+    logger.info(s"sending GET request to $url")
 
     implicit val hc: HeaderCarrier = HeaderCarrier()
 

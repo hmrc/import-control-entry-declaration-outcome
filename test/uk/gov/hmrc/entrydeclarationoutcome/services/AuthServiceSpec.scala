@@ -21,6 +21,7 @@ import org.scalatest.Matchers.convertToAnyShouldWrapper
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Span}
 import org.scalatest.{Inside, WordSpec}
+import play.api.mvc.Headers
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.EmptyRetrieval
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
@@ -39,11 +40,13 @@ class AuthServiceSpec
 
   implicit override val patienceConfig: PatienceConfig = PatienceConfig(timeout = Span(500, Millis))
 
+  val X_CLIENT_ID      = "X-Client-Id"
+  val clientId = "someClientId"
+
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.global
 
   val service  = new AuthService(mockAuthConnector, mockApiSubscriptionFieldsConnector)
   val eori     = "GB123"
-  val clientId = "someClientId"
 
   // WLOG - any AuthorisationException will do
   val authException = new InsufficientEnrolments with NoStackTrace
@@ -68,6 +71,7 @@ class AuthServiceSpec
   "AuthService.authenticate" when {
     "X-Client-Id header present" when {
       implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders("X-Client-Id" -> clientId)
+      implicit val headers: Headers = Headers(X_CLIENT_ID -> clientId)
 
       "CSP authentication succeeds" when {
         "authenticated EORI present in subscription fields" must {
@@ -99,12 +103,14 @@ class AuthServiceSpec
 
     "no X-Client-Id header present" must {
       implicit val hc: HeaderCarrier = HeaderCarrier()
+      implicit val headers: Headers = Headers()
       authenticateBasedOnSsEnrolment { () =>
         }
     }
 
     "X-Client-Id header present with different case" must {
       implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders("x-client-id" -> clientId)
+      implicit val headers: Headers = Headers(X_CLIENT_ID -> clientId)
 
       "Attempt CSP auth" in {
         stubCSPAuth returns Future.successful(())
@@ -114,7 +120,7 @@ class AuthServiceSpec
       }
     }
 
-    def authenticateBasedOnSsEnrolment(stubbings: () => Unit)(implicit hc: HeaderCarrier): Unit = {
+    def authenticateBasedOnSsEnrolment(stubbings: () => Unit)(implicit hc: HeaderCarrier, headers: Headers): Unit = {
       "return Some(eori)" when {
         "SS enrolment with an eori" in {
           stubbings()

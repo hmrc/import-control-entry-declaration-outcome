@@ -17,8 +17,8 @@
 package uk.gov.hmrc.entrydeclarationoutcome.housekeeping
 
 import akka.actor.Scheduler
+import play.api.Logging
 import org.joda.time.{Duration => JodaDuration}
-import play.api.Logger
 import uk.gov.hmrc.entrydeclarationoutcome.config.AppConfig
 import uk.gov.hmrc.entrydeclarationoutcome.repositories.LockRepositoryProvider
 import uk.gov.hmrc.lock.{ExclusiveTimePeriodLock, LockRepository}
@@ -33,7 +33,7 @@ class HousekeepingScheduler @Inject()(
   housekeeper: Housekeeper,
   lockRepositoryProvider: LockRepositoryProvider,
   appConfig: AppConfig
-)(implicit ec: ExecutionContext) {
+)(implicit ec: ExecutionContext) extends Logging {
 
   private val exclusiveTimePeriodLock: ExclusiveTimePeriodLock = new ExclusiveTimePeriodLock {
     override def repo: LockRepository = lockRepositoryProvider.lockRepository
@@ -49,7 +49,7 @@ class HousekeepingScheduler @Inject()(
         housekeeper.housekeep()
       }
       .andThen {
-        case Failure(e) => Logger.error("Failed housekeeping", e)
+        case Failure(e) => logger.error("Failed housekeeping", e)
       }
   }
 }

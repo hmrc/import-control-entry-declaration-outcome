@@ -20,13 +20,14 @@ import java.time.{Clock, Instant}
 
 import com.kenshoo.play.metrics.Metrics
 import javax.inject.{Inject, Singleton}
+import play.api.Logging
 import uk.gov.hmrc.entrydeclarationoutcome.config.AppConfig
 import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
+import uk.gov.hmrc.entrydeclarationoutcome.models.{FullOutcome, OutcomeMetadata, OutcomeReceived, OutcomeXml}
 import uk.gov.hmrc.entrydeclarationoutcome.repositories.OutcomeRepo
-import uk.gov.hmrc.entrydeclarationoutcome.utils.{EventLogger, Timer}
+import uk.gov.hmrc.entrydeclarationoutcome.utils.Timer
 
 import scala.concurrent.{ExecutionContext, Future}
-import uk.gov.hmrc.entrydeclarationoutcome.models.{FullOutcome, OutcomeMetadata, OutcomeReceived, OutcomeXml}
 
 @Singleton
 class OutcomeRetrievalService @Inject()(
@@ -35,7 +36,7 @@ class OutcomeRetrievalService @Inject()(
   override val clock: Clock,
   override val metrics: Metrics)(implicit ec: ExecutionContext)
     extends Timer
-    with EventLogger {
+    with Logging {
   def retrieveOutcomeXml(submissionId: String): Future[Option[OutcomeXml]] =
     outcomeRepo.lookupOutcomeXml(submissionId)
 

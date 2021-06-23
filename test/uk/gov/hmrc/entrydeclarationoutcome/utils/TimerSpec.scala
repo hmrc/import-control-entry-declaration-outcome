@@ -23,11 +23,12 @@ import com.kenshoo.play.metrics.Metrics
 import org.scalatest.Matchers.{be, convertToAnyShouldWrapper}
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import org.scalatest.WordSpec
+import play.api.Logging
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class TimerSpec extends WordSpec with Timer with EventLogger {
+class TimerSpec extends WordSpec with Timer with Logging {
   val metrics: Metrics   = new MockMetrics
   val startTime: Instant = Instant.now
   val endTime: Instant   = startTime.plusSeconds(1)

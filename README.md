@@ -11,7 +11,7 @@ The Import Control Entry Declaration Outcome responsibilities:
 ## Development Setup
 - MongoDB instance
 - Run locally: `sbt run` which runs on port `9815` by default
-- Run with test end points: `sbt 'run -Dapplication.router=testOnlyDoNotUseInAppConf.Routes'`
+- Run with test end points: `sbt 'run -Dplay.http.router=testOnlyDoNotUseInAppConf.Routes'`
 
 ## Tests
 - Run Unit Tests: `sbt test`

@@ -22,10 +22,12 @@ import com.codahale.metrics._
 import com.kenshoo.play.metrics.Metrics
 import java.time.Clock
 
+import play.api.Logging
+
 import scala.concurrent.{ExecutionContext, Future}
 
 trait Timer {
-  self: EventLogger =>
+  self: Logging =>
 
   val defaultTimerGroup: String = "timer"
   type Metric = String

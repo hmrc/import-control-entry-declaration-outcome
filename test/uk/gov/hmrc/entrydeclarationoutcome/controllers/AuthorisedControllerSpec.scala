@@ -27,8 +27,7 @@ import play.api.test.Helpers._
 import play.api.test.{FakeRequest, ResultExtractors}
 import play.mvc.Http.MimeTypes
 import uk.gov.hmrc.entrydeclarationoutcome.services.{AuthService, MockAuthService}
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.logging.Authorization
+import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
 
 import scala.concurrent.Future
 import scala.xml.Node
