@@ -18,6 +18,8 @@ package uk.gov.hmrc.entrydeclarationoutcome.controllers
 
 import java.time.Duration
 
+import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.WordSpec
 import play.api.libs.json.Json
 import play.api.test.Helpers.{contentType, _}
 import play.api.test.{FakeRequest, Helpers}
@@ -26,12 +28,11 @@ import uk.gov.hmrc.entrydeclarationoutcome.reporting.events.EventCode
 import uk.gov.hmrc.entrydeclarationoutcome.reporting.{MockReportSender, OutcomeReport}
 import uk.gov.hmrc.entrydeclarationoutcome.services.MockOutcomeSubmissionService
 import uk.gov.hmrc.entrydeclarationoutcome.utils.SaveError
-import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class OutcomeSubmissionControllerSpec extends UnitSpec with MockOutcomeSubmissionService with MockReportSender {
+class OutcomeSubmissionControllerSpec extends WordSpec with MockOutcomeSubmissionService with MockReportSender {
 
   private val controller =
     new OutcomeSubmissionController(Helpers.stubControllerComponents(), mockOutcomeSubmissionService, mockReportSender)
@@ -51,7 +52,7 @@ class OutcomeSubmissionControllerSpec extends UnitSpec with MockOutcomeSubmissio
 
   private val fakeRequest = FakeRequest().withBody(outcomeJson)
 
-  "OutcomeSubmissionController postOutcome" should {
+  "OutcomeSubmissionController postOutcome" must {
     "return CREATED" when {
       "request is handled successfully" in {
         val e2eDuration: Duration = Duration.ofSeconds(2)

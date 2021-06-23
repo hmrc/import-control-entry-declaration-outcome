@@ -19,17 +19,18 @@ package uk.gov.hmrc.entrydeclarationoutcome.services
 import java.time.{Clock, Instant, ZoneOffset}
 
 import com.kenshoo.play.metrics.Metrics
+import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
 import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationoutcome.models.{MessageType, OutcomeReceived}
 import uk.gov.hmrc.entrydeclarationoutcome.repositories.MockOutcomeRepo
 import uk.gov.hmrc.entrydeclarationoutcome.utils.{MockMetrics, SaveError}
-import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class OutcomeSubmissionServiceSpec extends UnitSpec with MockOutcomeRepo with ScalaFutures {
+class OutcomeSubmissionServiceSpec extends WordSpec with MockOutcomeRepo with ScalaFutures {
 
   val time: Instant         = Instant.now
   val receivedTime: Instant = time.minusSeconds(1)
@@ -55,7 +56,7 @@ class OutcomeSubmissionServiceSpec extends UnitSpec with MockOutcomeRepo with Sc
     "outcomeXml"
   )
 
-  "OutcomeSubmissionService" should {
+  "OutcomeSubmissionService" must {
     "return None" when {
       "outcome successfully stored in database" in new Test {
         MockOutcomeRepo.saveOutcome(outcome) returns Future.successful(None)

@@ -18,10 +18,11 @@ package uk.gov.hmrc.entrydeclarationoutcome.models
 
 import java.time.Instant
 
+import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.WordSpec
 import play.api.libs.json.Json
-import uk.gov.hmrc.play.test.UnitSpec
 
-class FullOutcomeSpec extends UnitSpec {
+class FullOutcomeSpec extends WordSpec {
 
   val fullOutcome: FullOutcome = FullOutcome(
     OutcomeReceived(

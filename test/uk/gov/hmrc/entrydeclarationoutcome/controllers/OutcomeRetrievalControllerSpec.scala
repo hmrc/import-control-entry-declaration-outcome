@@ -18,6 +18,8 @@ package uk.gov.hmrc.entrydeclarationoutcome.controllers
 
 import java.time.Instant
 
+import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.WordSpec
 import play.api.http.MimeTypes
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
@@ -25,14 +27,13 @@ import uk.gov.hmrc.entrydeclarationoutcome.models.{MessageType, OutcomeMetadata,
 import uk.gov.hmrc.entrydeclarationoutcome.reporting.events.EventCode
 import uk.gov.hmrc.entrydeclarationoutcome.reporting.{MockReportSender, OutcomeReport}
 import uk.gov.hmrc.entrydeclarationoutcome.services.{MockAuthService, MockOutcomeRetrievalService}
-import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.xml.Node
 
 class OutcomeRetrievalControllerSpec
-    extends UnitSpec
+    extends WordSpec
     with MockOutcomeRetrievalService
     with MockAuthService
     with MockReportSender {
@@ -67,7 +68,7 @@ class OutcomeRetrievalControllerSpec
       <message>No unacknowledged outcome found</message>
     </error>
 
-  "OutcomeRetrievalController getOutcome" should {
+  "OutcomeRetrievalController getOutcome" must {
     "return 200 OK with the XML" when {
       "the user is authenticated and the outcome XML could be found" in {
         MockAuthService.authenticate() returns Future.successful(Some(eori))
@@ -106,7 +107,7 @@ class OutcomeRetrievalControllerSpec
     }
   }
 
-  "OutcomeRetrievalController acknowledgeOutcome" should {
+  "OutcomeRetrievalController acknowledgeOutcome" must {
     "return 200 OK" when {
       "the user is authenticated and the outcome XML could be found" in {
         MockAuthService.authenticate() returns Future.successful(Some(eori))
@@ -143,7 +144,7 @@ class OutcomeRetrievalControllerSpec
     }
   }
 
-  "OutcomeRetrievalController listOutcomes" should {
+  "OutcomeRetrievalController listOutcomes" must {
     "return 200 OK" when {
       "the user is authenticated and an unacknowledged outcome could be found" in {
         val corId1 = "corId1"

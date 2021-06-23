@@ -16,16 +16,18 @@
 
 package uk.gov.hmrc.entrydeclarationoutcome.controllers
 
+import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.WordSpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.http.HeaderNames._
 import play.api.http.MimeTypes
 import play.api.http.Status._
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws.WSClient
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import play.api.{Application, Environment, Mode}
-import uk.gov.hmrc.play.test.UnitSpec
 
-class OutcomeSubmissionControllerISpec extends UnitSpec with GuiceOneServerPerSuite {
+class OutcomeSubmissionControllerISpec extends WordSpec with GuiceOneServerPerSuite {
 
   val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
@@ -36,7 +38,7 @@ class OutcomeSubmissionControllerISpec extends UnitSpec with GuiceOneServerPerSu
     .configure("metrics.enabled" -> "false", "auditing.enabled" -> "false")
     .build()
 
-  "OutcomeSubmissionController" should {
+  "OutcomeSubmissionController" must {
 
     "return BAD_REQUEST" when {
       "badly formed json payload received" in {

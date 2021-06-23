@@ -37,7 +37,6 @@ object AppDependencies {
     "org.scalamock"          %% "scalamock"                 % "4.4.0"          % "test, it",
     "org.scalacheck"         %% "scalacheck"                % "1.15.4"         % "test, it",
     "com.github.tomakehurst" % "wiremock"                   % "2.27.2"         % "test, it",
-    "uk.gov.hmrc"            %% "hmrctest"                  % "3.10.0-play-26"  % "test, it",
     "com.miguno.akka"        %% "akka-mock-scheduler"       % "0.5.5"          % "test, it",
     "com.typesafe.akka"      %% "akka-testkit"              % "2.5.23"         % "test, it"
   )

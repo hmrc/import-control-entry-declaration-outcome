@@ -20,11 +20,13 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 
-import org.scalatest.{Assertion, BeforeAndAfterAll}
+import org.scalatest.Matchers.{convertToAnyShouldWrapper, not}
 import org.scalatest.concurrent.{Eventually, IntegrationPatience}
+import org.scalatest.{Assertion, BeforeAndAfterAll, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsObject, Json}
+import play.api.test.Helpers.await
 import play.api.test.{DefaultAwaitTimeout, Injecting}
 import play.api.{Application, Environment, Mode}
 import reactivemongo.play.json.ImplicitBSONHandlers._
@@ -33,13 +35,12 @@ import uk.gov.hmrc.entrydeclarationoutcome.housekeeping.HousekeepingScheduler
 import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationoutcome.models._
 import uk.gov.hmrc.entrydeclarationoutcome.utils.SaveError
-import uk.gov.hmrc.play.test.UnitSpec
 
-import scala.util.Random
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.Random
 
 class OutcomeRepoISpec
-    extends UnitSpec
+    extends WordSpec
     with DefaultAwaitTimeout
     with GuiceOneAppPerSuite
     with BeforeAndAfterAll
@@ -249,7 +250,7 @@ class OutcomeRepoISpec
       val listedOutcome =
         OutcomeReceived("testEori", "corId1", receivedDateTime, None, messageType, "subId1", outcomeXml)
 
-      "unacknowledged messages exist" should {
+      "unacknowledged messages exist" must {
         "return a sequence of the messages" in {
           await(repository.removeAll())
           await(repository.save(listedOutcome))
