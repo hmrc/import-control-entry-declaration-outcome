@@ -16,11 +16,12 @@
 
 package uk.gov.hmrc.entrydeclarationoutcome.utils
 
+import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.WordSpec
 import play.api.libs.json.{Format, Json}
-import uk.gov.hmrc.play.test.UnitSpec
 
 trait EnumJsonSpecSupport {
-  self: UnitSpec =>
+  self: WordSpec =>
 
   /**
     * Tests round-tripping

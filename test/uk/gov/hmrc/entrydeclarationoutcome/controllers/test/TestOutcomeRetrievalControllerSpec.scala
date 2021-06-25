@@ -18,18 +18,19 @@ package uk.gov.hmrc.entrydeclarationoutcome.controllers.test
 
 import java.time.Instant
 
+import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.WordSpec
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import play.mvc.Http.MimeTypes
 import uk.gov.hmrc.entrydeclarationoutcome.models.{FullOutcome, MessageType, OutcomeReceived, OutcomeXml}
 import uk.gov.hmrc.entrydeclarationoutcome.services.MockOutcomeRetrievalService
-import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class TestOutcomeRetrievalControllerSpec extends UnitSpec with MockOutcomeRetrievalService {
+class TestOutcomeRetrievalControllerSpec extends WordSpec with MockOutcomeRetrievalService {
 
   val controller =
     new TestOutcomeRetrievalController(Helpers.stubControllerComponents(), mockOutcomeXmlRetrievalService)
@@ -56,7 +57,7 @@ class TestOutcomeRetrievalControllerSpec extends UnitSpec with MockOutcomeRetrie
 
   "TestOutcomeRetrievalController" when {
 
-    "getting outcome xml by submissionId" should {
+    "getting outcome xml by submissionId" must {
       "return 200 with the XML" when {
         "the outcome XML could be found" in {
           MockOutcomeXmlRetrievalService.retrieveOutcome(submissionId) returns Future.successful(Some(outcomeXml))
@@ -79,7 +80,7 @@ class TestOutcomeRetrievalControllerSpec extends UnitSpec with MockOutcomeRetrie
       }
     }
 
-    "getting full outcome by eori and correlationId" should {
+    "getting full outcome by eori and correlationId" must {
       "return 200 with the JSON" when {
         "the outcome could be found" in {
           MockOutcomeXmlRetrievalService.retrieveFullOutcome(eori, correlationId) returns Future.successful(

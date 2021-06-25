@@ -17,6 +17,8 @@
 package uk.gov.hmrc.entrydeclarationoutcome.controllers
 
 import org.scalamock.matchers.ArgCapture.CaptureOne
+import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
 import play.api.http.{HeaderNames, Status}
 import play.api.libs.json.Json
@@ -25,15 +27,13 @@ import play.api.test.Helpers._
 import play.api.test.{FakeRequest, ResultExtractors}
 import play.mvc.Http.MimeTypes
 import uk.gov.hmrc.entrydeclarationoutcome.services.{AuthService, MockAuthService}
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.logging.Authorization
-import uk.gov.hmrc.play.test.UnitSpec
+import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
 
 import scala.concurrent.Future
 import scala.xml.Node
 
 class AuthorisedControllerSpec
-    extends UnitSpec
+    extends WordSpec
     with Status
     with HeaderNames
     with ResultExtractors
@@ -72,28 +72,28 @@ class AuthorisedControllerSpec
 
   "calling an action" when {
 
-    "the user is authorised" should {
+    "the user is authorised" must {
       "return a 200" in new Test {
         MockAuthService.authenticate() returns Future.successful(Some(eori))
 
         private val result: Future[Result] = controller.action()(fakeGetRequest)
-        status(await(result)) shouldBe OK
+        status(result) shouldBe OK
       }
     }
 
-    "user is not authorised" should {
+    "user is not authorised" must {
       "return a 401" in new Test {
         MockAuthService.authenticate() returns Future.successful(None)
 
         private val result: Future[Result] = controller.action()(fakeGetRequest)
-        status(await(result))                       shouldBe UNAUTHORIZED
+        status(result)                              shouldBe UNAUTHORIZED
         xml.XML.loadString(contentAsString(result)) shouldBe unauthorisedXml
         contentType(result)                         shouldBe Some(MimeTypes.XML)
       }
     }
   }
 
-  "AuthController" should {
+  "AuthController" must {
     "use the authorization header to send to auth service" in new Test {
       val hcCapture: CaptureOne[HeaderCarrier] = CaptureOne[HeaderCarrier]()
       MockAuthService.authenticateCapture()(hcCapture) returns Future.successful(Some(eori))

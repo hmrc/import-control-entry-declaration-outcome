@@ -20,18 +20,19 @@ import java.time.{Clock, Instant, ZoneOffset}
 
 import com.codahale.metrics.MetricRegistry
 import com.kenshoo.play.metrics.Metrics
+import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
 import uk.gov.hmrc.entrydeclarationoutcome.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationoutcome.models._
 import uk.gov.hmrc.entrydeclarationoutcome.repositories.MockOutcomeRepo
-import uk.gov.hmrc.play.test.UnitSpec
-import scala.concurrent.duration._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.concurrent.duration._
 
-class OutcomeRetrievalServiceSpec extends UnitSpec with MockOutcomeRepo with MockAppConfig with ScalaFutures {
+class OutcomeRetrievalServiceSpec extends WordSpec with MockOutcomeRepo with MockAppConfig with ScalaFutures {
 
   val time: Instant = Instant.now
   val clock: Clock  = Clock.fixed(time, ZoneOffset.UTC)

@@ -19,19 +19,20 @@ package uk.gov.hmrc.entrydeclarationoutcome.services
 import java.time.{Clock, Instant, ZoneOffset}
 
 import com.kenshoo.play.metrics.Metrics
+import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
 import uk.gov.hmrc.entrydeclarationoutcome.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationoutcome.models.HousekeepingStatus
 import uk.gov.hmrc.entrydeclarationoutcome.repositories.{MockHousekeepingRepo, MockOutcomeRepo}
 import uk.gov.hmrc.entrydeclarationoutcome.utils.MockMetrics
-import uk.gov.hmrc.play.test.UnitSpec
 
-import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.concurrent.duration._
 
 class HousekeepingServiceSpec
-    extends UnitSpec
+    extends WordSpec
     with MockAppConfig
     with MockOutcomeRepo
     with MockHousekeepingRepo
@@ -49,7 +50,7 @@ class HousekeepingServiceSpec
         // WLOG
         val status = HousekeepingStatus(true)
 
-        MockHousekeepingRepo.getHousekeepingStatus returns status
+        MockHousekeepingRepo.getHousekeepingStatus returns Future.successful(status)
         service.getHousekeepingStatus.futureValue shouldBe status
       }
     }
@@ -72,7 +73,7 @@ class HousekeepingServiceSpec
           val submissionId = "submissionId"
 
           MockAppConfig.shortTtl returns newTtl
-          MockOutcomeRepo.setHousekeepingAt(submissionId, time.plusMillis(newTtl.toMillis)).returns(success)
+          MockOutcomeRepo.setHousekeepingAt(submissionId, time.plusMillis(newTtl.toMillis)).returns(Future.successful(success))
 
           service.setShortTtl(submissionId).futureValue shouldBe success
         }
@@ -83,7 +84,7 @@ class HousekeepingServiceSpec
           MockAppConfig.shortTtl returns newTtl
           MockOutcomeRepo
             .setHousekeepingAt(eori, correlationId, time.plusMillis(newTtl.toMillis))
-            .returns(success)
+            .returns(Future.successful(success))
 
           service.setShortTtl(eori, correlationId).futureValue shouldBe success
         }
@@ -92,15 +93,15 @@ class HousekeepingServiceSpec
 
     "performing housekeeping" must {
       "use the current date" in {
-        MockHousekeepingRepo.getHousekeepingStatus returns HousekeepingStatus(true)
+        MockHousekeepingRepo.getHousekeepingStatus returns Future.successful(HousekeepingStatus(true))
         val numDeleted = 123
-        MockOutcomeRepo.housekeep(time) returns numDeleted
+        MockOutcomeRepo.housekeep(time) returns Future.successful(numDeleted)
 
         service.housekeep().futureValue shouldBe true
       }
 
       "do nothing when housekeeping is off" in {
-        MockHousekeepingRepo.getHousekeepingStatus returns HousekeepingStatus(false)
+        MockHousekeepingRepo.getHousekeepingStatus returns Future.successful(HousekeepingStatus(false))
 
         service.housekeep().futureValue shouldBe false
       }

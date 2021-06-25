@@ -20,11 +20,15 @@ import java.time.{Clock, Duration, Instant, ZoneOffset}
 
 import com.codahale.metrics.MetricRegistry
 import com.kenshoo.play.metrics.Metrics
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.Matchers.{be, convertToAnyShouldWrapper}
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import org.scalatest.WordSpec
+import play.api.Logging
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
-class TimerSpec extends UnitSpec with Timer with EventLogger {
+class TimerSpec extends WordSpec with Timer with Logging {
   val metrics: Metrics   = new MockMetrics
   val startTime: Instant = Instant.now
   val endTime: Instant   = startTime.plusSeconds(1)
@@ -41,12 +45,12 @@ class TimerSpec extends UnitSpec with Timer with EventLogger {
     override def toJson: String = throw new NotImplementedError
   }
 
-  "Timer" should {
+  "Timer" must {
     val sleepMs = 300
 
     "Time a future correctly" in {
       await(timeFuture("test timer", "test.sleep") {
-        Thread.sleep(sleepMs)
+        Future.successful(Thread.sleep(sleepMs))
       })
       val beWithinTolerance = be >= sleepMs.toLong and be <= (sleepMs + 100).toLong
       timeMs should beWithinTolerance
@@ -54,7 +58,7 @@ class TimerSpec extends UnitSpec with Timer with EventLogger {
 
     "Time a block correctly" in {
       await(time("test timer", "test.sleep") {
-        Thread.sleep(sleepMs)
+        Future.successful(Thread.sleep(sleepMs))
       })
       val beWithinTolerance = be >= sleepMs.toLong and be <= (sleepMs + 100).toLong
       timeMs should beWithinTolerance

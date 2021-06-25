@@ -15,6 +15,7 @@
  */
 
 package uk.gov.hmrc.entrydeclarationoutcome.repositories
+
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{Matchers, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite

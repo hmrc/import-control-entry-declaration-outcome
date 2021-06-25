@@ -17,7 +17,7 @@
 package uk.gov.hmrc.entrydeclarationoutcome.controllers
 
 import javax.inject.{Inject, Singleton}
-import play.api.Logger
+import play.api.Logging
 import play.api.libs.json.{JsError, JsSuccess, JsValue}
 import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.entrydeclarationoutcome.logging.{ContextLogger, LoggingContext}
@@ -25,7 +25,7 @@ import uk.gov.hmrc.entrydeclarationoutcome.models.OutcomeReceived
 import uk.gov.hmrc.entrydeclarationoutcome.reporting.events.EventCode
 import uk.gov.hmrc.entrydeclarationoutcome.reporting.{OutcomeReport, ReportSender}
 import uk.gov.hmrc.entrydeclarationoutcome.services.OutcomeSubmissionService
-import uk.gov.hmrc.entrydeclarationoutcome.utils.{EventLogger, SaveError}
+import uk.gov.hmrc.entrydeclarationoutcome.utils.SaveError
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -37,7 +37,7 @@ class OutcomeSubmissionController @Inject()(
   reportSender: ReportSender
 )(implicit ec: ExecutionContext)
     extends BackendController(cc)
-    with EventLogger {
+    with Logging {
 
   val postOutcome: Action[JsValue] = Action.async(parse.json) { implicit request =>
     request.body.validate[OutcomeReceived] match {
@@ -73,7 +73,7 @@ class OutcomeSubmissionController @Inject()(
           }
 
       case JsError(errs) =>
-        Logger.error(s"Unable to parse payload: $errs")
+        logger.error(s"Unable to parse payload: $errs")
         Future.successful(BadRequest)
     }
   }
