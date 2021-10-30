@@ -25,7 +25,7 @@ object AppDependencies {
     "uk.gov.hmrc"       %% "bootstrap-backend-play-28" % bootstrapVersion,
     "org.typelevel"     %% "cats-core"                 % "2.6.1",
     "com.chuusai"       %% "shapeless"                 % "2.3.7",
-    "org.reactivemongo" %% "reactivemongo-akkastream"  % "1.0.7"
+    "org.reactivemongo" %% "reactivemongo-akkastream"  % "0.20.13"
   )
 
   val test: Seq[ModuleID] = Seq(
