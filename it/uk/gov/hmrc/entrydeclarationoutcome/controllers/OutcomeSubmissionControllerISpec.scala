@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.entrydeclarationoutcome.controllers
 
-import org.scalatest.Matchers.convertToAnyShouldWrapper
-import org.scalatest.WordSpec
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.http.HeaderNames._
 import play.api.http.MimeTypes
@@ -27,7 +27,7 @@ import play.api.libs.ws.WSClient
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import play.api.{Application, Environment, Mode}
 
-class OutcomeSubmissionControllerISpec extends WordSpec with GuiceOneServerPerSuite {
+class OutcomeSubmissionControllerISpec extends AnyWordSpec with GuiceOneServerPerSuite {
 
   val wsClient: WSClient = app.injector.instanceOf[WSClient]
 

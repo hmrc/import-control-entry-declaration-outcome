@@ -18,8 +18,8 @@ package uk.gov.hmrc.entrydeclarationoutcome.controllers
 
 import java.time.Duration
 
-import org.scalatest.Matchers.convertToAnyShouldWrapper
-import org.scalatest.WordSpec
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
 import play.api.test.Helpers.{contentType, _}
 import play.api.test.{FakeRequest, Helpers}
@@ -32,7 +32,7 @@ import uk.gov.hmrc.entrydeclarationoutcome.utils.SaveError
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class OutcomeSubmissionControllerSpec extends WordSpec with MockOutcomeSubmissionService with MockReportSender {
+class OutcomeSubmissionControllerSpec extends AnyWordSpec with MockOutcomeSubmissionService with MockReportSender {
 
   private val controller =
     new OutcomeSubmissionController(Helpers.stubControllerComponents(), mockOutcomeSubmissionService, mockReportSender)
