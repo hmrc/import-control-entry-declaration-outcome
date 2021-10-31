@@ -37,7 +37,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 
 class HousekeepingSchedulerISpec
-    extends TestKit(ActorSystem("HosekeepingActorSpec"))
+    extends TestKit(ActorSystem("HousekeepingActorSpec"))
     with AnyWordSpecLike
     with Matchers
     with FutureAwaits
