@@ -19,9 +19,9 @@ package uk.gov.hmrc.entrydeclarationoutcome.services
 import java.time.{Clock, Instant, ZoneOffset}
 
 import com.kenshoo.play.metrics.Metrics
-import org.scalatest.Matchers.convertToAnyShouldWrapper
-import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.entrydeclarationoutcome.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationoutcome.models.HousekeepingStatus
 import uk.gov.hmrc.entrydeclarationoutcome.repositories.{MockHousekeepingRepo, MockOutcomeRepo}
@@ -32,7 +32,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 
 class HousekeepingServiceSpec
-    extends WordSpec
+    extends AnyWordSpec
     with MockAppConfig
     with MockOutcomeRepo
     with MockHousekeepingRepo

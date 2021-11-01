@@ -18,14 +18,14 @@ package uk.gov.hmrc.entrydeclarationoutcome.reporting
 
 import java.time.{Clock, Duration, Instant, ZoneOffset}
 
-import org.scalatest.Matchers.convertToAnyShouldWrapper
-import org.scalatest.WordSpec
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsNumber, JsObject, Json}
 import uk.gov.hmrc.entrydeclarationoutcome.models.MessageType
 import uk.gov.hmrc.entrydeclarationoutcome.reporting.events.EventCode
 import uk.gov.hmrc.entrydeclarationoutcome.utils.Values.MkValues
 
-class OutcomeReportSpec extends WordSpec {
+class OutcomeReportSpec extends AnyWordSpec {
 
   val now: Instant = Instant.now
   val clock: Clock = Clock.fixed(now, ZoneOffset.UTC)

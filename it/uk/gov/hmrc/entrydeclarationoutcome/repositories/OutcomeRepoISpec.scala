@@ -20,9 +20,11 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 
-import org.scalatest.Matchers.{convertToAnyShouldWrapper, not}
 import org.scalatest.concurrent.{Eventually, IntegrationPatience}
-import org.scalatest.{Assertion, BeforeAndAfterAll, WordSpec}
+import org.scalatest.matchers.must.Matchers.not
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.{Assertion, BeforeAndAfterAll}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsObject, Json}
@@ -40,7 +42,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Random
 
 class OutcomeRepoISpec
-    extends WordSpec
+    extends AnyWordSpec
     with DefaultAwaitTimeout
     with GuiceOneAppPerSuite
     with BeforeAndAfterAll

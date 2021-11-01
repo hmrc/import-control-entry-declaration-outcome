@@ -18,8 +18,8 @@ package uk.gov.hmrc.entrydeclarationoutcome.controllers
 
 import java.time.Instant
 
-import org.scalatest.Matchers.convertToAnyShouldWrapper
-import org.scalatest.WordSpec
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.MimeTypes
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
@@ -33,7 +33,7 @@ import scala.concurrent.Future
 import scala.xml.Node
 
 class OutcomeRetrievalControllerSpec
-    extends WordSpec
+    extends AnyWordSpec
     with MockOutcomeRetrievalService
     with MockAuthService
     with MockReportSender {

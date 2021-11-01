@@ -17,8 +17,10 @@
 package uk.gov.hmrc.entrydeclarationoutcome.controllers
 
 import controllers.Assets
-import org.scalatest.Matchers.{convertToAnyShouldWrapper, have}
-import org.scalatest.{Assertion, WordSpec}
+import org.scalatest.Assertion
+import org.scalatest.matchers.must.Matchers.have
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.JsValue
@@ -29,7 +31,7 @@ import play.mvc.Http.MimeTypes
 import uk.gov.hmrc.entrydeclarationoutcome.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationoutcome.housekeeping.HousekeepingScheduler
 
-class DocumentationControllerSpec extends WordSpec with MockAppConfig with Injecting with GuiceOneAppPerSuite {
+class DocumentationControllerSpec extends AnyWordSpec with MockAppConfig with Injecting with GuiceOneAppPerSuite {
   override lazy val app: Application = new GuiceApplicationBuilder()
     .in(Environment.simple(mode = Mode.Dev))
     .disable[HousekeepingScheduler]

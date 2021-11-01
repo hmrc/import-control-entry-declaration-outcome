@@ -19,9 +19,9 @@ package uk.gov.hmrc.entrydeclarationoutcome.reporting
 import java.time.{Clock, Duration, Instant, ZoneOffset}
 
 import com.kenshoo.play.metrics.Metrics
-import org.scalatest.Matchers.convertToAnyShouldWrapper
-import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.JsObject
 import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationoutcome.models.MessageType
@@ -34,7 +34,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.control.NoStackTrace
 
-class ReportSenderSpec extends WordSpec with MockAuditHandler with MockEventConnector with ScalaFutures {
+class ReportSenderSpec extends AnyWordSpec with MockAuditHandler with MockEventConnector with ScalaFutures {
 
   // To show that it uses the specified clock for generating events...
   val clock: Clock = Clock.offset(Clock.fixed(Instant.now, ZoneOffset.UTC), Duration.ofSeconds(30))
