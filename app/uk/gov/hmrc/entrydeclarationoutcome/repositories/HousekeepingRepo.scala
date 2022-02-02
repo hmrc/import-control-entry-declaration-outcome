@@ -17,26 +17,16 @@
 package uk.gov.hmrc.entrydeclarationoutcome.repositories
 
 import javax.inject.{Inject, Singleton}
-import play.api.libs.json.{JsObject, Json}
 import play.api.Logger
-import uk.gov.hmrc.mongo.play.json.formats.MongoFormats
-import org.bson.BsonValue
 import org.mongodb.scala._
-import org.mongodb.scala.model.Projections._
 import org.mongodb.scala.model.Filters._
-import org.mongodb.scala.model.Sorts._
 import org.mongodb.scala.model.Updates._
 import org.mongodb.scala.model._
 import uk.gov.hmrc.mongo._
-import org.mongodb.scala.result._
-import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
-import org.mongodb.scala.bson.conversions.Bson
-import org.mongodb.scala.bson.BsonDocument
+import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.entrydeclarationoutcome.models.HousekeepingStatus
 import uk.gov.hmrc.play.http.logging.Mdc
-
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Success
 
 trait HousekeepingRepo {
   def enableHousekeeping(value: Boolean): Future[Unit]

@@ -18,7 +18,6 @@ package uk.gov.hmrc.entrydeclarationoutcome.repositories
 
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
-import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.mongo.play.json.formats.MongoFormats
 import org.bson.BsonValue
 import org.mongodb.scala._
@@ -28,11 +27,8 @@ import org.mongodb.scala.model.Sorts._
 import org.mongodb.scala.model.Updates._
 import org.mongodb.scala.model._
 import uk.gov.hmrc.mongo._
-import org.mongodb.scala.result._
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 import org.mongodb.scala.bson.conversions.Bson
-import org.mongodb.scala.bson.BsonDocument
-
 import uk.gov.hmrc.entrydeclarationoutcome.config.AppConfig
 import uk.gov.hmrc.entrydeclarationoutcome.logging.{ContextLogger, LoggingContext}
 import uk.gov.hmrc.entrydeclarationoutcome.models.{FullOutcome, OutcomeMetadata, OutcomeReceived, OutcomeXml, EntryObjectId}

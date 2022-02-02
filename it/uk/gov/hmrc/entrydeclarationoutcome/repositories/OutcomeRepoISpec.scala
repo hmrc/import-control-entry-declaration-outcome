@@ -19,7 +19,6 @@ package uk.gov.hmrc.entrydeclarationoutcome.repositories
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.UUID
-
 import org.scalatest.concurrent.{Eventually, IntegrationPatience}
 import org.scalatest.matchers.must.Matchers.not
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
@@ -27,11 +26,9 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.{Assertion, BeforeAndAfterAll}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers.await
 import play.api.test.{DefaultAwaitTimeout, Injecting}
 import play.api.{Application, Environment, Mode}
-import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.entrydeclarationoutcome.config.AppConfig
 import uk.gov.hmrc.entrydeclarationoutcome.housekeeping.HousekeepingScheduler
 import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
