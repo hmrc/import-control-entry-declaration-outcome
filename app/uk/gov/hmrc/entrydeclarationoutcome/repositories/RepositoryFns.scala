@@ -16,18 +16,25 @@
 
 package uk.gov.hmrc.entrydeclarationoutcome.repositories
 
-import java.time.Instant
+import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
+import org.mongodb.scala.model.Filters._
+import scala.concurrent.{ExecutionContext, Future}
 
-import play.api.libs.json.{Format, Json}
+trait RepositoryFns {
+  this: PlayMongoRepository[_] =>
 
-//This allows consistent listing of the date time in ascending order. Instant writes drops 'insignificant zeros'
-private[repositories] case class PersistableDateTime($date: Long) {
-  def toInstant: Instant = Instant.ofEpochMilli($date)
-}
+  def removeAll()(implicit ec: ExecutionContext): Future[Unit] =
+    collection
+      .deleteMany(exists("_id"))
+      .toFutureOption
+      .map( _ => ())
 
-private[repositories] object PersistableDateTime {
-  implicit def format: Format[PersistableDateTime] = Json.format[PersistableDateTime]
-
-  def apply(instant: Instant): PersistableDateTime =
-    PersistableDateTime(instant.toEpochMilli)
+  def count()(implicit ec: ExecutionContext): Future[Long] =
+    collection
+      .countDocuments(exists("_id"))
+      .toFutureOption
+      .map{
+        case None => 0L
+        case Some(count) => count
+      }
 }

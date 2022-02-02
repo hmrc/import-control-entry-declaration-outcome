@@ -124,7 +124,7 @@ class OutcomeRepoISpec
   )
 
   def lookupOutcome(submissionId: String): Option[FullOutcome] =
-    await(repository.find("submissionId" -> submissionId)).headOption.map(_.toFullOutcome)
+    await(repository.find(submissionId)).map(_.toFullOutcome)
 
   "OutcomeRepo" when {
     "saving an outcome" when {
@@ -340,11 +340,8 @@ class OutcomeRepoISpec
           await(repository.save(outcome))                         shouldBe None
           await(repository.setHousekeepingAt(submissionId, time)) shouldBe true
 
-          await(
-            repository.collection
-              .find(Json.obj("submissionId" -> submissionId), Option.empty[JsObject])
-              .one[OutcomePersisted]
-              .map(_.map(_.housekeepingAt.toInstant))).get shouldBe time.truncatedTo(ChronoUnit.MILLIS)
+          await(repository.find(submissionId))
+            .map(_.housekeepingAt).get shouldBe time.truncatedTo(ChronoUnit.MILLIS)
         }
 
         "return true if no change is made" in {
@@ -364,11 +361,8 @@ class OutcomeRepoISpec
           await(repository.save(outcome))                                shouldBe None
           await(repository.setHousekeepingAt(eori, correlationId, time)) shouldBe true
 
-          await(
-            repository.collection
-              .find(Json.obj("eori" -> eori, "correlationId" -> correlationId), Option.empty[JsObject])
-              .one[OutcomePersisted]
-              .map(_.map(_.housekeepingAt.toInstant))).get shouldBe time.truncatedTo(ChronoUnit.MILLIS)
+          await(repository.find(eori, correlationId))
+            .map(_.housekeepingAt).get shouldBe time.truncatedTo(ChronoUnit.MILLIS)
         }
 
         "return true if no change is made" in {

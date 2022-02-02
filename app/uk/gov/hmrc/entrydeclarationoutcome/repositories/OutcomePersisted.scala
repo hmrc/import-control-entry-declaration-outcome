@@ -18,15 +18,16 @@ package uk.gov.hmrc.entrydeclarationoutcome.repositories
 
 import play.api.libs.json._
 import uk.gov.hmrc.entrydeclarationoutcome.models.{FullOutcome, MessageType, Outcome, OutcomeReceived}
-
+import java.time.Instant
 import scala.concurrent.duration._
+import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats.Implicits.jatInstantFormat
 
 private[repositories] case class OutcomePersisted(
   eori: String,
   correlationId: String,
   acknowledged: Boolean = false,
-  receivedDateTime: PersistableDateTime,
-  housekeepingAt: PersistableDateTime,
+  receivedDateTime: Instant,
+  housekeepingAt: Instant,
   movementReferenceNumber: Option[String],
   messageType: MessageType,
   submissionId: String,
@@ -37,7 +38,7 @@ private[repositories] case class OutcomePersisted(
       eori                    = eori,
       correlationId           = correlationId,
       movementReferenceNumber = movementReferenceNumber,
-      receivedDateTime        = receivedDateTime.toInstant,
+      receivedDateTime        = receivedDateTime,
       messageType             = messageType,
       submissionId            = submissionId,
       outcomeXml              = outcomeXml
@@ -47,25 +48,24 @@ private[repositories] case class OutcomePersisted(
     FullOutcome(
       toOutcomeReceived,
       acknowledged   = acknowledged,
-      housekeepingAt = housekeepingAt.toInstant
+      housekeepingAt = housekeepingAt
     )
 }
 
 private[repositories] object OutcomePersisted {
   def from(outcomeReceived: OutcomeReceived, defaultTtl: FiniteDuration): OutcomePersisted = {
     import outcomeReceived._
-
-    val persistedDateTime = PersistableDateTime(receivedDateTime)
     OutcomePersisted(
       eori                    = eori,
       correlationId           = correlationId,
-      receivedDateTime        = persistedDateTime,
-      housekeepingAt          = persistedDateTime.copy(persistedDateTime.$date + defaultTtl.toMillis),
+      receivedDateTime        = receivedDateTime,
+      housekeepingAt          = receivedDateTime.plusMillis(defaultTtl.toMillis),
       movementReferenceNumber = movementReferenceNumber,
       messageType             = messageType,
       submissionId            = submissionId,
       outcomeXml              = outcomeXml
     )
   }
+
   implicit val format: Format[OutcomePersisted] = Json.format[OutcomePersisted]
 }

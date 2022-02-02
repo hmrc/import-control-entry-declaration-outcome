@@ -18,11 +18,11 @@ package uk.gov.hmrc.entrydeclarationoutcome.housekeeping
 
 import akka.actor.Scheduler
 import play.api.Logging
-import org.joda.time.{Duration => JodaDuration}
+import java.util.concurrent.TimeUnit
+import scala.concurrent.duration.Duration
 import uk.gov.hmrc.entrydeclarationoutcome.config.AppConfig
 import uk.gov.hmrc.entrydeclarationoutcome.repositories.LockRepositoryProvider
-import uk.gov.hmrc.lock.{ExclusiveTimePeriodLock, LockRepository}
-
+import uk.gov.hmrc.mongo.lock._
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 import scala.util.Failure
@@ -31,21 +31,18 @@ import scala.util.Failure
 class HousekeepingScheduler @Inject()(
   scheduler: Scheduler,
   housekeeper: Housekeeper,
-  lockRepositoryProvider: LockRepositoryProvider,
+  lockProvider: LockRepositoryProvider,
   appConfig: AppConfig
 )(implicit ec: ExecutionContext) extends Logging {
 
-  private val exclusiveTimePeriodLock: ExclusiveTimePeriodLock = new ExclusiveTimePeriodLock {
-    override def repo: LockRepository = lockRepositoryProvider.lockRepository
-
-    override def lockId: String = "housekeeping_lock"
-
-    override val holdLockFor: JodaDuration = JodaDuration.millis(appConfig.housekeepingLockDuration.toMillis)
-  }
+  private val exclusiveTimePeriodLock: TimePeriodLockService =
+    TimePeriodLockService(lockProvider.lockRepository,
+                          lockId = "housekeeping_lock",
+                          ttl = Duration(appConfig.housekeepingLockDuration.toMillis, TimeUnit.MILLISECONDS))
 
   scheduler.scheduleWithFixedDelay(appConfig.housekeepingRunInterval, appConfig.housekeepingRunInterval)(() => {
     exclusiveTimePeriodLock
-      .tryToAcquireOrRenewLock {
+      .withRenewedLock {
         housekeeper.housekeep()
       }
       .andThen {

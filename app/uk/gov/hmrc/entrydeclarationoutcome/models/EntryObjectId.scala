@@ -14,18 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.entrydeclarationoutcome.repositories
+package uk.gov.hmrc.entrydeclarationoutcome.models
 
-import uk.gov.hmrc.mongo.lock.MongoLockRepository
-import org.mongodb.scala.model.Filters._
-import scala.concurrent.{ExecutionContext, Future}
-import javax.inject.{Inject, Singleton}
 
-@Singleton
-class LockRepositoryProvider @Inject()(implicit val lockRepository: MongoLockRepository, ec: ExecutionContext) {
-  def removeAll(): Future[Unit] =
-    lockRepository.collection
-      .deleteMany(exists("_id"))
-      .toFutureOption
-      .map( _ => ())
+import org.bson.types.ObjectId
+import play.api.libs.json.{Format, Json}
+import uk.gov.hmrc.mongo.play.json.formats.MongoFormats.Implicits.objectIdFormat
+
+case class EntryObjectId(_id: ObjectId)
+
+object EntryObjectId {
+  implicit val formats: Format[EntryObjectId] = Json.format[EntryObjectId] 
 }
