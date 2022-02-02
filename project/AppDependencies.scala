@@ -22,11 +22,9 @@ object AppDependencies {
   val compile: Seq[ModuleID] = Seq(
     "uk.gov.hmrc"       %% "simple-reactivemongo"      % "8.0.0-play-28",
     "uk.gov.hmrc.mongo" %% "hmrc-mongo-play-28"        % "0.59.0",
-    //"uk.gov.hmrc"       %% "mongo-lock"                % "7.0.0-play-28",
     "uk.gov.hmrc"       %% "bootstrap-backend-play-28" % bootstrapVersion,
     "org.typelevel"     %% "cats-core"                 % "2.7.0",
-    "com.chuusai"       %% "shapeless"                 % "2.3.7",
-    //"org.reactivemongo" %% "reactivemongo-akkastream"  % "0.20.13"
+    "com.chuusai"       %% "shapeless"                 % "2.3.7"
   )
 
   val test: Seq[ModuleID] = Seq(
