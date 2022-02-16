@@ -17,21 +17,22 @@
 package uk.gov.hmrc.entrydeclarationoutcome.repositories
 
 import akka.stream.Materializer
-import play.api.libs.json.{JsObject, Json}
-import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.akkastream.cursorProducer
-import reactivemongo.api.indexes.Index
-import reactivemongo.api.indexes.IndexType.Ascending
-import reactivemongo.api.{Cursor, WriteConcern}
-import reactivemongo.bson.BSONObjectID
-import reactivemongo.core.errors.DatabaseException
-import reactivemongo.play.json.ImplicitBSONHandlers._
+import akka.stream.scaladsl.Source
+import uk.gov.hmrc.mongo.play.json.formats.MongoFormats
+import org.bson.BsonValue
+import org.mongodb.scala._
+import org.mongodb.scala.model.Projections._
+import org.mongodb.scala.model.Filters._
+import org.mongodb.scala.model.Sorts._
+import org.mongodb.scala.model.Updates._
+import org.mongodb.scala.model._
+import uk.gov.hmrc.mongo._
+import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
+import org.mongodb.scala.bson.conversions.Bson
 import uk.gov.hmrc.entrydeclarationoutcome.config.AppConfig
 import uk.gov.hmrc.entrydeclarationoutcome.logging.{ContextLogger, LoggingContext}
-import uk.gov.hmrc.entrydeclarationoutcome.models.{FullOutcome, OutcomeMetadata, OutcomeReceived, OutcomeXml}
+import uk.gov.hmrc.entrydeclarationoutcome.models.{FullOutcome, OutcomeMetadata, OutcomeReceived, OutcomeXml, EntryObjectId}
 import uk.gov.hmrc.entrydeclarationoutcome.utils.SaveError
-import uk.gov.hmrc.mongo.ReactiveRepository
-import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 import uk.gov.hmrc.play.http.logging.Mdc
 
 import java.time.Instant
@@ -40,167 +41,176 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait OutcomeRepo {
   def save(outcome: OutcomeReceived)(implicit lc: LoggingContext): Future[Option[SaveError]]
-
   def lookupOutcomeXml(submissionId: String): Future[Option[OutcomeXml]]
-
   def lookupOutcome(eori: String, correlationId: String): Future[Option[OutcomeReceived]]
-
   def lookupFullOutcome(eori: String, correlationId: String): Future[Option[FullOutcome]]
-
   /**
     * @return the acknowledged outcome
     */
   def acknowledgeOutcome(eori: String, correlationId: String, time: Instant)(
     implicit lc: LoggingContext): Future[Option[OutcomeReceived]]
-
   def listOutcomes(eori: String): Future[List[OutcomeMetadata]]
-
   def setHousekeepingAt(submissionId: String, time: Instant): Future[Boolean]
-
   def setHousekeepingAt(eori: String, correlationId: String, time: Instant): Future[Boolean]
-
   def housekeep(now: Instant): Future[Int]
 }
 
 @Singleton
 class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
-  implicit mongo: ReactiveMongoComponent,
+  implicit mongo: MongoComponent,
   ec: ExecutionContext,
   mat: Materializer
-) extends ReactiveRepository[OutcomePersisted, BSONObjectID](
-      "outcome",
-      mongo.mongoConnector.db,
-      OutcomePersisted.format,
-      ReactiveMongoFormats.objectIdFormats)
-    with OutcomeRepo {
-
-  override def indexes: Seq[Index] = Seq(
-    Index(Seq(("submissionId", Ascending)), name = Some("submissionIdIndex"), unique = true),
-    Index(Seq("housekeepingAt" -> Ascending), name = Some("housekeepingIndex")),
-    // Covering index for list...
-    Index(
-      Seq(
-        ("eori", Ascending),
-        ("acknowledged", Ascending),
-        ("receivedDateTime", Ascending),
-        ("correlationId", Ascending),
-        ("movementReferenceNumber", Ascending)),
-      name   = Some("listIndex"),
-      unique = false
-    ),
-    Index(
-      Seq(("eori", Ascending), ("correlationId", Ascending)),
-      name   = Some("eoriPlusCorrelationIdIndex"),
-      unique = true
-    )
-  )
+) extends PlayMongoRepository[OutcomePersisted](
+  collectionName = "outcome",
+  mongoComponent = mongo,
+  domainFormat = OutcomePersisted.format,
+  indexes = Seq(IndexModel(ascending("submissionId"),
+                           IndexOptions()
+                            .name("submissionIdIndex")
+                            .unique(true)),
+                IndexModel(ascending("housekeepingAt"),
+                           IndexOptions()
+                            .name("housekeepingIndex")),
+                IndexModel(ascending("eori",
+                                     "acknowledged",
+                                     "receivedDateTime",
+                                     "correlationId",
+                                     "movementReferenceNumber"),
+                           IndexOptions()
+                            .name("listIndex")
+                            .unique(false)),
+                IndexModel(ascending("eori", "correlationId"),
+                           IndexOptions()
+                            .name("eoriPlusCorrelationIdIndex")
+                            .unique(true)),
+                ),
+  extraCodecs = Seq(Codecs.playFormatCodec(MongoFormats.objectIdFormat)),
+  replaceIndexes = true)
+    with OutcomeRepo with RepositoryFns {
 
   val mongoErrorCodeForDuplicate: Int = 11000
 
-  def save(outcome: OutcomeReceived)(implicit lc: LoggingContext): Future[Option[SaveError]] = {
-    val outcomePersisted = OutcomePersisted.from(outcome, appConfig.defaultTtl)
+  //
+  // Test FNs
+  //
+  def find(submissionId: String): Future[Option[OutcomePersisted]] =
+    collection
+      .find(equal("submissionId", submissionId))
+      .headOption()
 
-    Mdc
-      .preservingMdc(insert(outcomePersisted))
-      .map(_ => None)
-      .recover {
-        case e: DatabaseException =>
-          if (e.code.contains(mongoErrorCodeForDuplicate)) {
-            ContextLogger.error(s"Duplicate entry declaration outcome", e)
-            Some(SaveError.Duplicate)
-          } else {
-            ContextLogger.error(s"Unable to save entry declaration outcome", e)
-            Some(SaveError.ServerError)
-          }
-      }
-  }
+  def find(eori: String, correlationId: String): Future[Option[OutcomePersisted]] =
+    collection
+      .find(and(equal("eori", eori), equal("correlationId", correlationId)))
+      .headOption()
+
+  def save(outcome: OutcomeReceived)(implicit lc: LoggingContext): Future[Option[SaveError]] =
+    Mdc.preservingMdc(
+      collection
+        .insertOne(OutcomePersisted.from(outcome, appConfig.defaultTtl))
+        .toFutureOption
+    )
+    .map(_ => None)
+    .recover {
+      case ex: MongoWriteException if ex.getCode == mongoErrorCodeForDuplicate =>
+        ContextLogger.error(s"Duplicate entry declaration outcome", ex)
+        Some(SaveError.Duplicate)
+      case ex =>
+        ContextLogger.error(s"Unable to save entry declaration outcome", ex)
+        Some(SaveError.ServerError)
+    }
 
   //Test only -> so can retrieve even if acknowledged
-  def lookupOutcomeXml(submissionId: String): Future[Option[OutcomeXml]] =
-    Mdc
-      .preservingMdc(
-        collection
-          .find(Json.obj("submissionId" -> submissionId), Some(Json.obj("outcomeXml" -> 1)))
-          .one[OutcomeXml])
+  def lookupOutcomeXml(submissionId: String): Future[Option[OutcomeXml]] = {
+    Mdc.preservingMdc(
+      collection
+        .find[BsonValue](equal("submissionId", submissionId))
+        .projection(fields(include("outcomeXml"), excludeId()))
+        .headOption
+        .map{
+          _.map(xml => Codecs.fromBson[OutcomeXml](xml))
+        }
+    )
+  }
 
   def lookupOutcome(eori: String, correlationId: String): Future[Option[OutcomeReceived]] =
-    Mdc
-      .preservingMdc(
-        collection
-          .find(
-            Json.obj("eori" -> eori, "correlationId" -> correlationId, "acknowledged" -> false),
-            Option.empty[JsObject])
-          .one[OutcomePersisted])
-      .map(_.map(_.toOutcomeReceived))
+    Mdc.preservingMdc(
+      collection
+        .find(and(equal("eori", eori),
+                  equal("correlationId", correlationId),
+                  equal("acknowledged", false)
+              )
+        )
+        .headOption
+    )
+    .map(_.map(_.toOutcomeReceived))
 
   override def lookupFullOutcome(eori: String, correlationId: String): Future[Option[FullOutcome]] =
-    Mdc
-      .preservingMdc(
-        collection
-          .find(Json.obj("eori" -> eori, "correlationId" -> correlationId), Option.empty[JsObject])
-          .one[OutcomePersisted])
-      .map(_.map(_.toFullOutcome))
+    Mdc.preservingMdc(
+      collection
+        .find(and(equal("eori", eori), equal("correlationId", correlationId)))
+        .headOption
+    )
+    .map(_.map(_.toFullOutcome))
 
-  def acknowledgeOutcome(eori: String, correlationId: String, time: Instant)(
-    implicit lc: LoggingContext): Future[Option[OutcomeReceived]] =
-    Mdc
-      .preservingMdc(
-        findAndUpdate(
-          query          = Json.obj("eori" -> eori, "correlationId" -> correlationId, "acknowledged" -> false),
-          update         = Json.obj("$set" -> Json.obj("acknowledged" -> true, "housekeepingAt" -> PersistableDateTime(time))),
-          fetchNewObject = true
-        ))
-      .map(result => result.result[OutcomePersisted].map(_.toOutcomeReceived))
+  def acknowledgeOutcome(eori: String, correlationId: String, time: Instant)(implicit lc: LoggingContext): Future[Option[OutcomeReceived]] =
+    Mdc.preservingMdc(
+      collection
+        .findOneAndUpdate(and(equal("eori", eori), equal("correlationId", correlationId), equal("acknowledged", false)),
+                          combine(set("acknowledged", true), set("housekeepingAt", time)),
+                          FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER))
+        .toFutureOption
+    )
+    .map(_.map(_.toOutcomeReceived))
 
   def listOutcomes(eori: String): Future[List[OutcomeMetadata]] =
     Mdc.preservingMdc(
       collection
-        .find(
-          Json.obj("eori" -> eori, "acknowledged" -> false),
-          Some(Json.obj("correlationId" -> 1, "movementReferenceNumber" -> 1)))
-        .sort(Json.obj("receivedDateTime" -> 1))
-        .cursor[OutcomeMetadata]()
-        .collect[List](maxDocs = appConfig.listOutcomesLimit, err = Cursor.FailOnError[List[OutcomeMetadata]]()))
+        .find[BsonValue](and(equal("eori", eori), equal("acknowledged", false)))
+        .projection(include("correlationId", "movementReferenceNumber"))
+        .sort(ascending("receivedDateTime"))
+        .limit(appConfig.listOutcomesLimit)
+        .collect
+        .toFutureOption
+    )
+    .map{
+      case Some(results) => results.map(Codecs.fromBson[OutcomeMetadata](_)).toList
+      case _ => Nil
+    }
 
   override def setHousekeepingAt(submissionId: String, time: Instant): Future[Boolean] =
-    setHousekeepingAt(time, Json.obj("submissionId" -> submissionId))
+    setHousekeepingAt(time, equal("submissionId", submissionId))
 
   override def setHousekeepingAt(eori: String, correlationId: String, time: Instant): Future[Boolean] =
-    setHousekeepingAt(time, Json.obj("eori" -> eori, "correlationId" -> correlationId))
+    setHousekeepingAt(time, and(equal("eori", eori), equal("correlationId", correlationId)))
 
-  private def setHousekeepingAt(time: Instant, query: JsObject): Future[Boolean] =
+  private def setHousekeepingAt(time: Instant, query: Bson): Future[Boolean] =
     Mdc
       .preservingMdc(
         collection
-          .update(ordered = false, WriteConcern.Default)
-          .one(query, Json.obj("$set" -> Json.obj("housekeepingAt" -> PersistableDateTime(time)))))
-      .map(result => result.n == 1)
+          .updateOne(query, set("housekeepingAt", time))
+          .toFutureOption
+      )
+      .map(_.map(_.getMatchedCount > 0).getOrElse(false))
 
-  override def housekeep(now: Instant): Future[Int] = {
-    val deleteBuilder = collection.delete(ordered = false)
-
-    Mdc
-      .preservingMdc(
+  override def housekeep(now: Instant): Future[Int] =
+    Mdc.preservingMdc(
+      Source.fromPublisher(
         collection
-          .find(
-            selector   = Json.obj("housekeepingAt" -> Json.obj("$lte" -> PersistableDateTime(now))),
-            projection = Some(Json.obj("_id" -> 1))
-          )
-          .sort(Json.obj("housekeepingAt" -> 1))
-          .cursor[JsObject]()
-          .documentSource(maxDocs = appConfig.housekeepingRunLimit)
-          .mapAsync(1) { idDoc =>
-            deleteBuilder.element(q = idDoc, limit = Some(1), collation = None)
+          .find[BsonValue](lte("housekeepingAt", now))
+          .projection(fields(include("_id")))
+          .sort(ascending("housekeepingAt"))
+          .limit(appConfig.housekeepingRunLimit)
+      )
+      .batch(appConfig.housekeepingBatchSize, List(_)) { (deletions, element) =>
+        element :: deletions
+      }
+      .mapAsync(1) { deletions =>
+        collection.bulkWrite(deletions.map(oid => DeleteManyModel(equal("_id", Codecs.fromBson[EntryObjectId](oid)._id))))
+          .toFutureOption
+          .map(_.map(_.getDeletedCount).getOrElse(0))
+          .recover{
+            case e => 0
           }
-          .batch(appConfig.housekeepingBatchSize, List(_)) { (deletions, element) =>
-            element :: deletions
-          }
-          .mapAsync(1) { deletions =>
-            collection
-              .delete()
-              .many(deletions)
-              .map(_.n)
-          }
-          .runFold(0)(_ + _))
-  }
+      }
+      .runFold(0)(_ + _))
 }

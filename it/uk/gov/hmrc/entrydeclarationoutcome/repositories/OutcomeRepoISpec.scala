@@ -19,7 +19,6 @@ package uk.gov.hmrc.entrydeclarationoutcome.repositories
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.UUID
-
 import org.scalatest.concurrent.{Eventually, IntegrationPatience}
 import org.scalatest.matchers.must.Matchers.not
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
@@ -27,11 +26,9 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.{Assertion, BeforeAndAfterAll}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers.await
 import play.api.test.{DefaultAwaitTimeout, Injecting}
 import play.api.{Application, Environment, Mode}
-import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.entrydeclarationoutcome.config.AppConfig
 import uk.gov.hmrc.entrydeclarationoutcome.housekeeping.HousekeepingScheduler
 import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
@@ -124,7 +121,7 @@ class OutcomeRepoISpec
   )
 
   def lookupOutcome(submissionId: String): Option[FullOutcome] =
-    await(repository.find("submissionId" -> submissionId)).headOption.map(_.toFullOutcome)
+    await(repository.find(submissionId)).map(_.toFullOutcome)
 
   "OutcomeRepo" when {
     "saving an outcome" when {
@@ -340,11 +337,8 @@ class OutcomeRepoISpec
           await(repository.save(outcome))                         shouldBe None
           await(repository.setHousekeepingAt(submissionId, time)) shouldBe true
 
-          await(
-            repository.collection
-              .find(Json.obj("submissionId" -> submissionId), Option.empty[JsObject])
-              .one[OutcomePersisted]
-              .map(_.map(_.housekeepingAt.toInstant))).get shouldBe time.truncatedTo(ChronoUnit.MILLIS)
+          await(repository.find(submissionId))
+            .map(_.housekeepingAt).get shouldBe time.truncatedTo(ChronoUnit.MILLIS)
         }
 
         "return true if no change is made" in {
@@ -364,11 +358,8 @@ class OutcomeRepoISpec
           await(repository.save(outcome))                                shouldBe None
           await(repository.setHousekeepingAt(eori, correlationId, time)) shouldBe true
 
-          await(
-            repository.collection
-              .find(Json.obj("eori" -> eori, "correlationId" -> correlationId), Option.empty[JsObject])
-              .one[OutcomePersisted]
-              .map(_.map(_.housekeepingAt.toInstant))).get shouldBe time.truncatedTo(ChronoUnit.MILLIS)
+          await(repository.find(eori, correlationId))
+            .map(_.housekeepingAt).get shouldBe time.truncatedTo(ChronoUnit.MILLIS)
         }
 
         "return true if no change is made" in {
