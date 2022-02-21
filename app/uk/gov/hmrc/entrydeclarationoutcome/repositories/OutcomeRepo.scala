@@ -82,7 +82,7 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
                 IndexModel(ascending("eori", "correlationId"),
                            IndexOptions()
                             .name("eoriPlusCorrelationIdIndex")
-                            .unique(true)),
+                            .unique(true))
                 ),
   extraCodecs = Seq(Codecs.playFormatCodec(MongoFormats.objectIdFormat)),
   replaceIndexes = true)
