@@ -77,7 +77,21 @@ class OutcomeRetrievalControllerSpec
         MockReportSender.sendReport(
           OutcomeReport(EventCode.ENS_RESP_COLLECTED, eori, correlationId, submissionId, messageType))
 
-        val result = controller.getOutcome(correlationId)(FakeRequest())
+        val result = controller.outcomeExternal(correlationId)(FakeRequest())
+
+        status(result)          shouldBe OK
+        contentAsString(result) shouldBe payloadXml
+        contentType(result)     shouldBe Some(MimeTypes.XML)
+      }
+
+      "the user is Internal and the outcome XML could be found" in {
+        MockAuthService.authenticate() returns Future.successful(Some(eori))
+        MockOutcomeXmlRetrievalService.retrieveOutcome(eori, correlationId) returns Future.successful(Some(outcome))
+
+        MockReportSender.sendReport(
+          OutcomeReport(EventCode.ENS_RESP_COLLECTED, eori, correlationId, submissionId, messageType))
+
+        val result = controller.outcome(correlationId)(FakeRequest())
 
         status(result)          shouldBe OK
         contentAsString(result) shouldBe payloadXml
@@ -89,7 +103,17 @@ class OutcomeRetrievalControllerSpec
         MockAuthService.authenticate() returns Future.successful(Some(eori))
         MockOutcomeXmlRetrievalService.retrieveOutcome(eori, correlationId) returns Future.successful(None)
 
-        val result = controller.getOutcome(correlationId)(FakeRequest())
+        val result = controller.outcomeExternal(correlationId)(FakeRequest())
+
+        status(result)                              shouldBe NOT_FOUND
+        xml.XML.loadString(contentAsString(result)) shouldBe notFoundXml
+        contentType(result)                         shouldBe Some(MimeTypes.XML)
+      }
+      "the user is Internal and the outcome XML could not be found" in {
+        MockAuthService.authenticate() returns Future.successful(Some(eori))
+        MockOutcomeXmlRetrievalService.retrieveOutcome(eori, correlationId) returns Future.successful(None)
+
+        val result = controller.outcome(correlationId)(FakeRequest())
 
         status(result)                              shouldBe NOT_FOUND
         xml.XML.loadString(contentAsString(result)) shouldBe notFoundXml
@@ -100,7 +124,14 @@ class OutcomeRetrievalControllerSpec
       "the user is not-authenticated" in {
         MockAuthService.authenticate() returns Future.successful(None)
 
-        val result = controller.getOutcome(correlationId)(FakeRequest())
+        val result = controller.outcomeExternal(correlationId)(FakeRequest())
+
+        status(result) shouldBe UNAUTHORIZED
+      }
+      "the Internal user is not-authenticated" in {
+        MockAuthService.authenticate() returns Future.successful(None)
+
+        val result = controller.outcome(correlationId)(FakeRequest())
 
         status(result) shouldBe UNAUTHORIZED
       }
@@ -116,7 +147,18 @@ class OutcomeRetrievalControllerSpec
         MockReportSender.sendReport(
           OutcomeReport(EventCode.ENS_RESP_ACK, eori, correlationId, submissionId, messageType))
 
-        val result = controller.acknowledgeOutcome(correlationId)(FakeRequest())
+        val result = controller.acknowledgeExternal(correlationId)(FakeRequest())
+
+        status(result) shouldBe OK
+      }
+      "the user is Internal and the outcome XML could be found" in {
+        MockAuthService.authenticate() returns Future.successful(Some(eori))
+        MockOutcomeXmlRetrievalService.acknowledgeOutcome(eori, correlationId) returns Future.successful(Some(outcome))
+
+        MockReportSender.sendReport(
+          OutcomeReport(EventCode.ENS_RESP_ACK, eori, correlationId, submissionId, messageType))
+
+        val result = controller.acknowledge(correlationId)(FakeRequest())
 
         status(result) shouldBe OK
       }
@@ -126,7 +168,17 @@ class OutcomeRetrievalControllerSpec
         MockAuthService.authenticate() returns Future.successful(Some(eori))
         MockOutcomeXmlRetrievalService.acknowledgeOutcome(eori, correlationId) returns Future.successful(None)
 
-        val result = controller.acknowledgeOutcome(correlationId)(FakeRequest())
+        val result = controller.acknowledgeExternal(correlationId)(FakeRequest())
+
+        status(result)                              shouldBe NOT_FOUND
+        xml.XML.loadString(contentAsString(result)) shouldBe notFoundXml
+        contentType(result)                         shouldBe Some(MimeTypes.XML)
+      }
+      "the user is Internal and the outcome XML could not be found" in {
+        MockAuthService.authenticate() returns Future.successful(Some(eori))
+        MockOutcomeXmlRetrievalService.acknowledgeOutcome(eori, correlationId) returns Future.successful(None)
+
+        val result = controller.acknowledge(correlationId)(FakeRequest())
 
         status(result)                              shouldBe NOT_FOUND
         xml.XML.loadString(contentAsString(result)) shouldBe notFoundXml
@@ -137,7 +189,14 @@ class OutcomeRetrievalControllerSpec
       "the user is not-authenticated" in {
         MockAuthService.authenticate() returns Future.successful(None)
 
-        val result = controller.acknowledgeOutcome(correlationId)(FakeRequest())
+        val result = controller.acknowledgeExternal(correlationId)(FakeRequest())
+
+        status(result) shouldBe UNAUTHORIZED
+      }
+      "the Internal user is not-authenticated" in {
+        MockAuthService.authenticate() returns Future.successful(None)
+
+        val result = controller.acknowledge(correlationId)(FakeRequest())
 
         status(result) shouldBe UNAUTHORIZED
       }
@@ -146,28 +205,44 @@ class OutcomeRetrievalControllerSpec
 
   "OutcomeRetrievalController listOutcomes" must {
     "return 200 OK" when {
+
+      val corId1 = "corId1"
+      val mrn    = "mrn"
+      val corId2 = "corId2"
+
+      val listXml =
+        <entryDeclarationResponses>
+          <response>
+            <correlationId>{corId1}</correlationId>
+            <link>/customs/imports/outcomes/{corId1}</link>
+            <MRN>{mrn}</MRN>
+          </response>
+          <response>
+            <correlationId>{corId2}</correlationId>
+            <link>/customs/imports/outcomes/{corId2}</link>
+          </response>
+        </entryDeclarationResponses>
+
       "the user is authenticated and an unacknowledged outcome could be found" in {
-        val corId1 = "corId1"
-        val mrn    = "mrn"
-        val corId2 = "corId2"
+
         MockAuthService.authenticate() returns Future.successful(Some(eori))
         MockOutcomeXmlRetrievalService.listOutcomes(eori) returns Future.successful(
           List(OutcomeMetadata(corId1, Some(mrn)), OutcomeMetadata(corId2)))
 
-        val listXml =
-          <entryDeclarationResponses>
-            <response>
-              <correlationId>{corId1}</correlationId>
-              <link>/customs/imports/outcomes/{corId1}</link>
-              <MRN>{mrn}</MRN>
-            </response>
-            <response>
-              <correlationId>{corId2}</correlationId>
-              <link>/customs/imports/outcomes/{corId2}</link>
-            </response>
-          </entryDeclarationResponses>
+        val result        = controller.listExternal(FakeRequest())
+        val prettyPrinter = new scala.xml.PrettyPrinter(80, 4)
 
-        val result        = controller.listOutcomes()(FakeRequest())
+        status(result)                                                    shouldBe OK
+        prettyPrinter.format(xml.XML.loadString(contentAsString(result))) shouldBe prettyPrinter.format(listXml)
+        contentType(result)                                               shouldBe Some(MimeTypes.XML)
+      }
+      "the user is Internal and an unacknowledged outcome could be found" in {
+
+        MockAuthService.authenticate() returns Future.successful(Some(eori))
+        MockOutcomeXmlRetrievalService.listOutcomes(eori) returns Future.successful(
+          List(OutcomeMetadata(corId1, Some(mrn)), OutcomeMetadata(corId2)))
+
+        val result        = controller.list(FakeRequest())
         val prettyPrinter = new scala.xml.PrettyPrinter(80, 4)
 
         status(result)                                                    shouldBe OK
@@ -180,7 +255,15 @@ class OutcomeRetrievalControllerSpec
         MockAuthService.authenticate() returns Future.successful(Some(eori))
         MockOutcomeXmlRetrievalService.listOutcomes(eori) returns Future.successful(List.empty[OutcomeMetadata])
 
-        val result = controller.listOutcomes()(FakeRequest())
+        val result = controller.listExternal(FakeRequest())
+
+        status(result) shouldBe NO_CONTENT
+      }
+      "the user is Internal and no unacknowledged outcome XML could be found" in {
+        MockAuthService.authenticate() returns Future.successful(Some(eori))
+        MockOutcomeXmlRetrievalService.listOutcomes(eori) returns Future.successful(List.empty[OutcomeMetadata])
+
+        val result = controller.list(FakeRequest())
 
         status(result) shouldBe NO_CONTENT
       }
@@ -189,7 +272,14 @@ class OutcomeRetrievalControllerSpec
       "the user is not-authenticated" in {
         MockAuthService.authenticate() returns Future.successful(None)
 
-        val result = controller.listOutcomes()(FakeRequest())
+        val result = controller.listExternal(FakeRequest())
+
+        status(result) shouldBe UNAUTHORIZED
+      }
+      "the Internal user is not-authenticated" in {
+        MockAuthService.authenticate() returns Future.successful(None)
+
+        val result = controller.list(FakeRequest())
 
         status(result) shouldBe UNAUTHORIZED
       }
