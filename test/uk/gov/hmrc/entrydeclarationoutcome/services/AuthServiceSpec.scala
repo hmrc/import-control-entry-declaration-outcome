@@ -168,4 +168,29 @@ class AuthServiceSpec
       }
     }
   }
+
+  "Authentication with CSP flag set to false" must {
+
+    implicit val hc: HeaderCarrier = HeaderCarrier()
+    implicit val headers: Headers = Headers()
+
+      "return the EORI with enrolment and EORI" in {
+
+        stubAuth returns Future.successful(Enrolments(Set(validICSEnrolment(eori))))
+        service.authenticate(csp = false).futureValue shouldBe Some(eori)
+      }
+
+      "return None with enrolment but no identifiers (using nonCSPAuth)" in {
+
+        stubAuth returns Future.successful(Enrolments(Set(validICSEnrolment(eori).copy(identifiers = Nil))))
+        service.authenticate(csp = false).futureValue shouldBe None
+      }
+
+      "return None with no enrolments in authorized header (using nonCSPAuth)" in {
+
+        stubAuth returns Future.successful(Enrolments(Set.empty))
+        service.authenticate(csp = false).futureValue shouldBe None
+      }
+  }
+
 }
