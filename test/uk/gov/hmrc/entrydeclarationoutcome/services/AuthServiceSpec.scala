@@ -41,8 +41,8 @@ class AuthServiceSpec
 
   implicit override val patienceConfig: PatienceConfig = PatienceConfig(timeout = Span(500, Millis))
 
-  val X_CLIENT_ID      = "X-Client-Id"
-  val clientId = "someClientId"
+  val X_CLIENT_ID = "X-Client-Id"
+  val clientId    = "someClientId"
 
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.global
 
@@ -81,7 +81,7 @@ class AuthServiceSpec
             stubCSPAuth returns Future.successful(())
 
             MockApiSubscriptionFieldsConnector.getAuthenticatedEoriField(clientId) returns Future.successful(Some(eori))
-            service.authenticate().futureValue shouldBe Some(eori)
+            service.authenticate(csp = true).futureValue shouldBe Some(eori)
           }
         }
 
@@ -90,7 +90,7 @@ class AuthServiceSpec
             stubCSPAuth returns Future.successful(())
             MockApiSubscriptionFieldsConnector.getAuthenticatedEoriField(clientId) returns Future.successful(None)
 
-            service.authenticate().futureValue shouldBe None
+            service.authenticate(csp = true).futureValue shouldBe None
           }
         }
       }
@@ -117,7 +117,7 @@ class AuthServiceSpec
         stubCSPAuth returns Future.successful(())
 
         MockApiSubscriptionFieldsConnector.getAuthenticatedEoriField(clientId) returns Future.successful(Some(eori))
-        service.authenticate().futureValue shouldBe Some(eori)
+        service.authenticate(csp = true).futureValue shouldBe Some(eori)
       }
     }
 
@@ -126,7 +126,7 @@ class AuthServiceSpec
         "SS enrolment with an eori" in {
           stubbings()
           stubAuth returns Future.successful(Enrolments(Set(validICSEnrolment(eori))))
-          service.authenticate().futureValue shouldBe Some(eori)
+          service.authenticate(csp = true).futureValue shouldBe Some(eori)
         }
       }
 
@@ -134,7 +134,7 @@ class AuthServiceSpec
         "SS enrolment with no identifiers" in {
           stubbings()
           stubAuth returns Future.successful(Enrolments(Set(validICSEnrolment(eori).copy(identifiers = Nil))))
-          service.authenticate().futureValue shouldBe None
+          service.authenticate(csp = true).futureValue shouldBe None
         }
 
         "no SS enrolment in authorization header" in {
@@ -146,26 +146,51 @@ class AuthServiceSpec
                 identifiers       = Seq(EnrolmentIdentifier(identifier, eori)),
                 state             = "Activated",
                 delegatedAuthRule = None))))
-          service.authenticate().futureValue shouldBe None
+          service.authenticate(csp = true).futureValue shouldBe None
         }
         "no enrolments at all in authorization header" in {
           stubbings()
           stubAuth returns Future.successful(Enrolments(Set.empty))
-          service.authenticate().futureValue shouldBe None
+          service.authenticate(csp = true).futureValue shouldBe None
         }
 
         "SS enrolment not activated" in {
           stubbings()
           stubAuth returns Future.successful(Enrolments(Set(validICSEnrolment(eori).copy(state = "inactive"))))
-          service.authenticate().futureValue shouldBe None
+          service.authenticate(csp = true).futureValue shouldBe None
         }
 
         "authorisation fails" in {
           stubbings()
           stubAuth returns Future.failed(authException)
-          service.authenticate().futureValue shouldBe None
+          service.authenticate(csp = true).futureValue shouldBe None
         }
       }
     }
   }
+
+  "Authentication with CSP flag set to false" must {
+
+    implicit val hc: HeaderCarrier = HeaderCarrier()
+    implicit val headers: Headers = Headers()
+
+      "return the EORI with enrolment and EORI" in {
+
+        stubAuth returns Future.successful(Enrolments(Set(validICSEnrolment(eori))))
+        service.authenticate(csp = false).futureValue shouldBe Some(eori)
+      }
+
+      "return None with enrolment but no identifiers (using nonCSPAuth)" in {
+
+        stubAuth returns Future.successful(Enrolments(Set(validICSEnrolment(eori).copy(identifiers = Nil))))
+        service.authenticate(csp = false).futureValue shouldBe None
+      }
+
+      "return None with no enrolments in authorized header (using nonCSPAuth)" in {
+
+        stubAuth returns Future.successful(Enrolments(Set.empty))
+        service.authenticate(csp = false).futureValue shouldBe None
+      }
+  }
+
 }

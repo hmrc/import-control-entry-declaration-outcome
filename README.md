@@ -24,6 +24,9 @@ The Import Control Entry Declaration Outcome responsibilities:
 |```/```                                  | GET    | External | Endpoint for users to list unacknowledged decisions. |
 |```/:correlationId```                    | GET    | External | Endpoint for users to fetch an unacknowledged decision based on correlation Id. |
 |```/:correlationId```                    | DELETE | External | Endpoint for users to acknowledge an unacknowledged decision based on correlation Id. |
+|```/import-control/list-outcomes```                      | GET    | Internal | Endpoint for users to list unacknowledged decisions. |
+|```/import-control/get-outcome/:correlationId```         | GET    | Internal | Endpoint for users to fetch an unacknowledged decision based on correlation Id. |
+|```/import-control/acknowledge-outcome/:correlationId``` | DELETE | Internal | Endpoint for users to acknowledge an unacknowledged decision based on correlation Id. |
 |```/outcome```                           | POST   | Internal | Endpoint for [Decision microservice](https://github.com/hmrc/import-control-entry-declaration-decision) to save a decision to the database. |
 |```/import-control/housekeeping/status```| GET    | Internal | Endpoint to get housekeeping status. |
 |```/import-control/housekeeping/status```| PUT    | Internal | Endpoint to set housekeeping status. |
