@@ -29,7 +29,7 @@ abstract class AuthorisedController(cc: ControllerComponents) extends BackendCon
 
   case class UserRequest[A](eori: String, request: Request[A]) extends WrappedRequest[A](request)
 
-  def authorisedAction(csp: Boolean): ActionBuilder[UserRequest, AnyContent] =
+  def authorisedAction(): ActionBuilder[UserRequest, AnyContent] =
     new ActionBuilder[UserRequest, AnyContent] {
 
       override def parser: BodyParser[AnyContent] = cc.parsers.defaultBodyParser
@@ -40,7 +40,7 @@ abstract class AuthorisedController(cc: ControllerComponents) extends BackendCon
 
         implicit val headerCarrier: HeaderCarrier = hc(request)
         implicit val headers: Headers             = request.headers
-        authService.authenticate(csp).flatMap {
+        authService.authenticate().flatMap {
           case Some(eori) => block(UserRequest(eori, request))
           case None       => Future.successful(Unauthorized(StandardError.unauthorised))
         }

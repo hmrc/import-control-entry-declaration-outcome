@@ -1,23 +1,15 @@
 # microservice specific routes
 
-# internal routes
-POST       /import-control/outcome                 uk.gov.hmrc.entrydeclarationoutcome.controllers.OutcomeSubmissionController.postOutcome
+POST       /import-control/outcome    uk.gov.hmrc.entrydeclarationoutcome.controllers.OutcomeSubmissionController.postOutcome
 
-GET        /import-control/housekeeping/status     uk.gov.hmrc.entrydeclarationoutcome.controllers.HousekeepingController.getStatus
-PUT        /import-control/housekeeping/status     uk.gov.hmrc.entrydeclarationoutcome.controllers.HousekeepingController.setStatus
+GET         /import-control/housekeeping/status     uk.gov.hmrc.entrydeclarationoutcome.controllers.HousekeepingController.getStatus
+PUT         /import-control/housekeeping/status     uk.gov.hmrc.entrydeclarationoutcome.controllers.HousekeepingController.setStatus
 
-PUT        /import-control/housekeeping/submissionid/:submissionId                 uk.gov.hmrc.entrydeclarationoutcome.controllers.HousekeepingController.setShortTtlBySubmissionId(submissionId)
-PUT        /import-control/housekeeping/eoriandcorrelationid/:eori/:correlationId  uk.gov.hmrc.entrydeclarationoutcome.controllers.HousekeepingController.setShortTtlByEoriAndCorrelationId(eori, correlationId)
+PUT         /import-control/housekeeping/submissionid/:submissionId                 uk.gov.hmrc.entrydeclarationoutcome.controllers.HousekeepingController.setShortTtlBySubmissionId(submissionId)
+PUT         /import-control/housekeeping/eoriandcorrelationid/:eori/:correlationId  uk.gov.hmrc.entrydeclarationoutcome.controllers.HousekeepingController.setShortTtlByEoriAndCorrelationId(eori, correlationId)
 
-GET        /import-control/list-outcomes             uk.gov.hmrc.entrydeclarationoutcome.controllers.OutcomeRetrievalController.list
+GET        /            uk.gov.hmrc.entrydeclarationoutcome.controllers.OutcomeRetrievalController.listOutcomes
 
-GET        /import-control/get-outcome/:id           uk.gov.hmrc.entrydeclarationoutcome.controllers.OutcomeRetrievalController.outcome(id)
+GET        /:id         uk.gov.hmrc.entrydeclarationoutcome.controllers.OutcomeRetrievalController.getOutcome(id)
 
-DELETE     /import-control/acknowledge-outcome/:id   uk.gov.hmrc.entrydeclarationoutcome.controllers.OutcomeRetrievalController.acknowledge(id)
-
-# External routes
-GET        /            uk.gov.hmrc.entrydeclarationoutcome.controllers.OutcomeRetrievalController.listExternal
-
-GET        /:id         uk.gov.hmrc.entrydeclarationoutcome.controllers.OutcomeRetrievalController.outcomeExternal(id)
-
-DELETE     /:id         uk.gov.hmrc.entrydeclarationoutcome.controllers.OutcomeRetrievalController.acknowledgeExternal(id)
+DELETE     /:id         uk.gov.hmrc.entrydeclarationoutcome.controllers.OutcomeRetrievalController.acknowledgeOutcome(id)

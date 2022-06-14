@@ -34,15 +34,10 @@ class OutcomeRetrievalController @Inject()(
   reportSender: ReportSender)(implicit ec: ExecutionContext)
     extends AuthorisedController(cc) {
 
-  val list: Action[AnyContent] = listOutcomes(csp = false)
-  val listExternal: Action[AnyContent] = listOutcomes(csp = true)
-
-  def listOutcomes(csp: Boolean): Action[AnyContent] = authorisedAction(csp).async { userRequest =>
+  def listOutcomes(): Action[AnyContent] = authorisedAction().async { userRequest =>
     implicit val lc: LoggingContext = LoggingContext(eori = Some(userRequest.eori))
 
-    val userType: String = if (csp) "External" else "Internal"
-
-    ContextLogger.info(s"Listing outcomes for $userType call")
+    ContextLogger.info("Listing outcomes")
 
     service.listOutcomes(userRequest.eori).map {
       case Nil             => NoContent
@@ -50,15 +45,10 @@ class OutcomeRetrievalController @Inject()(
     }
   }
 
-  def outcome(correlationId: String): Action[AnyContent] = getOutcome(correlationId, csp = false)
-  def outcomeExternal(correlationId: String): Action[AnyContent] = getOutcome(correlationId, csp = true)
-
-  def getOutcome(correlationId: String, csp: Boolean): Action[AnyContent] = authorisedAction(csp).async { implicit userRequest =>
+  def getOutcome(correlationId: String): Action[AnyContent] = authorisedAction().async { implicit userRequest =>
     implicit val lc: LoggingContext = LoggingContext(eori = Some(userRequest.eori), correlationId = Some(correlationId))
 
-    val userType: String = if (csp) "External" else "Internal"
-
-    ContextLogger.info(s"Fetching outcome for $userType call")
+    ContextLogger.info("Fetching outcome")
 
     service.retrieveOutcome(userRequest.eori, correlationId) map {
       case Some(outcome) =>
@@ -71,15 +61,10 @@ class OutcomeRetrievalController @Inject()(
     }
   }
 
-  def acknowledge(correlationId: String): Action[AnyContent] = acknowledgeOutcome(correlationId, csp = false)
-  def acknowledgeExternal(correlationId: String): Action[AnyContent] = acknowledgeOutcome(correlationId, csp = true)
-
-  def acknowledgeOutcome(correlationId: String, csp: Boolean): Action[AnyContent] = authorisedAction(csp).async { implicit userRequest =>
+  def acknowledgeOutcome(correlationId: String): Action[AnyContent] = authorisedAction().async { implicit userRequest =>
     implicit val lc: LoggingContext = LoggingContext(eori = Some(userRequest.eori), correlationId = Some(correlationId))
 
-    val userType: String = if (csp) "External" else "Internal"
-
-    ContextLogger.info(s"Acknowledging outcome for $userType call")
+    ContextLogger.info("Acknowledging outcome")
 
     service.acknowledgeOutcome(userRequest.eori, correlationId) map {
       case Some(outcome) =>
