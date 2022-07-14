@@ -17,13 +17,13 @@ import play.core.PlayVersion.current
 import sbt._
 
 object AppDependencies {
-  val bootstrapVersion = "5.20.0"
+  val bootstrapVersion = "5.24.0"
 
   val compile: Seq[ModuleID] = Seq(
     "uk.gov.hmrc.mongo" %% "hmrc-mongo-play-28"        % "0.59.0",
     "uk.gov.hmrc"       %% "bootstrap-backend-play-28" % bootstrapVersion,
-    "org.typelevel"     %% "cats-core"                 % "2.7.0",
-    "com.chuusai"       %% "shapeless"                 % "2.3.7"
+    "org.typelevel"     %% "cats-core"                 % "2.8.0",
+    "com.chuusai"       %% "shapeless"                 % "2.3.9"
   )
 
   val test: Seq[ModuleID] = Seq(
