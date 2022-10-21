@@ -1,0 +1,517 @@
+openapi: 3.0.3
+info:
+  title: Safety and security import control entry summary declaration outcomes
+  contact: {}
+  version: '1.0'
+servers:
+  - url: https://test-api.service.hmrc.gov.uk
+    description: Sandbox
+  - url: https://api.service.hmrc.gov.uk
+    description: Production
+components:
+  parameters:
+    acceptHeader:
+      name: Accept
+      in: header
+      description: "Specifies the response format and the [version](/api-documentation/docs/reference-guide#versioning) of the API to be used.\n
+        \nFor example: application/vnd.hmrc.1.0+json"
+      schema:
+        type: string
+        enum: [
+          "application/vnd.hmrc.1.0+json"
+        ]
+      required: true
+    authorizationHeader:
+      name: Authorization
+      in: header
+      description: "An [OAuth 2.0 Bearer Token](/api-documentation/docs/authorisation/user-restricted-endpoints) with the write:import-control-system scope.\n
+        \nFor example: Bearer bb7fed3fe10dd235a2ccda3d50fb"
+      schema:
+        type: string
+        enum: [
+          "Bearer bb7fed3fe10dd235a2ccda3d50fb"
+        ]
+      required: true
+    correlationId: 
+      name: correlationId
+      in: path
+      description: The Correlation ID corresponding to an ENS declaration.
+      schema:
+        type: string
+      style: simple  
+      required: true
+  securitySchemes:
+    User-Restricted:
+      type: oauth2
+      description: HMRC supports OAuth 2.0 for authenticating User-restricted API requests
+      flows:
+        authorizationCode:
+          authorizationUrl: https://api.service.hmrc.gov.uk/oauth/authorize
+          tokenUrl: https://api.service.hmrc.gov.uk/oauth/token
+          refreshUrl: https://api.service.hmrc.gov.uk/oauth/refresh
+          scopes:
+            write:import-control-system: SomeScope
+  schemas:
+    errorResponse:
+      title: errorResponse
+      required:
+      - code
+      type: object
+      properties:
+        code:
+          type: string
+    acknowledgement:
+      title: acknowledgement
+      required:
+      - method
+      - href
+      type: object
+      properties:
+        method:
+          type: string
+          xml:
+            name: method
+            attribute: true
+            wrapped: false
+        href:
+          type: string
+          xml:
+            name: href
+            attribute: true
+            wrapped: false
+      xml:
+        name: acknowledgement
+        namespace: ''
+        attribute: false
+        wrapped: false
+    CC328A:
+      title: CC328A
+      required:
+      - MesSenMES3
+      - MesRecMES6
+      - DatOfPreMES9
+      - TimOfPreMES10
+      - MesIdeMES19
+      - MesTypMES20
+      - CorIdeMES25
+      - HEAHEA
+      - CUSOFFLON
+      - PERLODSUMDEC
+      - CUSOFFFENT730
+      type: object
+      properties:
+        MesSenMES3:
+          type: string
+          xml:
+            name: MesSenMES3
+            namespace: ''
+            attribute: false
+            wrapped: false
+        MesRecMES6:
+          type: string
+          xml:
+            name: MesRecMES6
+            namespace: ''
+            attribute: false
+            wrapped: false
+        DatOfPreMES9:
+          type: integer
+          format: int32
+          xml:
+            name: DatOfPreMES9
+            namespace: ''
+            attribute: false
+            wrapped: false
+        TimOfPreMES10:
+          type: string
+          xml:
+            name: TimOfPreMES10
+            namespace: ''
+            attribute: false
+            wrapped: false
+        MesIdeMES19:
+          type: string
+          xml:
+            name: MesIdeMES19
+            namespace: ''
+            attribute: false
+            wrapped: false
+        MesTypMES20:
+          type: string
+          xml:
+            name: MesTypMES20
+            namespace: ''
+            attribute: false
+            wrapped: false
+        CorIdeMES25:
+          type: string
+          xml:
+            name: CorIdeMES25
+            namespace: ''
+            attribute: false
+            wrapped: false
+        HEAHEA:
+          allOf:
+          - $ref: '#/components/schemas/HEAHEA'
+          - xml:
+              name: HEAHEA
+              namespace: ''
+              attribute: false
+              wrapped: false
+        CUSOFFLON:
+          allOf:
+          - $ref: '#/components/schemas/CUSOFFLON'
+          - xml:
+              name: CUSOFFLON
+              namespace: ''
+              attribute: false
+              wrapped: false
+        PERLODSUMDEC:
+          allOf:
+          - $ref: '#/components/schemas/PERLODSUMDEC'
+          - xml:
+              name: PERLODSUMDEC
+              namespace: ''
+              attribute: false
+              wrapped: false
+        CUSOFFFENT730:
+          allOf:
+          - $ref: '#/components/schemas/CUSOFFFENT730'
+          - xml:
+              name: CUSOFFFENT730
+              namespace: ''
+              attribute: false
+              wrapped: false
+      xml:
+        name: CC328A
+        namespace: http://ics.dgtaxud.ec/CC328A
+        prefix: cc3
+        attribute: false
+        wrapped: false
+    CUSOFFFENT730:
+      title: CUSOFFFENT730
+      required:
+      - RefNumCUSOFFFENT731
+      type: object
+      properties:
+        RefNumCUSOFFFENT731:
+          type: string
+          xml:
+            name: RefNumCUSOFFFENT731
+            namespace: ''
+            attribute: false
+            wrapped: false
+      xml:
+        name: CUSOFFFENT730
+        namespace: ''
+        attribute: false
+        wrapped: false
+    CUSOFFLON:
+      title: CUSOFFLON
+      required:
+      - RefNumCOL1
+      type: object
+      properties:
+        RefNumCOL1:
+          type: string
+          xml:
+            name: RefNumCOL1
+            namespace: ''
+            attribute: false
+            wrapped: false
+      xml:
+        name: CUSOFFLON
+        namespace: ''
+        attribute: false
+        wrapped: false
+    entryDeclarationResponses:
+      title: entryDeclarationResponses
+      required:
+      - response
+      type: object
+      properties:
+        response:
+          type: array
+          items:
+            $ref: '#/components/schemas/response'
+          description: ''
+          xml:
+            namespace: ''
+            attribute: false
+            wrapped: false
+      xml:
+        name: entryDeclarationResponses
+        namespace: ''
+        attribute: false
+        wrapped: false
+    HEAHEA:
+      title: HEAHEA
+      required:
+      - RefNumHEA4
+      - DocNumHEA5
+      - DecRegDatTimHEA115
+      type: object
+      properties:
+        RefNumHEA4:
+          type: string
+          xml:
+            name: RefNumHEA4
+            namespace: ''
+            attribute: false
+            wrapped: false
+        DocNumHEA5:
+          type: string
+          xml:
+            name: DocNumHEA5
+            namespace: ''
+            attribute: false
+            wrapped: false
+        DecRegDatTimHEA115:
+          type: integer
+          format: int64
+          xml:
+            name: DecRegDatTimHEA115
+            namespace: ''
+            attribute: false
+            wrapped: false
+      xml:
+        name: HEAHEA
+        namespace: ''
+        attribute: false
+        wrapped: false
+    outcomeResponse:
+      title: outcomeResponse
+      required:
+      - response
+      - acknowledgement
+      type: object
+      properties:
+        response:
+          allOf:
+          - $ref: '#/components/schemas/response1'
+          - xml:
+              name: response
+              namespace: ''
+              attribute: false
+              wrapped: false
+        acknowledgement:
+          allOf:
+          - $ref: '#/components/schemas/acknowledgement'
+          - xml:
+              name: acknowledgement
+              namespace: ''
+              attribute: false
+              wrapped: false
+      xml:
+        name: outcomeResponse
+        namespace: ''
+        attribute: false
+        wrapped: false
+    PERLODSUMDEC:
+      title: PERLODSUMDEC
+      required:
+      - TINPLD1
+      type: object
+      properties:
+        TINPLD1:
+          type: string
+          xml:
+            name: TINPLD1
+            namespace: ''
+            attribute: false
+            wrapped: false
+      xml:
+        name: PERLODSUMDEC
+        namespace: ''
+        attribute: false
+        wrapped: false
+    response:
+      title: response
+      required:
+      - correlationId
+      - link
+      type: object
+      properties:
+        correlationId:
+          oneOf:
+          - type: integer
+            format: int32
+            xml:
+              name: correlationId
+              namespace: ''
+              attribute: false
+              wrapped: false
+          - type: string
+            xml:
+              name: correlationId
+              namespace: ''
+              attribute: false
+              wrapped: false
+          xml:
+            name: correlationId
+            namespace: ''
+            attribute: false
+            wrapped: false
+        link:
+          type: string
+          xml:
+            name: link
+            namespace: ''
+            attribute: false
+            wrapped: false
+        MRN:
+          type: integer
+          format: int32
+          xml:
+            name: MRN
+            namespace: ''
+            attribute: false
+            wrapped: false
+      xml:
+        name: response
+        namespace: ''
+        attribute: false
+        wrapped: false
+    response1:
+      title: response1
+      required:
+      - CC328A
+      type: object
+      properties:
+        CC328A:
+          allOf:
+          - $ref: '#/components/schemas/CC328A'
+          - xml:
+              name: CC328A
+              namespace: http://ics.dgtaxud.ec/CC328A
+              prefix: cc3
+              attribute: false
+              wrapped: false
+      xml:
+        name: response
+        namespace: ''
+        attribute: false
+        wrapped: false
+paths:
+  /customs/imports/outcomes/:
+    get:
+      tags:
+      - customs
+      summary: Get a list of outcomes
+      description: >
+        This endpoint allows a developer to get a list of outcomes for submissions that are yet to be acknowledged.
+      operationId: Getalistofoutcomes
+      parameters: 
+        - $ref: '#/components/parameters/acceptHeader'
+        - $ref: '#/components/parameters/authorizationHeader'
+      responses:
+        '200':
+          description: 'OK'
+          headers: {}
+          content:
+            application/xml:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/entryDeclarationResponses'
+                - xml:
+                    name: entryDeclarationResponses
+                    attribute: false
+                    wrapped: false
+              examples:
+                xml:
+                  externalValue: './examples/listOfOutcomes.xml'
+        '204':
+          description: 'No Content'
+          headers: {}
+      deprecated: false
+      security:
+        - User-Restricted:
+          - write:import-control-system
+  /customs/imports/outcomes/{correlationId}:
+    get:
+      tags:
+      - customs
+      summary: Retrieve an outcome
+      description: >
+        This endpoint allows a developer to get the outcome for given Correlation ID.
+      operationId: Retrieveanoutcome
+      parameters:
+        - $ref: '#/components/parameters/correlationId'
+        - $ref: '#/components/parameters/acceptHeader'
+        - $ref: '#/components/parameters/authorizationHeader'
+      responses:
+        '200':
+          description: 'OK'
+          headers: {}
+          content:
+            application/xml:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/outcomeResponse'
+                - xml:
+                    name: outcomeResponse
+                    attribute: false
+                    wrapped: false
+              examples:
+                xml:
+                  externalValue: './examples/pollingResponse.xml'
+        '404':
+          description: 'Not Found'
+          headers: {}
+          content:
+            application/xml:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/errorResponse'
+                - xml:
+                    name: errorResponse
+                    attribute: false
+                    wrapped: false
+      deprecated: false
+      security:
+        - User-Restricted:
+          - write:import-control-system
+    delete:
+      tags:
+      - customs
+      summary: Acknowledge an outcome
+      description: >
+        This endpoint allows a developer to acknowledge an outcome using a given correlation ID.
+
+        After calling this endpoint the outcome will no longer be retrievable and will no longer appear in the list of outcomes.
+      operationId: Acknowledgeanoutcome
+      parameters:
+        - $ref: '#/components/parameters/correlationId'
+        - $ref: '#/components/parameters/acceptHeader'
+        - $ref: '#/components/parameters/authorizationHeader'
+      responses:
+        '200':
+          description: 'OK'
+          headers: {}
+          content:
+            application/xml:
+              schema:
+                type: string
+                xml:
+                  name: response200
+                  attribute: false
+                  wrapped: false
+        '404':
+          description: 'Not Found'
+          headers: {}
+          content:
+            application/xml:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/errorResponse'
+                - xml:
+                    name: errorResponse
+                    attribute: false
+                    wrapped: false
+      deprecated: false
+      security:
+        - User-Restricted:
+          - write:import-control-system
+tags:
+- name: customs
+  description: ''
