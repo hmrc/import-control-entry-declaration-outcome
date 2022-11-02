@@ -13,8 +13,10 @@ components:
     acceptHeader:
       name: Accept
       in: header
-      description: "Specifies the response format and the [version](/api-documentation/docs/reference-guide#versioning) of the API to be used.\n
-        \nFor example: application/vnd.hmrc.1.0+json"
+      description: |
+        Specifies the response format and the [version](/api-documentation/docs/reference-guide#versioning) of the API to be used.
+        
+        For example: application/vnd.hmrc.1.0+json
       schema:
         type: string
         enum: [
@@ -24,8 +26,10 @@ components:
     authorizationHeader:
       name: Authorization
       in: header
-      description: "An [OAuth 2.0 Bearer Token](/api-documentation/docs/authorisation/user-restricted-endpoints) with the write:import-control-system scope.\n
-        \nFor example: Bearer bb7fed3fe10dd235a2ccda3d50fb"
+      description: |
+        An [OAuth 2.0 Bearer Token](/api-documentation/docs/authorisation/user-restricted-endpoints) with the write:import-control-system scope.
+        
+        For example: Bearer bb7fed3fe10dd235a2ccda3d50fb
       schema:
         type: string
         enum: [
@@ -418,10 +422,27 @@ paths:
                     attribute: false
                     wrapped: false
               examples:
-                xml:
-                  externalValue: './examples/listOfOutcomes.xml'
+                successResponse:
+                  description: |
+                    A list of Correlation IDs for unacknowledged outcomes (schema [here](https://developer.service.hmrc.gov.uk/api-documentation/docs/api/download/import-control-entry-declaration-outcome/1.0/schemas/outcomes.xsd)). These Correlation IDs correspond to values returned in responses to previously submitted ENS declarations.
+
+                    Outcomes that are successful (accepted) will have a Movement Reference Number (MRN) associated with the Correlation ID in the XML. Outcomes that are unsuccessful (rejected) will have no Movement Reference Number.
+
+                    A maximum of 100 outcomes will be returned in each response.
+                  value: |
+                    <entryDeclarationResponses>
+                      <response>
+                        <correlationId>1234567890</correlationId>
+                        <link>/customs/imports/outcomes/1234567890</link>
+                        <MRN>1234567890</MRN>
+                      </response>
+                      <response>
+                        <correlationId>0987654321</correlationId>
+                        <link>/customs/imports/outcomes/0987654321</link>
+                      </response>
+                    </entryDeclarationResponses>
         '204':
-          description: 'No Content'
+          description: No Content - There are no outcomes available
           headers: {}
       deprecated: false
       security:
@@ -453,8 +474,54 @@ paths:
                     attribute: false
                     wrapped: false
               examples:
-                xml:
-                  externalValue: './examples/pollingResponse.xml'
+                successResponse:
+                  description: |
+                    The outcome for the Correlation ID (schema [here](https://developer.service.hmrc.gov.uk/api-documentation/docs/api/download/import-control-entry-declaration-outcome/1.0/schemas/pollingResponse.xsd)).
+
+                    An accepted outcome which is successful will contain a Movement Reference Number. A rejected outcome will contain one or more errors. Accordingly, the content of response element will be based on one of the following schemas:
+
+                    * New submission accepted: schema [http://ics.dgtaxud.ec/CC328A.](https://developer.service.hmrc.gov.uk/api-documentation/docs/api/download/import-control-entry-declaration-outcome/1.0/schemas/CC328A-v10-0.xsd)
+                    * New submission rejected: schema [http://ics.dgtaxud.ec/CC316A.](https://developer.service.hmrc.gov.uk/api-documentation/docs/api/download/import-control-entry-declaration-outcome/1.0/schemas/CC316A-v10-0.xsd)
+                    * Amended submission accepted: schema [http://ics.dgtaxud.ec/CC304A.](https://developer.service.hmrc.gov.uk/api-documentation/docs/api/download/import-control-entry-declaration-outcome/1.0/schemas/CC304A-v10-0.xsd)
+                    * Amended submission rejected: schema [http://ics.dgtaxud.ec/CC305A.](https://developer.service.hmrc.gov.uk/api-documentation/docs/api/download/import-control-entry-declaration-outcome/1.0/schemas/CC305A-v10-0.xsd)
+                    
+                    These schemas import a number of other schemas:
+
+                    * [http://ics.dgtaxud.ec/doc](https://developer.service.hmrc.gov.uk/api-documentation/docs/api/download/import-control-entry-declaration-outcome/1.0/schemas/doc-v10-0.xsd)
+                    * [http://ics.dgtaxud.ec/complex_ics](https://developer.service.hmrc.gov.uk/api-documentation/docs/api/download/import-control-entry-declaration-outcome/1.0/schemas/complex_types_ics-v10-0.xsd)
+                    * [http://ics.dgtaxud.ec/simple](https://developer.service.hmrc.gov.uk/api-documentation/docs/api/download/import-control-entry-declaration-outcome/1.0/schemas/simple_types-v10-0.xsd)
+                    * [http://ics.dgtaxud.ec/simple_ics](https://developer.service.hmrc.gov.uk/api-documentation/docs/api/download/import-control-entry-declaration-outcome/1.0/schemas/simple_types_ics-v10-0.xsd)
+                    * [http://ics.dgtaxud.ec/tcl](https://developer.service.hmrc.gov.uk/api-documentation/docs/api/download/import-control-entry-declaration-outcome/1.0/schemas/tcl-v10-0.xsd)
+                    * [http://ics.dgtaxud.ec/tcl_ics](https://developer.service.hmrc.gov.uk/api-documentation/docs/api/download/import-control-entry-declaration-outcome/1.0/schemas/tcl_ics-v10-0.xsd)
+                  value: |
+                    <outcomeResponse xmlns:cc3="http://ics.dgtaxud.ec/CC328A">
+                        <response>
+                            <cc3:CC328A>
+                                <MesSenMES3>GB000012340003/1234567890</MesSenMES3>
+                                <MesRecMES6>GB000012340003/1234567890</MesRecMES6>
+                                <DatOfPreMES9>190114</DatOfPreMES9>
+                                <TimOfPreMES10>0945</TimOfPreMES10>
+                                <MesIdeMES19>MSUI11235227</MesIdeMES19>
+                                <MesTypMES20>CC328A</MesTypMES20>
+                                <CorIdeMES25>0JRF7UncK0t004</CorIdeMES25>
+                                <HEAHEA>
+                                    <RefNumHEA4>Preeti_315A_TC001</RefNumHEA4>
+                                    <DocNumHEA5>10GB08I01234567891</DocNumHEA5>
+                                    <DecRegDatTimHEA115>201901140945</DecRegDatTimHEA115>
+                                </HEAHEA>
+                                <CUSOFFLON>
+                                    <RefNumCOL1>ES000055</RefNumCOL1>
+                                </CUSOFFLON>
+                                <PERLODSUMDEC>
+                                    <TINPLD1>GB000012340002</TINPLD1>
+                                </PERLODSUMDEC>
+                                <CUSOFFFENT730>
+                                    <RefNumCUSOFFFENT731>GB000011</RefNumCUSOFFFENT731>
+                                </CUSOFFFENT730>
+                            </cc3:CC328A>
+                        </response>
+                        <acknowledgement method='DELETE' href='/customs/imports/outcomes/0JRF7UncK0t004'/>
+                    </outcomeResponse>
         '404':
           description: 'Not Found'
           headers: {}
@@ -467,6 +534,15 @@ paths:
                     name: errorResponse
                     attribute: false
                     wrapped: false
+              examples:
+                notFound:
+                  description: |
+                    No outcome for the submission with the specified Correlation ID is currently available or the outcome has already been acknowledged.
+                  value: |
+                    <error>
+                      <code>OUTCOME_NOT_FOUND</code>
+                      <message>No unacknowledged outcome found</message>
+                    </error>
       deprecated: false
       security:
         - User-Restricted:
@@ -486,16 +562,8 @@ paths:
         - $ref: '#/components/parameters/authorizationHeader'
       responses:
         '200':
-          description: 'OK'
+          description: 'OK - The outcome has successfully been acknowledged.'
           headers: {}
-          content:
-            application/xml:
-              schema:
-                type: string
-                xml:
-                  name: response200
-                  attribute: false
-                  wrapped: false
         '404':
           description: 'Not Found'
           headers: {}
@@ -508,6 +576,15 @@ paths:
                     name: errorResponse
                     attribute: false
                     wrapped: false
+              examples:
+                notFound:
+                  description: |
+                    No outcome for the submission with the specified Correlation ID is currently available or the outcome has already been acknowledged.
+                  value: |
+                    <error>
+                      <code>OUTCOME_NOT_FOUND</code>
+                      <message>No unacknowledged outcome found</message>
+                    </error>
       deprecated: false
       security:
         - User-Restricted:
