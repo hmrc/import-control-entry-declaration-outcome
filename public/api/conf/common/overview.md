@@ -18,3 +18,7 @@ This API will allow you to:
 * get a list of outcomes
 * retrieve an outcome
 * acknowledge an outcome
+
+## Changelog
+
+All service changes can be found within our Wiki page located [here](https://github.com/hmrc/import-control-entry-declaration-outcome/wiki/Changelog).
