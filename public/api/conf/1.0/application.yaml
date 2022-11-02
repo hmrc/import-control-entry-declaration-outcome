@@ -60,9 +60,14 @@ components:
       title: errorResponse
       required:
       - code
+      - message
       type: object
       properties:
         code:
+          description: The error code
+          type: string
+        message:
+          description: The error message
           type: string
     acknowledgement:
       title: acknowledgement
@@ -363,7 +368,7 @@ components:
         attribute: false
         wrapped: false
     response1:
-      title: response1
+      title: response
       required:
       - CC328A
       type: object
