@@ -16,11 +16,11 @@ components:
       description: |
         Specifies the response format and the [version](/api-documentation/docs/reference-guide#versioning) of the API to be used.
         
-        For example: application/vnd.hmrc.1.0+json
+        For example: application/vnd.hmrc.1.0+xml
       schema:
         type: string
         enum: [
-          "application/vnd.hmrc.1.0+json"
+          "application/vnd.hmrc.1.0+xml"
         ]
       required: true
     authorizationHeader:
@@ -54,7 +54,7 @@ components:
           tokenUrl: https://api.service.hmrc.gov.uk/oauth/token
           refreshUrl: https://api.service.hmrc.gov.uk/oauth/refresh
           scopes:
-            write:import-control-system: SomeScope
+            write:import-control-system: Access Import Control System
   schemas:
     errorResponse:
       title: errorResponse
@@ -119,8 +119,8 @@ components:
             attribute: false
             wrapped: false
         DatOfPreMES9:
-          type: integer
-          format: int32
+          type: string
+          format: date
           xml:
             name: DatOfPreMES9
             namespace: ''
@@ -271,8 +271,8 @@ components:
             attribute: false
             wrapped: false
         DecRegDatTimHEA115:
-          type: integer
-          format: int64
+          type: string
+          format: date-time
           xml:
             name: DecRegDatTimHEA115
             namespace: ''
@@ -337,20 +337,7 @@ components:
       type: object
       properties:
         correlationId:
-          oneOf:
-          - type: integer
-            format: int32
-            xml:
-              name: correlationId
-              namespace: ''
-              attribute: false
-              wrapped: false
-          - type: string
-            xml:
-              name: correlationId
-              namespace: ''
-              attribute: false
-              wrapped: false
+          type: string
           xml:
             name: correlationId
             namespace: ''
@@ -364,8 +351,7 @@ components:
             attribute: false
             wrapped: false
         MRN:
-          type: integer
-          format: int32
+          type: string
           xml:
             name: MRN
             namespace: ''
