@@ -57,7 +57,7 @@ components:
             write:import-control-system: Access Import Control System
   schemas:
     errorResponse:
-      title: errorResponse
+      title: error
       required:
       - code
       - message
@@ -387,6 +387,44 @@ components:
         namespace: ''
         attribute: false
         wrapped: false
+    listOutcomesResponse:
+      title: listOfOutcomes
+      required:
+        - entryDeclarationResponses
+      type: object
+      properties:
+        entryDeclarationResponses:
+          allOf:
+            - $ref: '#/components/schemas/entryDeclarationResponses'
+            - xml:
+                name: entryDeclarationResponses
+                namespace: ''
+                attribute: false
+                wrapped: false
+    retrieveOutcomeResponse:
+      title: retrieveOutcome
+      required:
+        - outcomeResponse
+      type: object
+      properties:
+        outcomeResponse:
+          allOf:
+            - $ref: '#/components/schemas/outcomeResponse'
+            - xml:
+                name: outcomeResponse
+                namespace: http://ics.dgtaxud.ec/CC328A
+                prefix: cc3
+                attribute: false
+                wrapped: false
+    notFoundResponse:
+      title: notFound
+      required:
+        - error
+      type: object
+      properties:
+        error:
+          allOf:
+            - $ref: '#/components/schemas/errorResponse'
 paths:
   /customs/imports/outcomes/:
     get:
@@ -407,7 +445,7 @@ paths:
             application/xml:
               schema:
                 allOf:
-                - $ref: '#/components/schemas/entryDeclarationResponses'
+                - $ref: '#/components/schemas/listOutcomesResponse'
                 - xml:
                     name: entryDeclarationResponses
                     attribute: false
@@ -459,7 +497,7 @@ paths:
             application/xml:
               schema:
                 allOf:
-                - $ref: '#/components/schemas/outcomeResponse'
+                - $ref: '#/components/schemas/retrieveOutcomeResponse'
                 - xml:
                     name: outcomeResponse
                     attribute: false
@@ -520,11 +558,7 @@ paths:
             application/xml:
               schema:
                 allOf:
-                - $ref: '#/components/schemas/errorResponse'
-                - xml:
-                    name: errorResponse
-                    attribute: false
-                    wrapped: false
+                - $ref: '#/components/schemas/notFoundResponse'
               examples:
                 notFound:
                   description: |
@@ -562,11 +596,7 @@ paths:
             application/xml:
               schema:
                 allOf:
-                - $ref: '#/components/schemas/errorResponse'
-                - xml:
-                    name: errorResponse
-                    attribute: false
-                    wrapped: false
+                - $ref: '#/components/schemas/notFoundResponse'
               examples:
                 notFound:
                   description: |
