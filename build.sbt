@@ -31,7 +31,7 @@ lazy val coverageSettings: Seq[Setting[_]] = {
   )
 }
 
-val silencerVersion = "1.7.9"
+val silencerVersion = "1.7.12"
 
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin, ScalafmtCorePlugin)
@@ -40,7 +40,6 @@ lazy val microservice = Project(appName, file("."))
     scalaVersion := "2.12.13",
     majorVersion := 0,
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
-    dependencyOverrides ++= AppDependencies.overrides,
     resolvers += Resolver.jcenterRepo,
     PlayKeys.playDefaultPort := 9815
   )
