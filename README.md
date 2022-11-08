@@ -33,11 +33,11 @@ The Import Control Entry Declaration Outcome responsibilities:
 |```/import-control/test-only/fulloutcome/:eori/:correlationId``` | GET    | Test     | Endpoint to get the full stored outcome JSON by EORI and correlationId. |
 
 ## API Reference / Documentation 
-For more information on external API endpoints see the RAML at [Developer Hub]("https://developer.service.hmrc.gov.uk/api-documentation/docs/api/service/import-control-entry-declaration-outcome/1.0") or using the endpoint below
+For more information on external API endpoints see the YAML at [Developer Hub]("https://developer.service.hmrc.gov.uk/api-documentation/docs/api/service/import-control-entry-declaration-outcome/1.0") or using the endpoint below
 
-|Path                          | Supported Methods | Description |
-| -----------------------------| ----------------- | ----------- |
-|```/api/conf/:version/*file```|        GET        | /api/conf/1.0/application.raml |
+|Path                          | Supported Methods | Description                    |
+| -----------------------------| ----------------- |--------------------------------|
+|```/api/conf/:version/*file```|        GET        | /api/conf/1.0/application.yaml |
 
 ## License
 
