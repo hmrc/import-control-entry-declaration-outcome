@@ -446,10 +446,6 @@ paths:
               schema:
                 allOf:
                 - $ref: '#/components/schemas/listOutcomesResponse'
-                - xml:
-                    name: entryDeclarationResponses
-                    attribute: false
-                    wrapped: false
               examples:
                 successResponse:
                   description: |
@@ -498,10 +494,6 @@ paths:
               schema:
                 allOf:
                 - $ref: '#/components/schemas/retrieveOutcomeResponse'
-                - xml:
-                    name: outcomeResponse
-                    attribute: false
-                    wrapped: false
               examples:
                 successResponse:
                   description: |
