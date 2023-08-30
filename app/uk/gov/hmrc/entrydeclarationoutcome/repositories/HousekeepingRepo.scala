@@ -55,7 +55,7 @@ class HousekeepingRepoImpl @Inject()(
     Mdc.preservingMdc(
       collection
         .deleteOne(equal("_id", singletonId))
-        .toFutureOption
+        .toFutureOption()
     )
     .map{
       case None => ()
@@ -73,7 +73,7 @@ class HousekeepingRepoImpl @Inject()(
             set("on", false),
             FindOneAndUpdateOptions().upsert(true)
           )
-          .toFutureOption
+          .toFutureOption()
       )
       .map{
         case None => ()
@@ -86,7 +86,7 @@ class HousekeepingRepoImpl @Inject()(
     Mdc.preservingMdc(
       collection
         .countDocuments(equal("_id", singletonId))
-        .headOption
+        .headOption()
     )
     .map{
       case None => HousekeepingStatus(true)

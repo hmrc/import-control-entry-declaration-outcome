@@ -1,5 +1,4 @@
 import uk.gov.hmrc.DefaultBuildSettings.integrationTestSettings
-import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 
 val appName = "import-control-entry-declaration-outcome"
 
@@ -31,26 +30,20 @@ lazy val coverageSettings: Seq[Setting[_]] = {
   )
 }
 
-val silencerVersion = "1.7.12"
-
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin, ScalafmtCorePlugin)
   .disablePlugins(JUnitXmlReportPlugin)
   .settings(
-    scalaVersion := "2.12.13",
+    scalaVersion := "2.13.8",
     majorVersion := 0,
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     resolvers += Resolver.jcenterRepo,
     PlayKeys.playDefaultPort := 9815
   )
-  .settings(publishingSettings: _*)
   .settings(coverageSettings: _*)
   .configs(IntegrationTest)
   .settings(integrationTestSettings(): _*)
   .settings(
-    scalacOptions ++= Seq("-P:silencer:pathFilters=views;routes", "-Ywarn-unused:-implicits"),
-    libraryDependencies ++= Seq(
-      compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full),
-      "com.github.ghik" % "silencer-lib" % silencerVersion % Provided cross CrossVersion.full
-    )
+    scalacOptions ++= Seq("-Wconf:src=routes/.*:s", "-Ywarn-unused:-implicits")
+//    scalacOptions ++= Seq("-P:silencer:pathFilters=views;routes", "-Ywarn-unused:-implicits")
   )

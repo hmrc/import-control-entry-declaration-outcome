@@ -31,14 +31,14 @@ trait MockOutcomeRetrievalService extends MockFactory {
       (mockOutcomeXmlRetrievalService.retrieveOutcomeXml(_: String)) expects submissionId
 
     def retrieveOutcome(eori: String, correlationId: String): CallHandler[Future[Option[OutcomeReceived]]] =
-      (mockOutcomeXmlRetrievalService.retrieveOutcome(_: String, _: String)) expects (eori, correlationId)
+      (mockOutcomeXmlRetrievalService.retrieveOutcome(_: String, _: String)).expects(eori, correlationId)
 
     def retrieveFullOutcome(eori: String, correlationId: String): CallHandler[Future[Option[FullOutcome]]] =
-      (mockOutcomeXmlRetrievalService.retrieveFullOutcome(_: String, _: String)) expects (eori, correlationId)
+      (mockOutcomeXmlRetrievalService.retrieveFullOutcome(_: String, _: String)).expects(eori, correlationId)
 
     def acknowledgeOutcome(eori: String, correlationId: String): CallHandler[Future[Option[OutcomeReceived]]] =
       (mockOutcomeXmlRetrievalService
-        .acknowledgeOutcome(_: String, _: String)(_: LoggingContext)) expects (eori, correlationId, *)
+        .acknowledgeOutcome(_: String, _: String)(_: LoggingContext)).expects(eori, correlationId, *)
 
     def listOutcomes(eori: String): CallHandler[Future[List[OutcomeMetadata]]] =
       mockOutcomeXmlRetrievalService.listOutcomes _ expects eori

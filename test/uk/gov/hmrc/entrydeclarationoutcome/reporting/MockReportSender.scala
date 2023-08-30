@@ -29,10 +29,10 @@ trait MockReportSender extends MockFactory {
   object MockReportSender {
     def sendReport[R](report: R): Unit =
       (mockReportSender
-        .sendReport(_: R)(_: EventSources[R], _: HeaderCarrier, _: LoggingContext)) expects (report, *, *, *)
+        .sendReport(_: R)(_: EventSources[R], _: HeaderCarrier, _: LoggingContext)).expects(report, *, *, *)
 
     def timeFrom(metric: String, startTime: Instant): CallHandler[Duration] =
       (mockReportSender.
-        timeFrom(_: String, _: Instant)) expects(metric, startTime)
+        timeFrom(_: String, _: Instant)).expects(metric, startTime)
   }
 }

@@ -26,13 +26,13 @@ trait RepositoryFns {
   def removeAll()(implicit ec: ExecutionContext): Future[Unit] =
     collection
       .deleteMany(exists("_id"))
-      .toFutureOption
+      .toFutureOption()
       .map( _ => ())
 
   def count()(implicit ec: ExecutionContext): Future[Long] =
     collection
       .countDocuments(exists("_id"))
-      .toFutureOption
+      .toFutureOption()
       .map{
         case None => 0L
         case Some(count) => count

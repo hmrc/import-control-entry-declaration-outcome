@@ -63,7 +63,7 @@ class HousekeepingRepoISpec
           await(repository.enableHousekeeping(true))
 
           await(repository.getHousekeepingStatus) shouldBe HousekeepingStatus(on = true)
-          await(repository.count)                 shouldBe 0
+          await(repository.count())                 shouldBe 0
         }
       }
 
@@ -72,7 +72,7 @@ class HousekeepingRepoISpec
           await(repository.enableHousekeeping(false))
 
           await(repository.getHousekeepingStatus) shouldBe HousekeepingStatus(on = false)
-          await(repository.count)                 shouldBe 1
+          await(repository.count())                 shouldBe 1
         }
       }
     }
@@ -94,7 +94,7 @@ class HousekeepingRepoISpec
           await(repository.enableHousekeeping(false))
 
           await(repository.getHousekeepingStatus) shouldBe HousekeepingStatus(on = false)
-          await(repository.count)                 shouldBe 1
+          await(repository.count())                 shouldBe 1
         }
       }
 
@@ -103,7 +103,7 @@ class HousekeepingRepoISpec
           await(repository.enableHousekeeping(true))
 
           await(repository.getHousekeepingStatus) shouldBe HousekeepingStatus(on = true)
-          await(repository.count)                 shouldBe 0
+          await(repository.count())                 shouldBe 0
         }
       }
     }
