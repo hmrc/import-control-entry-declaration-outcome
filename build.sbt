@@ -45,5 +45,4 @@ lazy val microservice = Project(appName, file("."))
   .settings(integrationTestSettings(): _*)
   .settings(
     scalacOptions ++= Seq("-Wconf:src=routes/.*:s", "-Ywarn-unused:-implicits")
-//    scalacOptions ++= Seq("-P:silencer:pathFilters=views;routes", "-Ywarn-unused:-implicits")
   )
