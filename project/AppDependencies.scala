@@ -33,7 +33,7 @@ object AppDependencies {
     "com.typesafe.play"            %% "play-test"               % current          % "test",
     "org.scalatestplus.play"       %% "scalatestplus-play"      % "5.1.0"          % "test, it",
     "org.scalamock"                %% "scalamock"               % "5.2.0"          % "test, it",
-    "org.scalatestplus"            %% "scalacheck-1-15"         % "3.2.11.0"       % "test, it",
+    "org.scalatestplus"            %% "scalacheck-1-17"         % "3.2.16.0"       % "test, it",
     "com.github.tomakehurst"       %  "wiremock-jre8"           % "2.35.0"         % "test, it",
     "com.fasterxml.jackson.module" %% "jackson-module-scala"    % "2.15.2"         % "test, it",
     "com.miguno.akka"              %% "akka-mock-scheduler"     % "0.5.5"          % "test, it",
