@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,20 +25,20 @@ trait MockAppConfig extends MockFactory {
   val mockAppConfig: AppConfig = mock[AppConfig]
 
   object MockAppConfig {
-    def appName: CallHandler[String] = mockAppConfig.appName _ expects ()
+    def appName: CallHandler[String] = (() => mockAppConfig.appName).expects()
 
-    def eventsHost: CallHandler[String] = mockAppConfig.eventsHost _ expects ()
+    def eventsHost: CallHandler[String] = (() => mockAppConfig.eventsHost).expects()
 
-    def apiSubscriptionFieldsHost: CallHandler[String] = mockAppConfig.apiSubscriptionFieldsHost _ expects ()
+    def apiSubscriptionFieldsHost: CallHandler[String] = (() => mockAppConfig.apiSubscriptionFieldsHost).expects()
 
-    def apiGatewayContext: CallHandler[String] = mockAppConfig.apiGatewayContext _ expects ()
+    def apiGatewayContext: CallHandler[String] = (() => mockAppConfig.apiGatewayContext).expects()
 
-    def apiStatus: CallHandler[String] = mockAppConfig.apiStatus _ expects ()
+    def apiStatus: CallHandler[String] = (() => mockAppConfig.apiStatus).expects()
 
-    def apiEndpointsEnabled: CallHandler[Boolean] = mockAppConfig.apiEndpointsEnabled _ expects ()
+    def apiEndpointsEnabled: CallHandler[Boolean] = (() => mockAppConfig.apiEndpointsEnabled).expects()
 
-    def listOutcomesLimit: CallHandler[Int] = mockAppConfig.listOutcomesLimit _ expects ()
+    def listOutcomesLimit: CallHandler[Int] = (() => mockAppConfig.listOutcomesLimit).expects()
 
-    def shortTtl: CallHandler[FiniteDuration] = mockAppConfig.shortTtl _ expects ()
+    def shortTtl: CallHandler[FiniteDuration] = (() => mockAppConfig.shortTtl).expects()
   }
 }

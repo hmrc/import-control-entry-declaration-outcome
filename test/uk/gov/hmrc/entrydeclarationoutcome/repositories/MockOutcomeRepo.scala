@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,32 +30,32 @@ trait MockOutcomeRepo extends MockFactory {
 
   object MockOutcomeRepo {
     def saveOutcome(outcome: OutcomeReceived): CallHandler[Future[Option[SaveError]]] =
-      (outcomeRepo.save(_: OutcomeReceived)(_: LoggingContext)) expects (outcome, *)
+      (outcomeRepo.save(_: OutcomeReceived)(_: LoggingContext)).expects(outcome, *)
 
     def lookupOutcomeXml(submissionId: String): CallHandler[Future[Option[OutcomeXml]]] =
       (outcomeRepo.lookupOutcomeXml(_: String)) expects submissionId
 
     def lookupOutcome(eori: String, correlationId: String): CallHandler[Future[Option[OutcomeReceived]]] =
-      (outcomeRepo.lookupOutcome(_: String, _: String)) expects (eori, correlationId)
+      (outcomeRepo.lookupOutcome(_: String, _: String)).expects(eori, correlationId)
 
     def acknowledgeOutcome(
       eori: String,
       correlationId: String,
       time: Instant): CallHandler[Future[Option[OutcomeReceived]]] =
       (outcomeRepo
-        .acknowledgeOutcome(_: String, _: String, _: Instant)(_: LoggingContext)) expects (eori, correlationId, time, *)
+        .acknowledgeOutcome(_: String, _: String, _: Instant)(_: LoggingContext)).expects(eori, correlationId, time, *)
 
     def listOutcomes(eori: String): CallHandler[Future[List[OutcomeMetadata]]] =
       outcomeRepo.listOutcomes _ expects eori
 
     def setHousekeepingAt(submissionId: String, time: Instant): CallHandler[Future[Boolean]] =
-      (outcomeRepo.setHousekeepingAt(_: String, _: Instant)) expects (submissionId, time)
+      (outcomeRepo.setHousekeepingAt(_: String, _: Instant)).expects(submissionId, time)
 
     def setHousekeepingAt(eori: String, correlationId: String, time: Instant): CallHandler[Future[Boolean]] =
-      (outcomeRepo.setHousekeepingAt(_: String, _: String, _: Instant)) expects (eori, correlationId, time)
+      (outcomeRepo.setHousekeepingAt(_: String, _: String, _: Instant)).expects(eori, correlationId, time)
 
     def lookupFullOutcome(eori: String, correlationId: String): CallHandler[Future[Option[FullOutcome]]] =
-      (outcomeRepo.lookupFullOutcome(_: String, _: String)) expects (eori, correlationId)
+      (outcomeRepo.lookupFullOutcome(_: String, _: String)).expects(eori, correlationId)
 
     def housekeep(time: Instant): CallHandler[Future[Int]] =
       outcomeRepo.housekeep _ expects time

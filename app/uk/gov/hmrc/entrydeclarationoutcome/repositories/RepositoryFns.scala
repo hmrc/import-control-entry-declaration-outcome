@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,13 +26,13 @@ trait RepositoryFns {
   def removeAll()(implicit ec: ExecutionContext): Future[Unit] =
     collection
       .deleteMany(exists("_id"))
-      .toFutureOption
+      .toFutureOption()
       .map( _ => ())
 
   def count()(implicit ec: ExecutionContext): Future[Long] =
     collection
       .countDocuments(exists("_id"))
-      .toFutureOption
+      .toFutureOption()
       .map{
         case None => 0L
         case Some(count) => count

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -107,7 +107,7 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
     Mdc.preservingMdc(
       collection
         .insertOne(OutcomePersisted.from(outcome, appConfig.defaultTtl))
-        .toFutureOption
+        .toFutureOption()
     )
     .map(_ => None)
     .recover {
@@ -125,7 +125,7 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
       collection
         .find[BsonValue](equal("submissionId", submissionId))
         .projection(fields(include("outcomeXml"), excludeId()))
-        .headOption
+        .headOption()
         .map{
           _.map(xml => Codecs.fromBson[OutcomeXml](xml))
         }
@@ -140,7 +140,7 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
                   equal("acknowledged", false)
               )
         )
-        .headOption
+        .headOption()
     )
     .map(_.map(_.toOutcomeReceived))
 
@@ -148,7 +148,7 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
     Mdc.preservingMdc(
       collection
         .find(and(equal("eori", eori), equal("correlationId", correlationId)))
-        .headOption
+        .headOption()
     )
     .map(_.map(_.toFullOutcome))
 
@@ -158,7 +158,7 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
         .findOneAndUpdate(and(equal("eori", eori), equal("correlationId", correlationId), equal("acknowledged", false)),
                           combine(set("acknowledged", true), set("housekeepingAt", time)),
                           FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER))
-        .toFutureOption
+        .toFutureOption()
     )
     .map(_.map(_.toOutcomeReceived))
 
@@ -169,8 +169,8 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
         .projection(include("correlationId", "movementReferenceNumber"))
         .sort(ascending("receivedDateTime"))
         .limit(appConfig.listOutcomesLimit)
-        .collect
-        .toFutureOption
+        .collect()
+        .toFutureOption()
     )
     .map{
       case Some(results) => results.map(Codecs.fromBson[OutcomeMetadata](_)).toList
@@ -188,7 +188,7 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
       .preservingMdc(
         collection
           .updateOne(query, set("housekeepingAt", time))
-          .toFutureOption
+          .toFutureOption()
       )
       .map(_.map(_.getMatchedCount > 0).getOrElse(false))
 
@@ -206,7 +206,7 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
       }
       .mapAsync(1) { deletions =>
         collection.bulkWrite(deletions.map(oid => DeleteManyModel(equal("_id", Codecs.fromBson[EntryObjectId](oid)._id))))
-          .toFutureOption
+          .toFutureOption()
           .map(_.map(_.getDeletedCount).getOrElse(0))
           .recover{
             case e => 0

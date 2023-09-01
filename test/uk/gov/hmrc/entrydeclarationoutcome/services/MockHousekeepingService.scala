@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,12 +30,12 @@ trait MockHousekeepingService extends MockFactory {
       mockHousekeepingService.enableHousekeeping _ expects value
 
     def getHousekeepingStatus: CallHandler[Future[HousekeepingStatus]] =
-      mockHousekeepingService.getHousekeepingStatus _ expects ()
+      (() => mockHousekeepingService.getHousekeepingStatus).expects()
 
     def setShortTtl(submissionId: String): CallHandler[Future[Boolean]] =
       (mockHousekeepingService.setShortTtl(_: String)) expects submissionId
 
     def setShortTtl(eori: String, correlationId: String): CallHandler[Future[Boolean]] =
-      (mockHousekeepingService.setShortTtl(_: String, _: String)) expects (eori, correlationId)
+      (mockHousekeepingService.setShortTtl(_: String, _: String)).expects(eori, correlationId)
   }
 }
