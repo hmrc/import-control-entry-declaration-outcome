@@ -39,4 +39,6 @@ object AppDependencies {
     "com.miguno.akka"              %% "akka-mock-scheduler"     % "0.5.5"          % "test, it",
     "com.typesafe.akka"            %% "akka-testkit"            % "2.6.21"         % "test, it"
   )
+
+  val itDependencies: Seq[ModuleID] = Seq()
 }
