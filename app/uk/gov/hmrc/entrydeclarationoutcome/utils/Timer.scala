@@ -17,12 +17,11 @@
 package uk.gov.hmrc.entrydeclarationoutcome.utils
 
 import java.time.{Duration, Instant}
-
 import com.codahale.metrics._
-import com.kenshoo.play.metrics.Metrics
-import java.time.Clock
 
+import java.time.Clock
 import play.api.Logging
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
 import scala.concurrent.{ExecutionContext, Future}
 

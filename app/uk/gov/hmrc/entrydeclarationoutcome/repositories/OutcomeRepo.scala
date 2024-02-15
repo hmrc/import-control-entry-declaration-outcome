@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.entrydeclarationoutcome.repositories
 
-import akka.stream.Materializer
-import akka.stream.scaladsl.Source
+import org.apache.pekko.stream.Materializer
+import org.apache.pekko.stream.scaladsl.Source
 import uk.gov.hmrc.mongo.play.json.formats.MongoFormats
 import org.bson.BsonValue
 import org.mongodb.scala._
