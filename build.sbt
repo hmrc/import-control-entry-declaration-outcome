@@ -42,7 +42,6 @@ lazy val microservice = Project(appName, file("."))
     PlayKeys.playDefaultPort := 9815
   )
   .settings(coverageSettings: _*)
-  .configs(IntegrationTest)
   .settings(
     scalacOptions ++= Seq("-Wconf:src=routes/.*:s", "-Ywarn-unused:-implicits")
   )
