@@ -17,14 +17,13 @@
 package uk.gov.hmrc.entrydeclarationoutcome.utils
 
 import java.time.{Clock, Duration, Instant, ZoneOffset}
-
 import com.codahale.metrics.MetricRegistry
-import com.kenshoo.play.metrics.Metrics
 import org.scalatest.matchers.must.Matchers.be
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Logging
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -42,8 +41,6 @@ class TimerSpec extends AnyWordSpec with Timer with Logging {
 
   private class MockMetrics extends Metrics {
     override val defaultRegistry: MetricRegistry = new MetricRegistry()
-
-    override def toJson: String = throw new NotImplementedError
   }
 
   "Timer" must {

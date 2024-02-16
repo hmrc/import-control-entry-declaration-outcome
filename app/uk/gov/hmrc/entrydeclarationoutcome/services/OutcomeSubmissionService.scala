@@ -17,14 +17,13 @@
 package uk.gov.hmrc.entrydeclarationoutcome.services
 
 import java.time.Clock
-
-import com.kenshoo.play.metrics.Metrics
 import javax.inject.{Inject, Singleton}
 import play.api.Logging
 import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationoutcome.models.OutcomeReceived
 import uk.gov.hmrc.entrydeclarationoutcome.repositories.OutcomeRepo
 import uk.gov.hmrc.entrydeclarationoutcome.utils.{SaveError, Timer}
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
 import scala.concurrent.{ExecutionContext, Future}
 

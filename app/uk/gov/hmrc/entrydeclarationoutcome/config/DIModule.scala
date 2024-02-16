@@ -18,7 +18,7 @@ package uk.gov.hmrc.entrydeclarationoutcome.config
 
 import java.time.Clock
 
-import akka.actor.{ActorSystem, Scheduler}
+import org.apache.pekko.actor.{ActorSystem, Scheduler}
 import com.google.inject.{AbstractModule, Provides}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.entrydeclarationoutcome.housekeeping.{Housekeeper, HousekeepingScheduler}
@@ -41,6 +41,6 @@ class DIModule extends AbstractModule {
   }
 
   @Provides
-  def akkaScheduler(actorSystem: ActorSystem): Scheduler =
+  def pekkoScheduler(actorSystem: ActorSystem): Scheduler =
     actorSystem.scheduler
 }

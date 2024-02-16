@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.entrydeclarationoutcome.housekeeping
 
-import akka.actor.Scheduler
+import org.apache.pekko.actor.Scheduler
 import play.api.Logging
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.Duration
