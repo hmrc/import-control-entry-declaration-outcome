@@ -36,7 +36,6 @@ object AppDependencies {
   )
 
   val itDependencies: Seq[ModuleID] = Seq(
-    "org.wiremock"         %  "wiremock"             % "3.3.1" % Test,
     "com.github.pjfanning" %% "pekko-mock-scheduler" % "0.6.0" % Test,
     "org.apache.pekko"     %% "pekko-testkit"        % "1.0.2" % Test
   )
