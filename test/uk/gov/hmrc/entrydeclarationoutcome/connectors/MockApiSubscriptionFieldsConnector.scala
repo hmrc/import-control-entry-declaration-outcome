@@ -18,10 +18,11 @@ package uk.gov.hmrc.entrydeclarationoutcome.connectors
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
+import org.scalatest.TestSuite
 
 import scala.concurrent.Future
 
-trait MockApiSubscriptionFieldsConnector extends MockFactory {
+trait MockApiSubscriptionFieldsConnector extends TestSuite with MockFactory {
   val mockApiSubscriptionFieldsConnector: ApiSubscriptionFieldsConnector = mock[ApiSubscriptionFieldsConnector]
 
   object MockApiSubscriptionFieldsConnector {
