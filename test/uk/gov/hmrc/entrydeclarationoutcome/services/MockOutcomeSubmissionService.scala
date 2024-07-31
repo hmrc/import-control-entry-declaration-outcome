@@ -18,13 +18,14 @@ package uk.gov.hmrc.entrydeclarationoutcome.services
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
+import org.scalatest.TestSuite
 import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationoutcome.models.OutcomeReceived
 import uk.gov.hmrc.entrydeclarationoutcome.utils.SaveError
 
 import scala.concurrent.Future
 
-trait MockOutcomeSubmissionService extends MockFactory {
+trait MockOutcomeSubmissionService extends TestSuite with MockFactory {
   val mockOutcomeSubmissionService: OutcomeSubmissionService = mock[OutcomeSubmissionService]
 
   object MockOutcomeSubmissionService {

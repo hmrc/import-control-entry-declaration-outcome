@@ -18,6 +18,7 @@ package uk.gov.hmrc.entrydeclarationoutcome.repositories
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
+import org.scalatest.TestSuite
 import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationoutcome.models.{FullOutcome, OutcomeMetadata, OutcomeReceived, OutcomeXml}
 import uk.gov.hmrc.entrydeclarationoutcome.utils.SaveError
@@ -25,7 +26,7 @@ import uk.gov.hmrc.entrydeclarationoutcome.utils.SaveError
 import java.time.Instant
 import scala.concurrent.Future
 
-trait MockOutcomeRepo extends MockFactory {
+trait MockOutcomeRepo extends TestSuite with MockFactory {
   val outcomeRepo: OutcomeRepo = mock[OutcomeRepo]
 
   object MockOutcomeRepo {
