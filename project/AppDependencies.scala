@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import sbt._
+import sbt.*
 
 object AppDependencies {
-  val bootstrapVersion = "8.6.0"
+  val bootstrapVersion = "9.1.0"
   val hmrcMongoVersion = "2.2.0"
 
   val compile: Seq[ModuleID] = Seq(
