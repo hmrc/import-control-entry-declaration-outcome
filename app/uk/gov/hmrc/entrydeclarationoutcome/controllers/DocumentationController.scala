@@ -33,13 +33,6 @@ class DocumentationController @Inject()(cc: ControllerComponents, assets: Assets
 
   def definition(): Action[AnyContent] = Action {
     Ok(Json.parse(s"""{
-                     |  "scopes": [
-                     |    {
-                     |      "key": "write:import-control-system",
-                     |      "name": "Access Import Control System",
-                     |      "description": "Allow access to entry summary declaration outcomes"
-                     |    }
-                     |  ],
                      |  "api": {
                      |    "name": "Safety and Security Import Outcomes",
                      |    "description": "API with endpoints for getting outcomes of Entry Summary Declarations.",
