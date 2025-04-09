@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ object AppDependencies {
     "uk.gov.hmrc"                  %% "bootstrap-test-play-30"  % bootstrapVersion % Test,
     "uk.gov.hmrc.mongo"            %% "hmrc-mongo-test-play-30" % hmrcMongoVersion % Test,
     "org.scalatestplus.play"       %% "scalatestplus-play"      % "7.0.1"          % Test,
-    "org.scalamock"                %% "scalamock"               % "6.2.0"          % Test,
+    "org.scalamock"                %% "scalamock"               % "7.3.0"          % Test,
     "org.scalatestplus"            %% "scalacheck-1-18"         % "3.2.19.0"       % Test,
     "com.fasterxml.jackson.module" %% "jackson-module-scala"    % "2.18.3"         % Test,
   )
