@@ -29,6 +29,7 @@ import play.api.test.{FakeRequest, Helpers, Injecting}
 import play.api.{Application, Environment, Mode}
 import play.mvc.Http.MimeTypes
 import uk.gov.hmrc.entrydeclarationoutcome.config.MockAppConfig
+import uk.gov.hmrc.entrydeclarationoutcome.controllers.api.DocumentationController
 import uk.gov.hmrc.entrydeclarationoutcome.housekeeping.HousekeepingScheduler
 
 class DocumentationControllerSpec extends AnyWordSpec with MockAppConfig with Injecting with GuiceOneAppPerSuite {
