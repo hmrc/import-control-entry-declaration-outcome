@@ -18,6 +18,7 @@ import sbt.*
 object AppDependencies {
   val bootstrapVersion = "9.11.0"
   val hmrcMongoVersion = "2.6.0"
+  val pekkoVersion = "1.1.3"
 
   val compile: Seq[ModuleID] = Seq(
     "uk.gov.hmrc.mongo" %% "hmrc-mongo-play-30"        % hmrcMongoVersion,
@@ -30,13 +31,18 @@ object AppDependencies {
     "uk.gov.hmrc"                  %% "bootstrap-test-play-30"  % bootstrapVersion % Test,
     "uk.gov.hmrc.mongo"            %% "hmrc-mongo-test-play-30" % hmrcMongoVersion % Test,
     "org.scalatestplus.play"       %% "scalatestplus-play"      % "7.0.1"          % Test,
-    "org.scalamock"                %% "scalamock"               % "7.3.0"          % Test,
+    "org.scalamock"                %% "scalamock"               % "7.3.2"          % Test,
     "org.scalatestplus"            %% "scalacheck-1-18"         % "3.2.19.0"       % Test,
-    "com.fasterxml.jackson.module" %% "jackson-module-scala"    % "2.18.3"         % Test,
+    "com.fasterxml.jackson.module" %% "jackson-module-scala"    % "2.19.0"         % Test,
   )
 
   val itDependencies: Seq[ModuleID] = Seq(
-    "com.github.pjfanning" %% "pekko-mock-scheduler" % "0.6.0" % Test,
-    "org.apache.pekko"     %% "pekko-testkit"        % "1.0.3" % Test
+    "com.github.pjfanning" %% "pekko-mock-scheduler"        % "0.6.0"       % Test,
+    "org.apache.pekko"     %% "pekko-testkit"               % pekkoVersion  % Test,
+    "org.apache.pekko"     %% "pekko-actor-typed"           % pekkoVersion  % Test,
+    "org.apache.pekko"     %% "pekko-protobuf-v3"           % pekkoVersion  % Test,
+    "org.apache.pekko"     %% "pekko-serialization-jackson" % pekkoVersion  % Test,
+    "org.apache.pekko"     %% "pekko-slf4j"                 % pekkoVersion  % Test,
+    "org.apache.pekko"     %% "pekko-stream"                % pekkoVersion  % Test
   )
 }
