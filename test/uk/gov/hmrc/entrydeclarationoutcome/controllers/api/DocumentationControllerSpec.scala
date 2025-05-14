@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.entrydeclarationoutcome.controllers
+package uk.gov.hmrc.entrydeclarationoutcome.controllers.api
 
 import controllers.Assets
 import org.scalatest.Assertion
