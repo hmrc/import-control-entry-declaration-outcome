@@ -150,7 +150,7 @@ class OutcomeRetrievalControllerSpec
         val mrn    = "mrn"
         val corId2 = "corId2"
         MockAuthService.authenticate() returns Future.successful(Some(userDetails))
-        MockOutcomeXmlRetrievalService.listOutcomes(userDetails.eori) returns Future.successful(
+        MockOutcomeXmlRetrievalService.listOutcomes(userDetails) returns Future.successful(
           List(OutcomeMetadata(corId1, Some(mrn)), OutcomeMetadata(corId2)))
 
         val listXml =
@@ -177,7 +177,7 @@ class OutcomeRetrievalControllerSpec
     "return 204 NO_CONTENT" when {
       "the user is authenticated and no unacknowledged outcome XML could be found" in {
         MockAuthService.authenticate() returns Future.successful(Some(userDetails))
-        MockOutcomeXmlRetrievalService.listOutcomes(userDetails.eori) returns Future.successful(List.empty[OutcomeMetadata])
+        MockOutcomeXmlRetrievalService.listOutcomes(userDetails) returns Future.successful(List.empty[OutcomeMetadata])
 
         val result = controller.listOutcomes()(FakeRequest())
 

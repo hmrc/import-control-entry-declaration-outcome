@@ -46,8 +46,8 @@ trait MockOutcomeRepo extends TestSuite with MockFactory {
       (outcomeRepo
         .acknowledgeOutcome(_: String, _: String, _: Instant)(_: LoggingContext)).expects(eori, correlationId, time, *)
 
-    def listOutcomes(eori: String): CallHandler[Future[List[OutcomeMetadata]]] =
-      outcomeRepo.listOutcomes _ expects eori
+    def listOutcomes(eori: String, optionalFilterExpression: Option[String]): CallHandler[Future[List[OutcomeMetadata]]] =
+      outcomeRepo.listOutcomes _ expects(eori, optionalFilterExpression)
 
     def setHousekeepingAt(submissionId: String, time: Instant): CallHandler[Future[Boolean]] =
       (outcomeRepo.setHousekeepingAt(_: String, _: Instant)).expects(submissionId, time)

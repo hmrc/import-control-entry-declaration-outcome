@@ -40,7 +40,7 @@ class OutcomeRetrievalController @Inject()(
 
     ContextLogger.info("Listing outcomes")
 
-    service.listOutcomes(eori).map {
+    service.listOutcomes(userRequest.userDetails).map {
       case Nil             => NoContent
       case outcomeMetadata => Ok(listXml(outcomeMetadata)).as(MimeTypes.XML)
     }

@@ -21,6 +21,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.Logging
 import uk.gov.hmrc.entrydeclarationoutcome.config.AppConfig
 import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
+import uk.gov.hmrc.entrydeclarationoutcome.models.ClientType.{CSP, GGW}
 import uk.gov.hmrc.entrydeclarationoutcome.models.{FullOutcome, OutcomeMetadata, OutcomeReceived, OutcomeXml}
 import uk.gov.hmrc.entrydeclarationoutcome.repositories.OutcomeRepo
 import uk.gov.hmrc.entrydeclarationoutcome.utils.Timer
@@ -55,9 +56,13 @@ class OutcomeRetrievalService @Inject()(
       outcomeRepo.acknowledgeOutcome(eori, correlationId, nowPlusShortTtl)
     }
 
-  def listOutcomes(eori: String): Future[List[OutcomeMetadata]] =
+  def listOutcomes(userDetails: UserDetails): Future[List[OutcomeMetadata]] =
     timeFuture("Service listOutcomes", "listOutcomes.total") {
-      outcomeRepo.listOutcomes(eori)
+      val eori = userDetails.eori
+      userDetails.clientInfo.clientType  match {
+        case GGW => outcomeRepo.listOutcomes(eori)
+        case CSP => outcomeRepo.listOutcomes(eori, userDetails.clientInfo.clientId.map(_.substring(0, 4)))
+      }
     }
 
   private def nowPlusShortTtl: Instant = clock.instant().plusMillis(appConfig.shortTtl.toMillis)

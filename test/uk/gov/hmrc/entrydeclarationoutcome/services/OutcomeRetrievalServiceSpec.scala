@@ -47,7 +47,9 @@ class OutcomeRetrievalServiceSpec extends AnyWordSpec with MockOutcomeRepo with 
   implicit val lc: LoggingContext = LoggingContext("eori", "corrId", "subId")
 
   val submissionId             = "submissionId"
-  val eori                     = "eori"
+  val userDetails: UserDetails = UserDetails("eori", ClientInfo(ClientType.CSP, Some("1234olkmfnrhtuy")))
+  val eori                     = userDetails.eori
+  val filter: Option[String]   = userDetails.clientInfo.clientId.map(_.substring(0, 4))
   val correlationId            = "correlationId"
   val xml                      = "somexml"
   val messageType: MessageType = MessageType.IE328
@@ -115,15 +117,15 @@ class OutcomeRetrievalServiceSpec extends AnyWordSpec with MockOutcomeRepo with 
 
     "listing outcomes xml" must {
       "return List(Outcomes) if an outcome exists in the database" in {
-        MockOutcomeRepo.listOutcomes(eori) returns Future.successful(List(OutcomeMetadata("corId")))
+        MockOutcomeRepo.listOutcomes(eori, filter) returns Future.successful(List(OutcomeMetadata("corId")))
 
-        service.listOutcomes(eori).futureValue shouldBe List(OutcomeMetadata("corId"))
+        service.listOutcomes(userDetails).futureValue shouldBe List(OutcomeMetadata("corId"))
       }
 
       "return Empty list if no outcome exists in the database" in {
-        MockOutcomeRepo.listOutcomes(eori) returns Future.successful(List.empty[OutcomeMetadata])
+        MockOutcomeRepo.listOutcomes(eori, filter) returns Future.successful(List.empty[OutcomeMetadata])
 
-        service.listOutcomes(eori).futureValue shouldBe List.empty[OutcomeMetadata]
+        service.listOutcomes(userDetails).futureValue shouldBe List.empty[OutcomeMetadata]
       }
     }
 

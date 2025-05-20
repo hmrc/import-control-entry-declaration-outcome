@@ -41,8 +41,8 @@ trait MockOutcomeRetrievalService extends TestSuite with MockFactory {
       (mockOutcomeXmlRetrievalService
         .acknowledgeOutcome(_: String, _: String)(_: LoggingContext)).expects(eori, correlationId, *)
 
-    def listOutcomes(eori: String): CallHandler[Future[List[OutcomeMetadata]]] =
-      mockOutcomeXmlRetrievalService.listOutcomes _ expects eori
+    def listOutcomes(userDetails: UserDetails): CallHandler[Future[List[OutcomeMetadata]]] =
+      mockOutcomeXmlRetrievalService.listOutcomes _ expects userDetails
   }
 
 }
