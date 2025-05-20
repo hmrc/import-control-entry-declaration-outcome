@@ -81,7 +81,7 @@ class AuthServiceSpec
             stubCSPAuth returns Future.successful(())
 
             MockApiSubscriptionFieldsConnector.getAuthenticatedEoriField(clientId) returns Future.successful(Some(eori))
-            service.authenticate().futureValue shouldBe Some(eori)
+            service.authenticate().futureValue.map(_.eori) shouldBe Some(eori)
           }
         }
 
@@ -90,7 +90,7 @@ class AuthServiceSpec
             stubCSPAuth returns Future.successful(())
             MockApiSubscriptionFieldsConnector.getAuthenticatedEoriField(clientId) returns Future.successful(None)
 
-            service.authenticate().futureValue shouldBe None
+            service.authenticate().futureValue.map(_.eori) shouldBe None
           }
         }
       }
@@ -117,7 +117,7 @@ class AuthServiceSpec
         stubCSPAuth returns Future.successful(())
 
         MockApiSubscriptionFieldsConnector.getAuthenticatedEoriField(clientId) returns Future.successful(Some(eori))
-        service.authenticate().futureValue shouldBe Some(eori)
+        service.authenticate().futureValue.map(_.eori) shouldBe Some(eori)
       }
     }
 
@@ -126,7 +126,7 @@ class AuthServiceSpec
         "SS enrolment with an eori" in {
           stubbings()
           stubAuth returns Future.successful(Enrolments(Set(validICSEnrolment(eori))))
-          service.authenticate().futureValue shouldBe Some(eori)
+          service.authenticate().futureValue.map(_.eori) shouldBe Some(eori)
         }
       }
 
@@ -134,7 +134,7 @@ class AuthServiceSpec
         "SS enrolment with no identifiers" in {
           stubbings()
           stubAuth returns Future.successful(Enrolments(Set(validICSEnrolment(eori).copy(identifiers = Nil))))
-          service.authenticate().futureValue shouldBe None
+          service.authenticate().futureValue.map(_.eori) shouldBe None
         }
 
         "no SS enrolment in authorization header" in {

@@ -29,10 +29,10 @@ trait MockAuthService extends TestSuite with MockFactory {
   val mockAuthService: AuthService = mock[AuthService]
 
   object MockAuthService {
-    def authenticate(): CallHandler[Future[Option[String]]] =
+    def authenticate(): CallHandler[Future[Option[UserDetails]]] =
       (mockAuthService.authenticate()(_: HeaderCarrier, _: Headers)).expects(*,*)
 
-    def authenticateCapture()(headerCarrier: CaptureOne[HeaderCarrier]): CallHandler[Future[Option[String]]] =
+    def authenticateCapture()(headerCarrier: CaptureOne[HeaderCarrier]): CallHandler[Future[Option[UserDetails]]] =
       (mockAuthService.authenticate()(_: HeaderCarrier, _: Headers)).expects(capture(headerCarrier),*)
   }
 
