@@ -61,7 +61,7 @@ class OutcomeRetrievalService @Inject()(
       val eori = userDetails.eori
       userDetails.clientInfo  match {
         case GGWClient => outcomeRepo.listOutcomes(eori)
-        case CSPClient(clientId) => outcomeRepo.listOutcomes(eori, Option(clientId.substring(0, 4)))
+        case CSPClient(clientId) => outcomeRepo.listOutcomes(eori, Option(clientId.takeRight(4)))
       }
     }
 
