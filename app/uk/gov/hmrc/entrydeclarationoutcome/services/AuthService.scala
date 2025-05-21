@@ -27,7 +27,8 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
 import play.api.mvc.Headers
-import uk.gov.hmrc.entrydeclarationoutcome.models.{ClientInfo, ClientType}
+import uk.gov.hmrc.entrydeclarationoutcome.models.ClientInfo.{CSPClient, GGWClient}
+import uk.gov.hmrc.entrydeclarationoutcome.models.ClientInfo
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -71,7 +72,7 @@ class AuthService @Inject()(
       clientId <- EitherT.fromOption[Future](headers.get(X_CLIENT_ID), NoClientId)
       _        <- EitherT.fromOptionF(auth, AuthFail)
       eori     <- EitherT.fromOptionF(apiSubscriptionFieldsConnector.getAuthenticatedEoriField(clientId), NoEori: AuthError)
-    } yield UserDetails(eori, ClientInfo(ClientType.CSP, Some(clientId)))
+    } yield UserDetails(eori, CSPClient(clientId))
   }
 
   private def authNonCSP(implicit hc: HeaderCarrier, headers: Headers): EitherT[Future, AuthError, UserDetails] =
@@ -88,7 +89,7 @@ class AuthService @Inject()(
         val eori = eoris.headOption
 
         val result = eori match {
-          case Some(eori) => UserDetails(eori, ClientInfo(ClientType.GGW, None)).asRight
+          case Some(eori) => UserDetails(eori, GGWClient).asRight
           case None       => NoEori.asLeft
         }
 

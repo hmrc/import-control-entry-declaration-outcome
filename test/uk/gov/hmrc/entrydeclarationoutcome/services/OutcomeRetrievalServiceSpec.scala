@@ -23,6 +23,7 @@ import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.entrydeclarationoutcome.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
+import uk.gov.hmrc.entrydeclarationoutcome.models.ClientInfo.CSPClient
 import uk.gov.hmrc.entrydeclarationoutcome.models._
 import uk.gov.hmrc.entrydeclarationoutcome.repositories.MockOutcomeRepo
 import uk.gov.hmrc.play.bootstrap.metrics.Metrics
@@ -46,12 +47,12 @@ class OutcomeRetrievalServiceSpec extends AnyWordSpec with MockOutcomeRepo with 
 
   implicit val lc: LoggingContext = LoggingContext("eori", "corrId", "subId")
 
-  val submissionId             = "submissionId"
-  val userDetails: UserDetails = UserDetails("eori", ClientInfo(ClientType.CSP, Some("1234olkmfnrhtuy")))
-  val eori                     = userDetails.eori
-  val filter: Option[String]   = userDetails.clientInfo.clientId.map(_.substring(0, 4))
-  val correlationId            = "correlationId"
-  val xml                      = "somexml"
+  val submissionId: String     = "submissionId"
+  val userDetails: UserDetails = UserDetails("eori", CSPClient("1234olkmfnrhtuy"))
+  val filter: Option[String]   = Some("1234")
+  val eori: String             = userDetails.eori
+  val correlationId: String    = "correlationId"
+  val xml: String              = "somexml"
   val messageType: MessageType = MessageType.IE328
 
   val outcome: OutcomeReceived = OutcomeReceived(

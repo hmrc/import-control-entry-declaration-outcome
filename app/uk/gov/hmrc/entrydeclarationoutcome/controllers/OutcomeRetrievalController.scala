@@ -20,7 +20,7 @@ import javax.inject.Inject
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import play.mvc.Http.MimeTypes
 import uk.gov.hmrc.entrydeclarationoutcome.logging.{ContextLogger, LoggingContext}
-import uk.gov.hmrc.entrydeclarationoutcome.models.{ClientInfo, OutcomeMetadata, StandardError}
+import uk.gov.hmrc.entrydeclarationoutcome.models.{OutcomeMetadata, StandardError}
 import uk.gov.hmrc.entrydeclarationoutcome.reporting.events.EventCode
 import uk.gov.hmrc.entrydeclarationoutcome.reporting.{OutcomeReport, ReportSender}
 import uk.gov.hmrc.entrydeclarationoutcome.services.{AuthService, OutcomeRetrievalService}

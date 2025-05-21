@@ -49,7 +49,7 @@ trait OutcomeRepo {
     */
   def acknowledgeOutcome(eori: String, correlationId: String, time: Instant)(
     implicit lc: LoggingContext): Future[Option[OutcomeReceived]]
-  def listOutcomes(eori: String, filterExpression: Option[String] = None): Future[List[OutcomeMetadata]]
+  def listOutcomes(eori: String, optionalFilterExpression: Option[String] = None): Future[List[OutcomeMetadata]]
   def setHousekeepingAt(submissionId: String, time: Instant): Future[Boolean]
   def setHousekeepingAt(eori: String, correlationId: String, time: Instant): Future[Boolean]
   def housekeep(now: Instant): Future[Int]
@@ -162,19 +162,19 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
     )
     .map(_.map(_.toOutcomeReceived))
 
-  def listOutcomes(eori: String, filterExpression: Option[String] = None): Future[List[OutcomeMetadata]] = {
+  def listOutcomes(eori: String, optionalFilterExpression: Option[String]): Future[List[OutcomeMetadata]] = {
     val findExpression = and(equal("eori", eori), equal("acknowledged", false))
-    val searchCriteria =
-      filterExpression match {
+    val findCriteria =
+      optionalFilterExpression match {
         // match only correlationIds staring with the provided filter expression if provied
-        case Some(filter) => and(findExpression, regex("correlationId", s"^${filter}"))
+        case Some(filterExpression) => and(findExpression, regex("correlationId", s"^${filterExpression}"))
         // if none is provided, do not filter further
         case _ => findExpression
       }
 
     Mdc.preservingMdc(
       collection
-        .find[BsonValue](searchCriteria)
+        .find[BsonValue](findCriteria)
         .projection(include("correlationId", "movementReferenceNumber"))
         .sort(ascending("receivedDateTime"))
         .limit(appConfig.listOutcomesLimit)

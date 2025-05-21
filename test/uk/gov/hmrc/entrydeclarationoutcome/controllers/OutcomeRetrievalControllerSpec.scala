@@ -22,6 +22,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.MimeTypes
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
+import uk.gov.hmrc.entrydeclarationoutcome.models.ClientInfo.GGWClient
 import uk.gov.hmrc.entrydeclarationoutcome.models.{ClientInfo, ClientType, MessageType, OutcomeMetadata, OutcomeReceived, OutcomeXml}
 import uk.gov.hmrc.entrydeclarationoutcome.reporting.events.EventCode
 import uk.gov.hmrc.entrydeclarationoutcome.reporting.{MockReportSender, OutcomeReport}
@@ -47,7 +48,7 @@ class OutcomeRetrievalControllerSpec
   val payloadXml: String       = "payloadXml"
   val outcomeXml: OutcomeXml   = OutcomeXml(payloadXml)
   val submissionId: String     = "someSubmissionId"
-  val userDetails: UserDetails = UserDetails("GB123", ClientInfo(ClientType.GGW, None))
+  val userDetails: UserDetails = UserDetails("GB123", GGWClient)
   val correlationId: String    = "someCorrelationId"
   val messageType: MessageType = MessageType.IE328
 

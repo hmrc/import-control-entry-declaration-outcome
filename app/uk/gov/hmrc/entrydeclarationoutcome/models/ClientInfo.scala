@@ -16,7 +16,16 @@
 
 package uk.gov.hmrc.entrydeclarationoutcome.models
 
-case class ClientInfo(
-  clientType: ClientType,
-  clientId: Option[String]
-)
+sealed trait ClientInfo {
+  val clientType: ClientType
+}
+
+object ClientInfo {
+  case object GGWClient extends ClientInfo {
+    override val clientType: ClientType = ClientType.GGW
+  }
+  case class CSPClient(clientId: String) extends ClientInfo {
+    override val clientType: ClientType = ClientType.CSP
+    val clientIdPrefix: String = clientId.substring(0, 1)
+  }
+}
