@@ -49,7 +49,7 @@ class OutcomeRetrievalServiceSpec extends AnyWordSpec with MockOutcomeRepo with 
 
   val submissionId: String     = "submissionId"
   val userDetails: UserDetails = UserDetails("eori", CSPClient("1234olkmfnrhtuy"))
-  val filter: Option[String]   = Some("1234")
+  val filter: Option[String]   = Some("htuy")
   val eori: String             = userDetails.eori
   val correlationId: String    = "correlationId"
   val xml: String              = "somexml"
