@@ -21,7 +21,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.Logging
 import uk.gov.hmrc.entrydeclarationoutcome.config.AppConfig
 import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
-import uk.gov.hmrc.entrydeclarationoutcome.models.ClientInfo.{CSPClient, GGWClient}
+import uk.gov.hmrc.entrydeclarationoutcome.models.ClientInfo.{CSPClient, CSP_CLIENT_PREFIX_LENGTH, GGWClient}
 import uk.gov.hmrc.entrydeclarationoutcome.models.{FullOutcome, OutcomeMetadata, OutcomeReceived, OutcomeXml}
 import uk.gov.hmrc.entrydeclarationoutcome.repositories.OutcomeRepo
 import uk.gov.hmrc.entrydeclarationoutcome.utils.Timer
@@ -61,7 +61,7 @@ class OutcomeRetrievalService @Inject()(
       val eori = userDetails.eori
       userDetails.clientInfo  match {
         case GGWClient => outcomeRepo.listOutcomes(eori)
-        case CSPClient(clientId) => outcomeRepo.listOutcomes(eori, Option(clientId.takeRight(4)))
+        case CSPClient(clientId) => outcomeRepo.listOutcomes(eori, Option(clientId.take(CSP_CLIENT_PREFIX_LENGTH)))
       }
     }
 

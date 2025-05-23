@@ -162,12 +162,13 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
     )
     .map(_.map(_.toOutcomeReceived))
 
-  def listOutcomes(eori: String, optionalFilterExpression: Option[String]): Future[List[OutcomeMetadata]] = {
+  def listOutcomes(eori: String, optionalClientIdPrefix: Option[String] = None): Future[List[OutcomeMetadata]] = {
     val findExpression = and(equal("eori", eori), equal("acknowledged", false))
     val findCriteria =
-      optionalFilterExpression match {
+      optionalClientIdPrefix match {
         // match only correlationIds staring with the provided filter expression if provied
-        case Some(filterExpression) => and(findExpression, regex("correlationId", s"^${filterExpression}"))
+        case Some(filterExpression) =>
+          and(findExpression, regex("correlationId", filterExpression + "$"))
         // if none is provided, do not filter further
         case _ => findExpression
       }

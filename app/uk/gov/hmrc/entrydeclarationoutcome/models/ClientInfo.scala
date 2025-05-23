@@ -21,11 +21,12 @@ sealed trait ClientInfo {
 }
 
 object ClientInfo {
+  val CSP_CLIENT_PREFIX_LENGTH: Int = 4
+
   case object GGWClient extends ClientInfo {
     override val clientType: ClientType = ClientType.GGW
   }
   case class CSPClient(clientId: String) extends ClientInfo {
     override val clientType: ClientType = ClientType.CSP
-    val clientIdPrefix: String = clientId.substring(0, 1)
   }
 }
