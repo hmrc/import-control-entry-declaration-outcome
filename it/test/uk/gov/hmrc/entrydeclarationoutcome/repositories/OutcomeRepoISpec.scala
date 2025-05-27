@@ -326,6 +326,23 @@ class OutcomeRepoISpec
           await(repository.listOutcomes(acknowledgedEori)) shouldBe List.empty[OutcomeMetadata]
         }
       }
+
+      "apply correlationId suffix filter when optionalClientIdPrefix is provided" in {
+
+        await(repository.removeAll())
+
+        val suffix = "1234"
+        val matchingCorrelationId = "abc" + suffix
+        val nonMatchingCorrelationId = "xyz5678"
+
+        await(repository.save(outcome.copy(correlationId = matchingCorrelationId, submissionId = "sub1")))
+
+        await(repository.save(outcome.copy(correlationId = nonMatchingCorrelationId, submissionId = "sub2")))
+
+        val result = await(repository.listOutcomes(eori, Some(suffix)))
+
+        result shouldBe List(OutcomeMetadata(matchingCorrelationId, Some("movementReferenceNumber")))
+      }
     }
 
     "housekeepingAt" when {

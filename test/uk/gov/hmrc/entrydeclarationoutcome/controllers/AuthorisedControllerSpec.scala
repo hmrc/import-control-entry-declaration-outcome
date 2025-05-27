@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,7 +63,7 @@ class AuthorisedControllerSpec
     lazy val controller = new TestController()
   }
 
-  val userDetails = UserDetails("GB123", GGWClient)
+  val userDetails: UserDetails = UserDetails("GB123", GGWClient)
 
   val unauthorisedXml: Node =
     <error>

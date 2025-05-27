@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,10 +42,10 @@ class AuthService @Inject()(
 
   private val X_CLIENT_ID = "X-Client-Id"
 
-  sealed trait AuthError
-  case object NoClientId extends AuthError
-  case object NoEori extends AuthError
-  case object AuthFail extends AuthError
+  private sealed trait AuthError
+  private case object NoClientId extends AuthError
+  private case object NoEori extends AuthError
+  private case object AuthFail extends AuthError
 
   def authenticate()(implicit hc: HeaderCarrier, headers: Headers): Future[Option[UserDetails]] =
     authCSP
