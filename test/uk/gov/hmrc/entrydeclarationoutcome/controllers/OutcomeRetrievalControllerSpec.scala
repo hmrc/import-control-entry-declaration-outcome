@@ -60,7 +60,8 @@ class OutcomeRetrievalControllerSpec
     None,
     messageType,
     submissionId,
-    payloadXml
+    payloadXml,
+    None
   )
 
   val notFoundXml: Node =

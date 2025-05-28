@@ -82,8 +82,18 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
                 IndexModel(ascending("eori", "correlationId"),
                            IndexOptions()
                             .name("eoriPlusCorrelationIdIndex")
-                            .unique(true))
-                ),
+                            .unique(true)),
+                IndexModel(ascending(
+                  "eori",
+                  "acknowledged",
+                  "clientIdentifierPrefix",
+                  "receivedDateTime",
+                  "correlationId",
+                  "movementReferenceNumber"),
+                  IndexOptions()
+                    .name("listIndexWithClientId")
+                    .unique(false)
+                )),
   extraCodecs = Seq(Codecs.playFormatCodec(MongoFormats.objectIdFormat)),
   replaceIndexes = true)
     with OutcomeRepo with RepositoryFns {
@@ -163,14 +173,15 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
     .map(_.map(_.toOutcomeReceived))
 
   def listOutcomes(eori: String, optionalClientIdPrefix: Option[String] = None): Future[List[OutcomeMetadata]] = {
-    val findExpression = and(equal("eori", eori), equal("acknowledged", false))
+    val baseFilter = and(equal("eori", eori), equal("acknowledged", false))
     val findCriteria =
       optionalClientIdPrefix match {
-        // match only correlationIds staring with the provided filter expression if provied
+        // match only correlationIds staring with the provided filter expression if provided
         case Some(filterExpression) =>
-          and(findExpression, regex("correlationId", filterExpression + "$"))
+          and(baseFilter, regex("correlationId", filterExpression + "$"),
+            equal("clientIdentifierPrefix", filterExpression))
         // if none is provided, do not filter further
-        case _ => findExpression
+        case _ => baseFilter
       }
 
     Mdc.preservingMdc(

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -95,7 +95,8 @@ class OutcomeRepoISpec
     Some("movementReferenceNumber"),
     messageType,
     submissionId,
-    outcomeXml
+    outcomeXml,
+    None
   )
 
   val acknowledgedOutcome: OutcomeReceived = OutcomeReceived(
@@ -105,7 +106,8 @@ class OutcomeRepoISpec
     Some("movementReferenceNumber"),
     messageType,
     acknowledgedSubmissionId,
-    outcomeXml
+    outcomeXml,
+    None
   )
 
   val OutcomeXmlWrapper: OutcomeXml = OutcomeXml(outcomeXml)
@@ -117,7 +119,8 @@ class OutcomeRepoISpec
     None,
     messageType,
     UUID.randomUUID.toString,
-    outcomeXml
+    outcomeXml,
+    None
   )
 
   def lookupOutcome(submissionId: String): Option[FullOutcome] =
@@ -247,7 +250,7 @@ class OutcomeRepoISpec
 
     "listing outcomes" when {
       val listedOutcome =
-        OutcomeReceived("testEori", "corId1", receivedDateTime, None, messageType, "subId1", outcomeXml)
+        OutcomeReceived("testEori", "corId1", receivedDateTime, None, messageType, "subId1", outcomeXml, None)
 
       "unacknowledged messages exist" must {
         "return a sequence of the messages" in {
@@ -327,22 +330,94 @@ class OutcomeRepoISpec
         }
       }
 
-      "apply correlationId suffix filter when optionalClientIdPrefix is provided" in {
-
+      "apply query filters when optionalClientIdPrefix is provided(CSP client)" in {
         await(repository.removeAll())
 
-        val suffix = "1234"
-        val matchingCorrelationId = "abc" + suffix
-        val nonMatchingCorrelationId = "xyz5678"
+        val correlationIdentifierSuffix = Some("1234")
+        val clientIdentifierPrefix = Some("1234")
 
-        await(repository.save(outcome.copy(correlationId = matchingCorrelationId, submissionId = "sub1")))
+        /**
+         * Creating 3 documents
+         * 2 documents belonging to the same EORI
+         *  where each document belongs to before and after change
+         * 1 document to a different EORI
+         */
 
-        await(repository.save(outcome.copy(correlationId = nonMatchingCorrelationId, submissionId = "sub2")))
+        //new document state for CSP
+        val outcomeWithMatchingPrefix = outcome.copy(
+          clientIdentifierPrefix = clientIdentifierPrefix,
+          correlationId = "abc" + correlationIdentifierSuffix.get,
+          submissionId = "sub1"
+        )
 
-        val result = await(repository.listOutcomes(eori, Some(suffix)))
+        //previous document state for CSP
+        val outcomeWithNonMatchingPrefix = outcome.copy(
+          correlationId = "abcdefg",
+          submissionId = "sub2"
+        )
 
-        result shouldBe List(OutcomeMetadata(matchingCorrelationId, Some("movementReferenceNumber")))
+        //as is document state for GGW
+        val outcomeWithOtherEori = outcome.copy(
+          eori = "otherEori",
+          correlationId = "1234567",
+          submissionId = "sub3"
+        )
+
+        await(repository.save(outcomeWithMatchingPrefix))
+        await(repository.save(outcomeWithNonMatchingPrefix))
+        await(repository.save(outcomeWithOtherEori))
+
+        //A document matching the eori, clientIdentifierPrefix and suffix of correlationId will be fetched
+        val resultForCsp = await(repository.listOutcomes(eori, clientIdentifierPrefix))
+
+        resultForCsp shouldBe List(OutcomeMetadata("abc" + clientIdentifierPrefix.get, Some("movementReferenceNumber")))
       }
+
+      "don't apply query filters when optionalClientIdPrefix is not provided(GGW client)" in {
+        await(repository.removeAll())
+
+        val correlationIdentifierSuffix = Some("1234")
+        val clientIdentifierPrefix = Some("1234")
+
+        /**
+         * Creating 3 documents
+         * 2 documents belonging to the same EORI
+         *  where each document belongs to before and after change
+         * 1 document to a different EORI
+         */
+
+        //new document state for CSP
+        val outcomeWithMatchingPrefix = outcome.copy(
+          clientIdentifierPrefix = clientIdentifierPrefix,
+          correlationId = "abc" + correlationIdentifierSuffix.get,
+          submissionId = "sub1"
+        )
+
+        //previous document state for CSP
+        val outcomeWithNonMatchingPrefix = outcome.copy(
+          correlationId = "abcdefg",
+          submissionId = "sub2"
+        )
+
+        //as is document state for GGW
+        val outcomeWithOtherEori = outcome.copy(
+          eori = "otherEori",
+          correlationId = "1234567",
+          submissionId = "sub3"
+        )
+
+        await(repository.save(outcomeWithMatchingPrefix))
+        await(repository.save(outcomeWithNonMatchingPrefix))
+        await(repository.save(outcomeWithOtherEori))
+
+        //All 2 documents matching the EORI will be fetched
+        val resultForGgw = await(repository.listOutcomes(eori))
+
+        resultForGgw shouldBe List(
+          OutcomeMetadata("abc" + correlationIdentifierSuffix.get, Some("movementReferenceNumber")),
+          OutcomeMetadata("abcdefg", Some("movementReferenceNumber")))
+      }
+
     }
 
     "housekeepingAt" when {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,8 @@ private[repositories] case class OutcomePersisted(
   movementReferenceNumber: Option[String],
   messageType: MessageType,
   submissionId: String,
-  outcomeXml: String)
+  outcomeXml: String,
+  clientIdentifierPrefix: Option[String])
     extends Outcome {
   def toOutcomeReceived: OutcomeReceived =
     OutcomeReceived(
@@ -41,7 +42,8 @@ private[repositories] case class OutcomePersisted(
       receivedDateTime        = receivedDateTime,
       messageType             = messageType,
       submissionId            = submissionId,
-      outcomeXml              = outcomeXml
+      outcomeXml              = outcomeXml,
+      clientIdentifierPrefix  = clientIdentifierPrefix
     )
 
   def toFullOutcome: FullOutcome =
@@ -63,7 +65,8 @@ private[repositories] object OutcomePersisted {
       movementReferenceNumber = movementReferenceNumber,
       messageType             = messageType,
       submissionId            = submissionId,
-      outcomeXml              = outcomeXml
+      outcomeXml              = outcomeXml,
+      clientIdentifierPrefix  = clientIdentifierPrefix
     )
   }
 

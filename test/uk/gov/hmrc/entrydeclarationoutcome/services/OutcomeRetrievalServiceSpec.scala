@@ -63,7 +63,8 @@ class OutcomeRetrievalServiceSpec extends AnyWordSpec with MockOutcomeRepo with 
     None,
     messageType,
     submissionId,
-    xml
+    xml,
+    None
   )
 
   val outcomeXml: OutcomeXml = OutcomeXml(xml)
