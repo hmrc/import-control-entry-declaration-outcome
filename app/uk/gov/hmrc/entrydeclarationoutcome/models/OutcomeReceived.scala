@@ -17,8 +17,7 @@
 package uk.gov.hmrc.entrydeclarationoutcome.models
 
 import java.time.Instant
-
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.{Format, JsString, Json, Reads, Writes}
 
 case class OutcomeReceived(
                             eori: String,
@@ -37,5 +36,8 @@ object OutcomeReceived extends InstantFormatter {
 
 case class CSPUserId(id: String)
 object CSPUserId extends InstantFormatter {
-  implicit val format: Format[CSPUserId] = Json.format[CSPUserId]
+  implicit val format: Format[CSPUserId] = Format(
+    Reads.StringReads.map(CSPUserId(_)),
+    Writes[CSPUserId](cspUserId => JsString(cspUserId.id))
+  )
 }

@@ -178,7 +178,9 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
       optionalClientIdPrefix match {
         // match only correlationIds staring with the provided filter expression if provided
         case Some(filterExpression) =>
-          and(baseFilter, regex("correlationId", filterExpression + "$")) //, equal("clientIdentifierPrefix", filterExpression))
+          and(baseFilter,
+            regex("correlationId", filterExpression + "$"),
+            equal("cspUserId", filterExpression))
         // if none is provided, do not filter further
         case _ => baseFilter
       }
