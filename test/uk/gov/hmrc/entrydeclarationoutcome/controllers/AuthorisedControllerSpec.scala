@@ -26,7 +26,7 @@ import play.api.mvc._
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, ResultExtractors}
 import play.mvc.Http.MimeTypes
-import uk.gov.hmrc.entrydeclarationoutcome.models.ClientInfo.GGWClient
+import uk.gov.hmrc.entrydeclarationoutcome.services.UserDetails.GGWUserDetails
 import uk.gov.hmrc.entrydeclarationoutcome.services.{AuthService, MockAuthService, UserDetails}
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
 
@@ -63,7 +63,7 @@ class AuthorisedControllerSpec
     lazy val controller = new TestController()
   }
 
-  val userDetails: UserDetails = UserDetails("GB123", GGWClient)
+  val userDetails: UserDetails = GGWUserDetails("GB123")
 
   val unauthorisedXml: Node =
     <error>

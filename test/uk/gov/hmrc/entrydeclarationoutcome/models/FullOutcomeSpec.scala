@@ -32,8 +32,7 @@ class FullOutcomeSpec extends AnyWordSpec {
       Some("mrn"),
       MessageType.IE316,
       "submissionId",
-      "payloadXml",
-      None
+      "payloadXml"
     ),
     acknowledged   = true,
     housekeepingAt = Instant.parse("2020-08-05T11:00:00.000Z")

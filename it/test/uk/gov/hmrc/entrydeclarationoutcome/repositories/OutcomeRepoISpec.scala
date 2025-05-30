@@ -95,8 +95,7 @@ class OutcomeRepoISpec
     Some("movementReferenceNumber"),
     messageType,
     submissionId,
-    outcomeXml,
-    None
+    outcomeXml
   )
 
   val acknowledgedOutcome: OutcomeReceived = OutcomeReceived(
@@ -112,7 +111,7 @@ class OutcomeRepoISpec
 
   val OutcomeXmlWrapper: OutcomeXml = OutcomeXml(outcomeXml)
 
-  def randomOutcomeRecieved: OutcomeReceived = OutcomeReceived(
+  def randomOutcomeReceived: OutcomeReceived = OutcomeReceived(
     acknowledgedEori,
     UUID.randomUUID.toString,
     receivedDateTime,
@@ -325,16 +324,16 @@ class OutcomeRepoISpec
       }
       "no unacknowledged messages exist" must {
         "return Empty List" in {
-          beforeAll()
+          // beforeAll()
           await(repository.listOutcomes(acknowledgedEori)) shouldBe List.empty[OutcomeMetadata]
         }
       }
 
-      "apply query filters when optionalClientIdPrefix is provided(CSP client)" in {
+      "apply query filters when optionalClientIdPrefix is provided (CSP client)" in {
         await(repository.removeAll())
 
-        val correlationIdentifierSuffix = Some("1234")
-        val clientIdentifierPrefix = Some("1234")
+        val correlationIdentifierSuffix = "1234"
+        val clientIdentifierPrefix = "1234"
 
         /**
          * Creating 3 documents
@@ -343,20 +342,20 @@ class OutcomeRepoISpec
          * 1 document to a different EORI
          */
 
-        //new document state for CSP
+        // new document state for CSP
         val outcomeWithMatchingPrefix = outcome.copy(
-          clientIdentifierPrefix = clientIdentifierPrefix,
-          correlationId = "abc" + correlationIdentifierSuffix.get,
+          cspUserId = Some(CSPUserId(clientIdentifierPrefix)),
+          correlationId = "abc" + correlationIdentifierSuffix,
           submissionId = "sub1"
         )
 
-        //previous document state for CSP
+        // previous document state for CSP
         val outcomeWithNonMatchingPrefix = outcome.copy(
           correlationId = "abcdefg",
           submissionId = "sub2"
         )
 
-        //as is document state for GGW
+        // as is document state for GGW
         val outcomeWithOtherEori = outcome.copy(
           eori = "otherEori",
           correlationId = "1234567",
@@ -367,17 +366,17 @@ class OutcomeRepoISpec
         await(repository.save(outcomeWithNonMatchingPrefix))
         await(repository.save(outcomeWithOtherEori))
 
-        //A document matching the eori, clientIdentifierPrefix and suffix of correlationId will be fetched
-        val resultForCsp = await(repository.listOutcomes(eori, clientIdentifierPrefix))
+        // A document matching the eori, clientIdentifierPrefix and suffix of correlationId will be fetched
+        val resultForCsp = await(repository.listOutcomes(eori, Some(clientIdentifierPrefix)))
 
-        resultForCsp shouldBe List(OutcomeMetadata("abc" + clientIdentifierPrefix.get, Some("movementReferenceNumber")))
+        resultForCsp shouldBe List(OutcomeMetadata("abc" + clientIdentifierPrefix, Some("movementReferenceNumber")))
       }
 
-      "don't apply query filters when optionalClientIdPrefix is not provided(GGW client)" in {
+      "don't apply query filters when optionalClientIdPrefix is not provided (GGW client)" in {
         await(repository.removeAll())
 
         val correlationIdentifierSuffix = Some("1234")
-        val clientIdentifierPrefix = Some("1234")
+        val clientIdentifierPrefix = "1234"
 
         /**
          * Creating 3 documents
@@ -386,20 +385,20 @@ class OutcomeRepoISpec
          * 1 document to a different EORI
          */
 
-        //new document state for CSP
+        // new document state for CSP
         val outcomeWithMatchingPrefix = outcome.copy(
-          clientIdentifierPrefix = clientIdentifierPrefix,
+          cspUserId = Some(CSPUserId(clientIdentifierPrefix)),
           correlationId = "abc" + correlationIdentifierSuffix.get,
           submissionId = "sub1"
         )
 
-        //previous document state for CSP
+        // previous document state for CSP
         val outcomeWithNonMatchingPrefix = outcome.copy(
           correlationId = "abcdefg",
           submissionId = "sub2"
         )
 
-        //as is document state for GGW
+        // as is document state for GGW
         val outcomeWithOtherEori = outcome.copy(
           eori = "otherEori",
           correlationId = "1234567",
@@ -410,7 +409,7 @@ class OutcomeRepoISpec
         await(repository.save(outcomeWithNonMatchingPrefix))
         await(repository.save(outcomeWithOtherEori))
 
-        //All 2 documents matching the EORI will be fetched
+        // All 2 documents matching the EORI will be fetched
         val resultForGgw = await(repository.listOutcomes(eori))
 
         resultForGgw shouldBe List(
@@ -471,7 +470,7 @@ class OutcomeRepoISpec
       def populateOutcomes(numOutcomes: Int): Seq[OutcomeReceived] = {
         await(repository.removeAll())
         (1 to numOutcomes).map { _ =>
-          val outcome = randomOutcomeRecieved
+          val outcome = randomOutcomeReceived
           await(repository.save(outcome)) shouldBe None
           outcome
         }
@@ -492,7 +491,7 @@ class OutcomeRepoISpec
       "the time has reached the housekeepingAt for some documents" must {
         "delete only those documents" in {
           val numOutcomes = 10
-          val outcomes    = populateOutcomes(numOutcomes)
+          val outcomes    =   populateOutcomes(numOutcomes)
           setHousekeepingAt(outcomes, 1 to outcomes.size)
 
           val elapsedSecs = 6

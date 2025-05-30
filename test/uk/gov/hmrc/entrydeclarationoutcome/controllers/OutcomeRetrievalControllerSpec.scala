@@ -22,10 +22,10 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.MimeTypes
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
-import uk.gov.hmrc.entrydeclarationoutcome.models.ClientInfo.{GGWClient, CSPClient}
 import uk.gov.hmrc.entrydeclarationoutcome.models.{MessageType, OutcomeMetadata, OutcomeReceived, OutcomeXml}
 import uk.gov.hmrc.entrydeclarationoutcome.reporting.events.EventCode
 import uk.gov.hmrc.entrydeclarationoutcome.reporting.{MockReportSender, OutcomeReport}
+import uk.gov.hmrc.entrydeclarationoutcome.services.UserDetails.{CSPUserDetails, GGWUserDetails}
 import uk.gov.hmrc.entrydeclarationoutcome.services.{MockAuthService, MockOutcomeRetrievalService, UserDetails}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -48,8 +48,8 @@ class OutcomeRetrievalControllerSpec
   val payloadXml: String       = "payloadXml"
   val outcomeXml: OutcomeXml   = OutcomeXml(payloadXml)
   val submissionId: String     = "someSubmissionId"
-  val userDetailsGGW: UserDetails = UserDetails("GB123", GGWClient)
-  val userDetailsCSP: UserDetails = UserDetails("GB123", CSPClient("clientId1234"))
+  val userDetailsGGW: UserDetails = GGWUserDetails("GB123")
+  val userDetailsCSP: UserDetails = CSPUserDetails("GB123", "clientId1234")
   val correlationId: String    = "someCorrelationId"
   val messageType: MessageType = MessageType.IE328
 
@@ -61,7 +61,6 @@ class OutcomeRetrievalControllerSpec
     messageType,
     submissionId,
     payloadXml,
-    None
   )
 
   val notFoundXml: Node =

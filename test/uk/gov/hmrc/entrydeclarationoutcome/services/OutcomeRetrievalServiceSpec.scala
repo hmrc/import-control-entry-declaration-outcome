@@ -23,9 +23,9 @@ import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.entrydeclarationoutcome.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
-import uk.gov.hmrc.entrydeclarationoutcome.models.ClientInfo.{CSPClient, GGWClient}
 import uk.gov.hmrc.entrydeclarationoutcome.models._
 import uk.gov.hmrc.entrydeclarationoutcome.repositories.MockOutcomeRepo
+import uk.gov.hmrc.entrydeclarationoutcome.services.UserDetails.{CSPUserDetails, GGWUserDetails}
 import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -48,10 +48,9 @@ class OutcomeRetrievalServiceSpec extends AnyWordSpec with MockOutcomeRepo with 
   implicit val lc: LoggingContext = LoggingContext("eori", "corrId", "subId")
 
   val submissionId: String     = "submissionId"
-  val cspUserDetails: UserDetails = UserDetails("eori", CSPClient("1234olkmfnrhtuy"))
-  val ggwUserDetails: UserDetails = UserDetails("eori", GGWClient)
-  val filter: Option[String]   = Some("1234")
-  val eori: String             = cspUserDetails.eori
+  val cspUserDetails: CSPUserDetails = CSPUserDetails("eori", "1234olkmfnrhtuy")
+  val ggwUserDetails: GGWUserDetails = GGWUserDetails("eori")
+  val eori: String             = "someEORI"
   val correlationId: String    = "correlationId"
   val xml: String              = "somexml"
   val messageType: MessageType = MessageType.IE328
@@ -63,8 +62,7 @@ class OutcomeRetrievalServiceSpec extends AnyWordSpec with MockOutcomeRepo with 
     None,
     messageType,
     submissionId,
-    xml,
-    None
+    xml
   )
 
   val outcomeXml: OutcomeXml = OutcomeXml(xml)
@@ -120,18 +118,19 @@ class OutcomeRetrievalServiceSpec extends AnyWordSpec with MockOutcomeRepo with 
 
     "listing outcomes xml" must {
       "return List(Outcomes) if an outcome exists in the database" in {
-        MockOutcomeRepo.listOutcomes(eori, filter) returns Future.successful(List(OutcomeMetadata("corId")))
+        MockOutcomeRepo.listOutcomes(cspUserDetails.eori, Some(cspUserDetails.clientIdPrefix)) returns Future.successful(List(OutcomeMetadata("corId")))
 
         service.listOutcomes(cspUserDetails).futureValue shouldBe List(OutcomeMetadata("corId"))
       }
 
       "return Empty list if no outcome exists in the database" in {
-        MockOutcomeRepo.listOutcomes(eori, filter) returns Future.successful(List.empty[OutcomeMetadata])
+        MockOutcomeRepo.listOutcomes(cspUserDetails.eori, Some(cspUserDetails.clientIdPrefix)) returns Future.successful(List.empty[OutcomeMetadata])
 
         service.listOutcomes(cspUserDetails).futureValue shouldBe List.empty[OutcomeMetadata]
       }
 
       "return List(Outcomes) for a GGWClient if outcomes exist in the database" in {
+
         MockOutcomeRepo.listOutcomes(ggwUserDetails.eori, None) returns Future.successful(List(OutcomeMetadata("corId")))
 
         service.listOutcomes(ggwUserDetails).futureValue shouldBe List(OutcomeMetadata("corId"))

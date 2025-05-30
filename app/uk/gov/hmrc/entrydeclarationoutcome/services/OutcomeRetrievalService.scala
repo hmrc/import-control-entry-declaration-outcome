@@ -21,9 +21,9 @@ import javax.inject.{Inject, Singleton}
 import play.api.Logging
 import uk.gov.hmrc.entrydeclarationoutcome.config.AppConfig
 import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
-import uk.gov.hmrc.entrydeclarationoutcome.models.ClientInfo.{CSPClient, CSP_CLIENT_PREFIX_LENGTH, GGWClient}
 import uk.gov.hmrc.entrydeclarationoutcome.models.{FullOutcome, OutcomeMetadata, OutcomeReceived, OutcomeXml}
 import uk.gov.hmrc.entrydeclarationoutcome.repositories.OutcomeRepo
+import uk.gov.hmrc.entrydeclarationoutcome.services.UserDetails.{CSPUserDetails, GGWUserDetails}
 import uk.gov.hmrc.entrydeclarationoutcome.utils.Timer
 import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
@@ -58,10 +58,9 @@ class OutcomeRetrievalService @Inject()(
 
   def listOutcomes(userDetails: UserDetails): Future[List[OutcomeMetadata]] =
     timeFuture("Service listOutcomes", "listOutcomes.total") {
-      val eori = userDetails.eori
-      userDetails.clientInfo  match {
-        case GGWClient => outcomeRepo.listOutcomes(eori)
-        case CSPClient(clientId) => outcomeRepo.listOutcomes(eori, Option(clientId.take(CSP_CLIENT_PREFIX_LENGTH)))
+      userDetails match {
+        case GGWUserDetails(eori) => outcomeRepo.listOutcomes(eori)
+        case cspUser@CSPUserDetails(eori, _) => outcomeRepo.listOutcomes(eori, Option(cspUser.clientIdPrefix))
       }
     }
 

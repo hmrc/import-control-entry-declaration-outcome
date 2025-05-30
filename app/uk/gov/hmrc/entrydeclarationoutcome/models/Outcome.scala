@@ -23,5 +23,5 @@ trait Outcome {
   def messageType: MessageType
   def submissionId: String
   def outcomeXml: String
-  def clientIdentifierPrefix: Option[String]
+  def cspUserId: Option[CSPUserId]
 }

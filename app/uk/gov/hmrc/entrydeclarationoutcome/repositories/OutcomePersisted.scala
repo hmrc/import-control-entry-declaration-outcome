@@ -17,22 +17,23 @@
 package uk.gov.hmrc.entrydeclarationoutcome.repositories
 
 import play.api.libs.json._
-import uk.gov.hmrc.entrydeclarationoutcome.models.{FullOutcome, MessageType, Outcome, OutcomeReceived}
+import uk.gov.hmrc.entrydeclarationoutcome.models.{CSPUserId, FullOutcome, MessageType, Outcome, OutcomeReceived}
+
 import java.time.Instant
 import scala.concurrent.duration._
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats.Implicits.jatInstantFormat
 
 private[repositories] case class OutcomePersisted(
-  eori: String,
-  correlationId: String,
-  acknowledged: Boolean = false,
-  receivedDateTime: Instant,
-  housekeepingAt: Instant,
-  movementReferenceNumber: Option[String],
-  messageType: MessageType,
-  submissionId: String,
-  outcomeXml: String,
-  clientIdentifierPrefix: Option[String])
+                                                   eori: String,
+                                                   correlationId: String,
+                                                   acknowledged: Boolean = false,
+                                                   receivedDateTime: Instant,
+                                                   housekeepingAt: Instant,
+                                                   movementReferenceNumber: Option[String],
+                                                   messageType: MessageType,
+                                                   submissionId: String,
+                                                   outcomeXml: String,
+                                                   cspUserId: Option[CSPUserId] = None)
     extends Outcome {
   def toOutcomeReceived: OutcomeReceived =
     OutcomeReceived(
@@ -43,7 +44,7 @@ private[repositories] case class OutcomePersisted(
       messageType             = messageType,
       submissionId            = submissionId,
       outcomeXml              = outcomeXml,
-      clientIdentifierPrefix  = clientIdentifierPrefix
+      cspUserId               = cspUserId
     )
 
   def toFullOutcome: FullOutcome =
@@ -66,7 +67,7 @@ private[repositories] object OutcomePersisted {
       messageType             = messageType,
       submissionId            = submissionId,
       outcomeXml              = outcomeXml,
-      clientIdentifierPrefix  = clientIdentifierPrefix
+      cspUserId               = cspUserId
     )
   }
 

@@ -21,16 +21,21 @@ import java.time.Instant
 import play.api.libs.json.{Format, Json}
 
 case class OutcomeReceived(
-  eori: String,
-  correlationId: String,
-  receivedDateTime: Instant,
-  movementReferenceNumber: Option[String],
-  messageType: MessageType,
-  submissionId: String,
-  outcomeXml: String,
-  clientIdentifierPrefix: Option[String])
-    extends Outcome
+                            eori: String,
+                            correlationId: String,
+                            receivedDateTime: Instant,
+                            movementReferenceNumber: Option[String],
+                            messageType: MessageType,
+                            submissionId: String,
+                            outcomeXml: String,
+                            cspUserId: Option[CSPUserId] = None)
+extends Outcome
 
 object OutcomeReceived extends InstantFormatter {
   implicit val format: Format[OutcomeReceived] = Json.format[OutcomeReceived]
+}
+
+case class CSPUserId(id: String)
+object CSPUserId extends InstantFormatter {
+  implicit val format: Format[CSPUserId] = Json.format[CSPUserId]
 }
