@@ -177,10 +177,7 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
     val findCriteria =
       optionalClientIdPrefix match {
         // match only correlationIds staring with the provided filter expression if provided
-        case Some(filterExpression) =>
-          and(baseFilter,
-            regex("correlationId", filterExpression + "$"),
-            equal("cspUserId", filterExpression))
+        case Some(filterExpression) => and(baseFilter, equal("cspUserId", filterExpression))
         // if none is provided, do not filter further
         case _ => baseFilter
       }
