@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,8 +41,8 @@ trait MockOutcomeRetrievalService extends TestSuite with MockFactory {
       (mockOutcomeXmlRetrievalService
         .acknowledgeOutcome(_: String, _: String)(_: LoggingContext)).expects(eori, correlationId, *)
 
-    def listOutcomes(eori: String): CallHandler[Future[List[OutcomeMetadata]]] =
-      mockOutcomeXmlRetrievalService.listOutcomes _ expects eori
+    def listOutcomes(userDetails: UserDetails): CallHandler[Future[List[OutcomeMetadata]]] =
+      mockOutcomeXmlRetrievalService.listOutcomes _ expects userDetails
   }
 
 }

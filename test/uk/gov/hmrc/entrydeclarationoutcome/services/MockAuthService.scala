@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,10 +29,10 @@ trait MockAuthService extends TestSuite with MockFactory {
   val mockAuthService: AuthService = mock[AuthService]
 
   object MockAuthService {
-    def authenticate(): CallHandler[Future[Option[String]]] =
+    def authenticate(): CallHandler[Future[Option[UserDetails]]] =
       (mockAuthService.authenticate()(_: HeaderCarrier, _: Headers)).expects(*,*)
 
-    def authenticateCapture()(headerCarrier: CaptureOne[HeaderCarrier]): CallHandler[Future[Option[String]]] =
+    def authenticateCapture()(headerCarrier: CaptureOne[HeaderCarrier]): CallHandler[Future[Option[UserDetails]]] =
       (mockAuthService.authenticate()(_: HeaderCarrier, _: Headers)).expects(capture(headerCarrier),*)
   }
 

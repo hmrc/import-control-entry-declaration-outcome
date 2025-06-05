@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ trait OutcomeRepo {
     */
   def acknowledgeOutcome(eori: String, correlationId: String, time: Instant)(
     implicit lc: LoggingContext): Future[Option[OutcomeReceived]]
-  def listOutcomes(eori: String): Future[List[OutcomeMetadata]]
+  def listOutcomes(eori: String, optionalCSPUserId: Option[String] = None): Future[List[OutcomeMetadata]]
   def setHousekeepingAt(submissionId: String, time: Instant): Future[Boolean]
   def setHousekeepingAt(eori: String, correlationId: String, time: Instant): Future[Boolean]
   def housekeep(now: Instant): Future[Int]
@@ -88,7 +88,7 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
   replaceIndexes = true)
     with OutcomeRepo with RepositoryFns {
 
-  val mongoErrorCodeForDuplicate: Int = 11000
+  private val mongoErrorCodeForDuplicate: Int = 11000
 
   //
   // Test FNs
@@ -162,10 +162,22 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
     )
     .map(_.map(_.toOutcomeReceived))
 
-  def listOutcomes(eori: String): Future[List[OutcomeMetadata]] =
+  def listOutcomes(eori: String, optionalCSPUserId: Option[String] = None): Future[List[OutcomeMetadata]] = {
+    val findEoriAndNotAcknowledged: Bson = and(equal("eori", eori), equal("acknowledged", false))
+
+    val findCriteria =
+      optionalCSPUserId match {
+        case Some(cspUserId) =>
+          // match only correlationIds containing the CSPUserId provided at the end
+          and(findEoriAndNotAcknowledged, regex("correlationId", cspUserId + "$"))
+        case None =>
+          // if none is provided, do not filter for a specific software (as user is logged-in via GGW)
+          findEoriAndNotAcknowledged
+      }
+
     Mdc.preservingMdc(
       collection
-        .find[BsonValue](and(equal("eori", eori), equal("acknowledged", false)))
+        .find[BsonValue](findCriteria)
         .projection(include("correlationId", "movementReferenceNumber"))
         .sort(ascending("receivedDateTime"))
         .limit(appConfig.listOutcomesLimit)
@@ -176,6 +188,7 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
       case Some(results) => results.map(Codecs.fromBson[OutcomeMetadata](_)).toList
       case _ => Nil
     }
+  }
 
   override def setHousekeepingAt(submissionId: String, time: Instant): Future[Boolean] =
     setHousekeepingAt(time, equal("submissionId", submissionId))
