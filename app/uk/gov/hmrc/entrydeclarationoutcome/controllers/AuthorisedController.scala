@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package uk.gov.hmrc.entrydeclarationoutcome.controllers
 
 import play.api.mvc._
 import uk.gov.hmrc.entrydeclarationoutcome.models.StandardError
-import uk.gov.hmrc.entrydeclarationoutcome.services.AuthService
+import uk.gov.hmrc.entrydeclarationoutcome.services.{AuthService, UserDetails}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
@@ -27,7 +27,7 @@ import scala.concurrent.{ExecutionContext, Future}
 abstract class AuthorisedController(cc: ControllerComponents) extends BackendController(cc) {
   val authService: AuthService
 
-  case class UserRequest[A](eori: String, request: Request[A]) extends WrappedRequest[A](request)
+  case class UserRequest[A](request: Request[A], userDetails: UserDetails) extends WrappedRequest[A](request)
 
   def authorisedAction(): ActionBuilder[UserRequest, AnyContent] =
     new ActionBuilder[UserRequest, AnyContent] {
@@ -41,7 +41,7 @@ abstract class AuthorisedController(cc: ControllerComponents) extends BackendCon
         implicit val headerCarrier: HeaderCarrier = hc(request)
         implicit val headers: Headers             = request.headers
         authService.authenticate().flatMap {
-          case Some(eori) => block(UserRequest(eori, request))
+          case Some(userDetails) => block(UserRequest(request, userDetails))
           case None       => Future.successful(Unauthorized(StandardError.unauthorised))
         }
       }

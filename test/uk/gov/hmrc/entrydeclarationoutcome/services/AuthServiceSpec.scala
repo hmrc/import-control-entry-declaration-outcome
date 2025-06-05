@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.EmptyRetrieval
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.entrydeclarationoutcome.connectors.{MockApiSubscriptionFieldsConnector, MockAuthConnector}
+import uk.gov.hmrc.entrydeclarationoutcome.services.UserDetails.CSPUserDetails
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -81,7 +82,10 @@ class AuthServiceSpec
             stubCSPAuth returns Future.successful(())
 
             MockApiSubscriptionFieldsConnector.getAuthenticatedEoriField(clientId) returns Future.successful(Some(eori))
-            service.authenticate().futureValue shouldBe Some(eori)
+            val authRespone = service.authenticate().futureValue
+            authRespone.map(_.eori) shouldBe Some(eori)
+            authRespone.get.isInstanceOf[CSPUserDetails] shouldBe true
+            authRespone.get.asInstanceOf[CSPUserDetails].clientId shouldBe clientId
           }
         }
 
@@ -90,7 +94,7 @@ class AuthServiceSpec
             stubCSPAuth returns Future.successful(())
             MockApiSubscriptionFieldsConnector.getAuthenticatedEoriField(clientId) returns Future.successful(None)
 
-            service.authenticate().futureValue shouldBe None
+            service.authenticate().futureValue.map(_.eori) shouldBe None
           }
         }
       }
@@ -117,7 +121,7 @@ class AuthServiceSpec
         stubCSPAuth returns Future.successful(())
 
         MockApiSubscriptionFieldsConnector.getAuthenticatedEoriField(clientId) returns Future.successful(Some(eori))
-        service.authenticate().futureValue shouldBe Some(eori)
+        service.authenticate().futureValue.map(_.eori) shouldBe Some(eori)
       }
     }
 
@@ -126,7 +130,7 @@ class AuthServiceSpec
         "SS enrolment with an eori" in {
           stubbings()
           stubAuth returns Future.successful(Enrolments(Set(validICSEnrolment(eori))))
-          service.authenticate().futureValue shouldBe Some(eori)
+          service.authenticate().futureValue.map(_.eori) shouldBe Some(eori)
         }
       }
 
@@ -134,7 +138,7 @@ class AuthServiceSpec
         "SS enrolment with no identifiers" in {
           stubbings()
           stubAuth returns Future.successful(Enrolments(Set(validICSEnrolment(eori).copy(identifiers = Nil))))
-          service.authenticate().futureValue shouldBe None
+          service.authenticate().futureValue.map(_.eori) shouldBe None
         }
 
         "no SS enrolment in authorization header" in {
