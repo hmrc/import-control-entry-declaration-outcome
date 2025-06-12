@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -110,7 +110,7 @@ class OutcomeRepoISpec
 
   val OutcomeXmlWrapper: OutcomeXml = OutcomeXml(outcomeXml)
 
-  def randomOutcomeRecieved: OutcomeReceived = OutcomeReceived(
+  def randomOutcomeReceived: OutcomeReceived = OutcomeReceived(
     acknowledgedEori,
     UUID.randomUUID.toString,
     receivedDateTime,
@@ -322,10 +322,96 @@ class OutcomeRepoISpec
       }
       "no unacknowledged messages exist" must {
         "return Empty List" in {
-          beforeAll()
           await(repository.listOutcomes(acknowledgedEori)) shouldBe List.empty[OutcomeMetadata]
         }
       }
+
+      "apply query filters when optionalClientIdPrefix is provided (CSP client)" in {
+        await(repository.removeAll())
+
+        val correlationIdentifierSuffix = "1234"
+        val clientIdentifierPrefix = "1234"
+
+        /**
+         * Creating 3 documents
+         * 2 documents belonging to the same EORI
+         *  where each document belongs to before and after change
+         * 1 document to a different EORI
+         */
+
+        // new document state for CSP
+        val outcomeWithMatchingPrefix = outcome.copy(
+          correlationId = "abc" + correlationIdentifierSuffix,
+          submissionId = "sub1"
+        )
+
+        // previous document state for CSP
+        val outcomeWithNonMatchingPrefix = outcome.copy(
+          correlationId = "abcdefg",
+          submissionId = "sub2"
+        )
+
+        // as is document state for GGW
+        val outcomeWithOtherEori = outcome.copy(
+          eori = "otherEori",
+          correlationId = "1234567",
+          submissionId = "sub3"
+        )
+
+        await(repository.save(outcomeWithMatchingPrefix))
+        await(repository.save(outcomeWithNonMatchingPrefix))
+        await(repository.save(outcomeWithOtherEori))
+
+        // A document matching the eori, clientIdentifierPrefix and suffix of correlationId will be fetched
+        val resultForCsp = await(repository.listOutcomes(eori, Some(clientIdentifierPrefix)))
+
+        val expectedOutcomeMetadata = OutcomeMetadata("abc" + clientIdentifierPrefix, Some("movementReferenceNumber"))
+        resultForCsp shouldBe List(expectedOutcomeMetadata)
+      }
+
+      "don't apply query filters when optionalClientIdPrefix is not provided (GGW client)" in {
+        await(repository.removeAll())
+
+        val correlationIdentifierSuffix = Some("1234")
+
+        /**
+         * Creating 3 documents
+         * 2 documents belonging to the same EORI
+         *  where each document belongs to before and after change
+         * 1 document to a different EORI
+         */
+
+        // new document state for CSP
+        val outcomeWithMatchingPrefix = outcome.copy(
+          correlationId = "abc" + correlationIdentifierSuffix.get,
+          submissionId = "sub1"
+        )
+
+        // previous document state for CSP
+        val outcomeWithNonMatchingPrefix = outcome.copy(
+          correlationId = "abcdefg",
+          submissionId = "sub2"
+        )
+
+        // as is document state for GGW
+        val outcomeWithOtherEori = outcome.copy(
+          eori = "otherEori",
+          correlationId = "1234567",
+          submissionId = "sub3"
+        )
+
+        await(repository.save(outcomeWithMatchingPrefix))
+        await(repository.save(outcomeWithNonMatchingPrefix))
+        await(repository.save(outcomeWithOtherEori))
+
+        // All 2 documents matching the EORI will be fetched
+        val resultForGgw = await(repository.listOutcomes(eori))
+
+        resultForGgw shouldBe List(
+          OutcomeMetadata("abc" + correlationIdentifierSuffix.get, Some("movementReferenceNumber")),
+          OutcomeMetadata("abcdefg", Some("movementReferenceNumber")))
+      }
+
     }
 
     "housekeepingAt" when {
@@ -379,7 +465,7 @@ class OutcomeRepoISpec
       def populateOutcomes(numOutcomes: Int): Seq[OutcomeReceived] = {
         await(repository.removeAll())
         (1 to numOutcomes).map { _ =>
-          val outcome = randomOutcomeRecieved
+          val outcome = randomOutcomeReceived
           await(repository.save(outcome)) shouldBe None
           outcome
         }
