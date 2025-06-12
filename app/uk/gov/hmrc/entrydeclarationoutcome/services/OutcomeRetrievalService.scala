@@ -56,7 +56,8 @@ class OutcomeRetrievalService @Inject()(
       outcomeRepo.acknowledgeOutcome(eori, correlationId, nowPlusShortTtl)
     }
 
-  def listOutcomes(userDetails: UserDetails): Future[List[OutcomeMetadata]] =
+  def listOutcomes(userDetails: UserDetails)
+                  (implicit lc: LoggingContext): Future[List[OutcomeMetadata]] =
     timeFuture("Service listOutcomes", "listOutcomes.total") {
       userDetails match {
         case GGWUserDetails(eori) => outcomeRepo.listOutcomes(eori)

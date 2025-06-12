@@ -49,7 +49,7 @@ trait OutcomeRepo {
     */
   def acknowledgeOutcome(eori: String, correlationId: String, time: Instant)(
     implicit lc: LoggingContext): Future[Option[OutcomeReceived]]
-  def listOutcomes(eori: String, optionalCSPUserId: Option[String] = None): Future[List[OutcomeMetadata]]
+  def listOutcomes(eori: String, optionalCSPUserId: Option[String] = None)(implicit lc: LoggingContext): Future[List[OutcomeMetadata]]
   def setHousekeepingAt(submissionId: String, time: Instant): Future[Boolean]
   def setHousekeepingAt(eori: String, correlationId: String, time: Instant): Future[Boolean]
   def housekeep(now: Instant): Future[Int]
@@ -162,7 +162,8 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
     )
     .map(_.map(_.toOutcomeReceived))
 
-  def listOutcomes(eori: String, optionalCSPUserId: Option[String] = None): Future[List[OutcomeMetadata]] = {
+  def listOutcomes(eori: String, optionalCSPUserId: Option[String] = None)
+                  (implicit lc: LoggingContext): Future[List[OutcomeMetadata]] = {
     val findEoriAndNotAcknowledged: Bson = and(equal("eori", eori), equal("acknowledged", false))
 
     val findCriteria =
@@ -185,8 +186,33 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
         .toFutureOption()
     )
     .map{
-      case Some(results) => results.map(Codecs.fromBson[OutcomeMetadata](_)).toList
-      case _ => Nil
+      case Some(results) =>
+        val outcomesList = results.map(Codecs.fromBson[OutcomeMetadata](_)).toList
+        listOutcomesWithLegacyFilter(optionalCSPUserId, outcomesList.size, findEoriAndNotAcknowledged)
+        outcomesList
+      case _ =>
+        listOutcomesWithLegacyFilter(optionalCSPUserId, 0, findEoriAndNotAcknowledged)
+        Nil
+    }
+  }
+
+  private def listOutcomesWithLegacyFilter(optionalCSPUserId: Option[String], filteredOutcomesCount: Int, findEoriAndNotAcknowledged: Bson)
+                                          (implicit lc: LoggingContext): Unit = {
+    optionalCSPUserId match {
+      case Some(_) =>
+        collection
+          .countDocuments(findEoriAndNotAcknowledged)
+          .toFuture()
+          .map { totalOutcomesCount: Long =>
+            if (totalOutcomesCount > filteredOutcomesCount) {
+              ContextLogger.warn(s"Number of documents retrieved specific to a EORI: $totalOutcomesCount"
+                + s"; is greater than the number of documents retrieved specific to a EORI/ClientId: $filteredOutcomesCount")
+            }
+          }.recover {
+            case exception: Exception =>
+              ContextLogger.error("Failed to count documents specific to a EORI", exception)
+          }
+      case None =>
     }
   }
 

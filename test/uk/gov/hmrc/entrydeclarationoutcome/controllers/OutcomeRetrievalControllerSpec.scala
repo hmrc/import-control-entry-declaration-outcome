@@ -22,6 +22,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.MimeTypes
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
+import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationoutcome.models.{MessageType, OutcomeMetadata, OutcomeReceived, OutcomeXml}
 import uk.gov.hmrc.entrydeclarationoutcome.reporting.events.EventCode
 import uk.gov.hmrc.entrydeclarationoutcome.reporting.{MockReportSender, OutcomeReport}
@@ -38,6 +39,7 @@ class OutcomeRetrievalControllerSpec
     with MockAuthService
     with MockReportSender {
 
+  implicit val lc: LoggingContext = LoggingContext("eori", "corrId", "subId")
   val controller =
     new OutcomeRetrievalController(
       mockAuthService,
@@ -168,7 +170,7 @@ class OutcomeRetrievalControllerSpec
     "return 200 OK with outcomes for GGW client" when {
       "the user is authenticated and an unacknowledged outcome could be found" in {
         MockAuthService.authenticate() returns Future.successful(Some(userDetailsGGW))
-        MockOutcomeXmlRetrievalService.listOutcomes(userDetailsGGW) returns Future.successful(
+        MockOutcomeXmlRetrievalService.listOutcomes(userDetailsGGW)(lc = lc) returns Future.successful(
           List(OutcomeMetadata(corId1, Some(mrn)), OutcomeMetadata(corId2)))
 
         val result        = controller.listOutcomes()(FakeRequest())
