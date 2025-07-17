@@ -16,7 +16,7 @@
 import sbt.*
 
 object AppDependencies {
-  val bootstrapVersion = "9.13.0"
+  val bootstrapVersion = "9.16.0"
   val hmrcMongoVersion = "2.6.0"
   val pekkoVersion = "1.1.3"
 
@@ -30,10 +30,10 @@ object AppDependencies {
   val test: Seq[ModuleID] = Seq(
     "uk.gov.hmrc"                  %% "bootstrap-test-play-30"  % bootstrapVersion % Test,
     "uk.gov.hmrc.mongo"            %% "hmrc-mongo-test-play-30" % hmrcMongoVersion % Test,
-    "org.scalatestplus.play"       %% "scalatestplus-play"      % "7.0.1"          % Test,
-    "org.scalamock"                %% "scalamock"               % "7.3.2"          % Test,
+    "org.scalatestplus.play"       %% "scalatestplus-play"      % "7.0.2"          % Test,
+    "org.scalamock"                %% "scalamock"               % "7.4.0"          % Test,
     "org.scalatestplus"            %% "scalacheck-1-18"         % "3.2.19.0"       % Test,
-    "com.fasterxml.jackson.module" %% "jackson-module-scala"    % "2.19.0"         % Test,
+    "com.fasterxml.jackson.module" %% "jackson-module-scala"    % "2.19.1"         % Test,
   )
 
   val itDependencies: Seq[ModuleID] = Seq(
