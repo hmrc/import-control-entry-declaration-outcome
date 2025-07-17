@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import uk.gov.hmrc.entrydeclarationoutcome.config.AppConfig
 import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationoutcome.models.{FullOutcome, OutcomeMetadata, OutcomeReceived, OutcomeXml}
 import uk.gov.hmrc.entrydeclarationoutcome.repositories.OutcomeRepo
+import uk.gov.hmrc.entrydeclarationoutcome.services.UserDetails.{CSPUserDetails, GGWUserDetails}
 import uk.gov.hmrc.entrydeclarationoutcome.utils.Timer
 import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
@@ -55,9 +56,12 @@ class OutcomeRetrievalService @Inject()(
       outcomeRepo.acknowledgeOutcome(eori, correlationId, nowPlusShortTtl)
     }
 
-  def listOutcomes(eori: String): Future[List[OutcomeMetadata]] =
+  def listOutcomes(userDetails: UserDetails): Future[List[OutcomeMetadata]] =
     timeFuture("Service listOutcomes", "listOutcomes.total") {
-      outcomeRepo.listOutcomes(eori)
+      userDetails match {
+        case GGWUserDetails(eori) => outcomeRepo.listOutcomes(eori)
+        case cspUser@CSPUserDetails(eori, _) => outcomeRepo.listOutcomes(eori, Option(cspUser.clientIdPrefix))
+      }
     }
 
   private def nowPlusShortTtl: Instant = clock.instant().plusMillis(appConfig.shortTtl.toMillis)

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,22 +35,24 @@ class OutcomeRetrievalController @Inject()(
     extends AuthorisedController(cc) {
 
   def listOutcomes(): Action[AnyContent] = authorisedAction().async { userRequest =>
-    implicit val lc: LoggingContext = LoggingContext(eori = Some(userRequest.eori))
+    val eori = userRequest.userDetails.eori
+    implicit val lc: LoggingContext = LoggingContext(eori = Some(eori))
 
     ContextLogger.info("Listing outcomes")
 
-    service.listOutcomes(userRequest.eori).map {
+    service.listOutcomes(userRequest.userDetails).map {
       case Nil             => NoContent
       case outcomeMetadata => Ok(listXml(outcomeMetadata)).as(MimeTypes.XML)
     }
   }
 
   def getOutcome(correlationId: String): Action[AnyContent] = authorisedAction().async { implicit userRequest =>
-    implicit val lc: LoggingContext = LoggingContext(eori = Some(userRequest.eori), correlationId = Some(correlationId))
+    val eori = userRequest.userDetails.eori
+    implicit val lc: LoggingContext = LoggingContext(eori = Some(eori), correlationId = Some(correlationId))
 
     ContextLogger.info("Fetching outcome")
 
-    service.retrieveOutcome(userRequest.eori, correlationId) map {
+    service.retrieveOutcome(eori, correlationId) map {
       case Some(outcome) =>
         ContextLogger.info("Outcome fetched")
         reportSender.sendReport(OutcomeReport(outcome, EventCode.ENS_RESP_COLLECTED))
@@ -62,11 +64,12 @@ class OutcomeRetrievalController @Inject()(
   }
 
   def acknowledgeOutcome(correlationId: String): Action[AnyContent] = authorisedAction().async { implicit userRequest =>
-    implicit val lc: LoggingContext = LoggingContext(eori = Some(userRequest.eori), correlationId = Some(correlationId))
+    val eori = userRequest.userDetails.eori
+    implicit val lc: LoggingContext = LoggingContext(eori = Some(eori), correlationId = Some(correlationId))
 
     ContextLogger.info("Acknowledging outcome")
 
-    service.acknowledgeOutcome(userRequest.eori, correlationId) map {
+    service.acknowledgeOutcome(eori, correlationId) map {
       case Some(outcome) =>
         ContextLogger.info("Outcome acknowledged")
         reportSender.sendReport(OutcomeReport(outcome, EventCode.ENS_RESP_ACK))

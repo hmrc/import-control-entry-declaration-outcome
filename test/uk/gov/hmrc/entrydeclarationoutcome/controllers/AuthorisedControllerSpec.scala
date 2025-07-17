@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,8 @@ import play.api.mvc._
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, ResultExtractors}
 import play.mvc.Http.MimeTypes
-import uk.gov.hmrc.entrydeclarationoutcome.services.{AuthService, MockAuthService}
+import uk.gov.hmrc.entrydeclarationoutcome.services.UserDetails.GGWUserDetails
+import uk.gov.hmrc.entrydeclarationoutcome.services.{AuthService, MockAuthService, UserDetails}
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
 
 import scala.concurrent.Future
@@ -62,7 +63,7 @@ class AuthorisedControllerSpec
     lazy val controller = new TestController()
   }
 
-  val eori = "GB123"
+  val userDetails: UserDetails = GGWUserDetails("GB123")
 
   val unauthorisedXml: Node =
     <error>
@@ -74,7 +75,7 @@ class AuthorisedControllerSpec
 
     "the user is authorised" must {
       "return a 200" in new Test {
-        MockAuthService.authenticate() returns Future.successful(Some(eori))
+        MockAuthService.authenticate() returns Future.successful(Some(userDetails))
 
         private val result: Future[Result] = controller.action()(fakeGetRequest)
         status(result) shouldBe OK
@@ -96,7 +97,7 @@ class AuthorisedControllerSpec
   "AuthController" must {
     "use the authorization header to send to auth service" in new Test {
       val hcCapture: CaptureOne[HeaderCarrier] = CaptureOne[HeaderCarrier]()
-      MockAuthService.authenticateCapture()(hcCapture) returns Future.successful(Some(eori))
+      MockAuthService.authenticateCapture()(hcCapture) returns Future.successful(Some(userDetails))
       controller.action()(fakeGetRequest)
 
       hcCapture.value.authorization shouldBe Some(Authorization(bearerToken))
