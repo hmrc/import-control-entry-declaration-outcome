@@ -37,8 +37,7 @@ sealed trait UserDetails {
 
 object UserDetails {
 
-  case class GGWUserDetails(eori: String) extends UserDetails {
-  }
+  case class GGWUserDetails(eori: String) extends UserDetails
 
   case class CSPUserDetails(eori: String, clientId: String) extends UserDetails {
     val clientIdPrefix: String = clientId.take(4)
