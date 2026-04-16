@@ -19,7 +19,7 @@ import uk.gov.hmrc.DefaultBuildSettings
 val appName = "import-control-entry-declaration-outcome"
 
 ThisBuild / majorVersion := 0
-ThisBuild / scalaVersion := "2.13.17"
+ThisBuild / scalaVersion := "2.13.18"
 
 lazy val coverageSettings: Seq[Setting[_]] = {
   import scoverage.ScoverageKeys
