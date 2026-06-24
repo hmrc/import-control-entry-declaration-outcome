@@ -20,27 +20,27 @@ import org.apache.pekko.stream.Materializer
 import org.apache.pekko.stream.scaladsl.Source
 import uk.gov.hmrc.mongo.play.json.formats.MongoFormats
 import org.bson.BsonValue
-import org.mongodb.scala._
-import org.mongodb.scala.model.Projections._
-import org.mongodb.scala.model.Filters._
-import org.mongodb.scala.model.Sorts._
-import org.mongodb.scala.model.Updates._
-import org.mongodb.scala.model._
-import uk.gov.hmrc.mongo._
+import org.mongodb.scala.*
+import org.mongodb.scala.model.Projections.*
+import org.mongodb.scala.model.Filters.*
+import org.mongodb.scala.model.Sorts.*
+import org.mongodb.scala.model.Updates.*
+import org.mongodb.scala.model.*
+import uk.gov.hmrc.mongo.*
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 import org.mongodb.scala.bson.conversions.Bson
 import uk.gov.hmrc.entrydeclarationoutcome.config.AppConfig
 import uk.gov.hmrc.entrydeclarationoutcome.logging.{ContextLogger, LoggingContext}
 import uk.gov.hmrc.entrydeclarationoutcome.models.{FullOutcome, OutcomeMetadata, OutcomeReceived, OutcomeXml, EntryObjectId}
 import uk.gov.hmrc.entrydeclarationoutcome.utils.SaveError
-import uk.gov.hmrc.play.http.logging.Mdc
+import uk.gov.hmrc.mdc.Mdc
 
 import java.time.Instant
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 trait OutcomeRepo {
-  def save(outcome: OutcomeReceived)(implicit lc: LoggingContext): Future[Option[SaveError]]
+  def save(outcome: OutcomeReceived)(using lc: LoggingContext): Future[Option[SaveError]]
   def lookupOutcomeXml(submissionId: String): Future[Option[OutcomeXml]]
   def lookupOutcome(eori: String, correlationId: String): Future[Option[OutcomeReceived]]
   def lookupFullOutcome(eori: String, correlationId: String): Future[Option[FullOutcome]]
@@ -48,7 +48,7 @@ trait OutcomeRepo {
     * @return the acknowledged outcome
     */
   def acknowledgeOutcome(eori: String, correlationId: String, time: Instant)(
-    implicit lc: LoggingContext): Future[Option[OutcomeReceived]]
+    using lc: LoggingContext): Future[Option[OutcomeReceived]]
   def listOutcomes(eori: String, optionalCSPUserId: Option[String] = None): Future[List[OutcomeMetadata]]
   def setHousekeepingAt(submissionId: String, time: Instant): Future[Boolean]
   def setHousekeepingAt(eori: String, correlationId: String, time: Instant): Future[Boolean]
@@ -57,7 +57,7 @@ trait OutcomeRepo {
 
 @Singleton
 class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
-  implicit mongo: MongoComponent,
+  using mongo: MongoComponent,
   ec: ExecutionContext,
   mat: Materializer
 ) extends PlayMongoRepository[OutcomePersisted](
@@ -103,7 +103,7 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
       .find(and(equal("eori", eori), equal("correlationId", correlationId)))
       .headOption()
 
-  def save(outcome: OutcomeReceived)(implicit lc: LoggingContext): Future[Option[SaveError]] =
+  def save(outcome: OutcomeReceived)(using lc: LoggingContext): Future[Option[SaveError]] =
     Mdc.preservingMdc(
       collection
         .insertOne(OutcomePersisted.from(outcome, appConfig.defaultTtl))
@@ -152,7 +152,7 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
     )
     .map(_.map(_.toFullOutcome))
 
-  def acknowledgeOutcome(eori: String, correlationId: String, time: Instant)(implicit lc: LoggingContext): Future[Option[OutcomeReceived]] =
+  def acknowledgeOutcome(eori: String, correlationId: String, time: Instant)(using lc: LoggingContext): Future[Option[OutcomeReceived]] =
     Mdc.preservingMdc(
       collection
         .findOneAndUpdate(and(equal("eori", eori), equal("correlationId", correlationId), equal("acknowledged", false)),
@@ -222,7 +222,7 @@ class OutcomeRepoImpl @Inject()(appConfig: AppConfig)(
           .toFutureOption()
           .map(_.map(_.getDeletedCount).getOrElse(0))
           .recover{
-            case e => 0
+            case _ => 0
           }
       }
       .runFold(0)(_ + _))

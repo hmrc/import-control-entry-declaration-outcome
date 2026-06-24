@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.entrydeclarationoutcome.utils
 
-import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.*
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{Format, Json}
 

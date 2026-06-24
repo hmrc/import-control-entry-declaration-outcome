@@ -19,18 +19,18 @@ package uk.gov.hmrc.entrydeclarationoutcome.services
 import java.time.{Clock, Instant, ZoneOffset}
 import com.codahale.metrics.MetricRegistry
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.*
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.entrydeclarationoutcome.config.MockAppConfig
 import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
-import uk.gov.hmrc.entrydeclarationoutcome.models._
+import uk.gov.hmrc.entrydeclarationoutcome.models.*
 import uk.gov.hmrc.entrydeclarationoutcome.repositories.MockOutcomeRepo
 import uk.gov.hmrc.entrydeclarationoutcome.services.UserDetails.{CSPUserDetails, GGWUserDetails}
 import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
 class OutcomeRetrievalServiceSpec extends AnyWordSpec with MockOutcomeRepo with MockAppConfig with ScalaFutures {
 
@@ -45,7 +45,7 @@ class OutcomeRetrievalServiceSpec extends AnyWordSpec with MockOutcomeRepo with 
 
   val service = new OutcomeRetrievalService(outcomeRepo, mockAppConfig, clock, mockedMetrics)
 
-  implicit val lc: LoggingContext = LoggingContext("eori", "corrId", "subId")
+  given lc: LoggingContext = LoggingContext("eori", "corrId", "subId")
 
   val submissionId: String     = "submissionId"
   val cspUserDetails: CSPUserDetails = CSPUserDetails("eori", "1234olkmfnrhtuy")

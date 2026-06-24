@@ -20,18 +20,18 @@ import play.api.Logging
 
 object ContextLogger extends Logging {
 
-  def info(message: => String)(implicit lc: LoggingContext): Unit =
+  def info(message: => String)(using lc: LoggingContext): Unit =
     logger.info(formatMessage(message))
 
-  def warn(message: => String)(implicit lc: LoggingContext): Unit =
+  def warn(message: => String)(using lc: LoggingContext): Unit =
     logger.warn(formatMessage(message))
 
-  def error(message: => String)(implicit lc: LoggingContext): Unit =
+  def error(message: => String)(using lc: LoggingContext): Unit =
     logger.error(formatMessage(message))
 
-  def error(message: => String, e: => Throwable)(implicit lc: LoggingContext): Unit =
+  def error(message: => String, e: => Throwable)(using lc: LoggingContext): Unit =
     logger.error(formatMessage(message), e)
 
-  private def formatMessage(message: => String)(implicit lc: LoggingContext): String =
+  private def formatMessage(message: => String)(using lc: LoggingContext): String =
     s"$message ${lc.context}"
 }

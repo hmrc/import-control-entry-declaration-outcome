@@ -31,7 +31,7 @@ trait MockOutcomeRepo extends TestSuite with MockFactory {
 
   object MockOutcomeRepo {
     def saveOutcome(outcome: OutcomeReceived): CallHandler[Future[Option[SaveError]]] =
-      (outcomeRepo.save(_: OutcomeReceived)(_: LoggingContext)).expects(outcome, *)
+      (outcomeRepo.save(_: OutcomeReceived)(using _: LoggingContext)).expects(outcome, *)
 
     def lookupOutcomeXml(submissionId: String): CallHandler[Future[Option[OutcomeXml]]] =
       (outcomeRepo.lookupOutcomeXml(_: String)) expects submissionId
@@ -44,7 +44,7 @@ trait MockOutcomeRepo extends TestSuite with MockFactory {
       correlationId: String,
       time: Instant): CallHandler[Future[Option[OutcomeReceived]]] =
       (outcomeRepo
-        .acknowledgeOutcome(_: String, _: String, _: Instant)(_: LoggingContext)).expects(eori, correlationId, time, *)
+        .acknowledgeOutcome(_: String, _: String, _: Instant)(using _: LoggingContext)).expects(eori, correlationId, time, *)
 
     def listOutcomes(eori: String, optionalCSPUserId: Option[String] = None): CallHandler[Future[List[OutcomeMetadata]]] =
       outcomeRepo.listOutcomes _ expects(eori, optionalCSPUserId)

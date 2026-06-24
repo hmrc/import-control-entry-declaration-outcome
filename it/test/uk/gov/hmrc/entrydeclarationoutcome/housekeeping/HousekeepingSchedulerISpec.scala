@@ -34,7 +34,7 @@ import uk.gov.hmrc.entrydeclarationoutcome.repositories.LockRepositoryProvider
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
 class HousekeepingSchedulerISpec
     extends TestKit(ActorSystem("HousekeepingActorSpec"))

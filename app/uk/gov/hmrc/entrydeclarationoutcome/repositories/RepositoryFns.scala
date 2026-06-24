@@ -17,19 +17,19 @@
 package uk.gov.hmrc.entrydeclarationoutcome.repositories
 
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
-import org.mongodb.scala.model.Filters._
+import org.mongodb.scala.model.Filters.*
 import scala.concurrent.{ExecutionContext, Future}
 
 trait RepositoryFns {
   this: PlayMongoRepository[_] =>
 
-  def removeAll()(implicit ec: ExecutionContext): Future[Unit] =
+  def removeAll()(using ec: ExecutionContext): Future[Unit] =
     collection
       .deleteMany(exists("_id"))
       .toFutureOption()
       .map( _ => ())
 
-  def count()(implicit ec: ExecutionContext): Future[Long] =
+  def count()(using ec: ExecutionContext): Future[Long] =
     collection
       .countDocuments(exists("_id"))
       .toFutureOption()

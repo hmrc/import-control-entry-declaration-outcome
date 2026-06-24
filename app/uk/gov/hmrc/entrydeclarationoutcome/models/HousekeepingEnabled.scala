@@ -21,5 +21,5 @@ import play.api.libs.json.{Format, Json}
 case class HousekeepingEnabled(housekeeping: Boolean)
 
 object HousekeepingEnabled {
-  implicit val formats: Format[HousekeepingEnabled] = Json.format[HousekeepingEnabled]
+  given formats: Format[HousekeepingEnabled] = Json.format[HousekeepingEnabled]
 }

@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.entrydeclarationoutcome.repositories
 
-import play.api.libs.json._
+import play.api.libs.json.*
 import uk.gov.hmrc.entrydeclarationoutcome.models.{FullOutcome, MessageType, Outcome, OutcomeReceived}
 import java.time.Instant
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats.Implicits.jatInstantFormat
 
 private[repositories] case class OutcomePersisted(
@@ -54,7 +54,7 @@ private[repositories] case class OutcomePersisted(
 
 private[repositories] object OutcomePersisted {
   def from(outcomeReceived: OutcomeReceived, defaultTtl: FiniteDuration): OutcomePersisted = {
-    import outcomeReceived._
+    import outcomeReceived.*
     OutcomePersisted(
       eori                    = eori,
       correlationId           = correlationId,
@@ -67,5 +67,5 @@ private[repositories] object OutcomePersisted {
     )
   }
 
-  implicit val format: Format[OutcomePersisted] = Json.format[OutcomePersisted]
+  given format: Format[OutcomePersisted] = Json.format[OutcomePersisted]
 }

@@ -28,6 +28,6 @@ trait MockAuditHandler extends TestSuite with MockFactory {
 
   object MockAuditHandler {
     def audit(auditEvent: AuditEvent): CallHandler[Future[Unit]] =
-      (mockAuditHandler.audit(_: AuditEvent)(_: HeaderCarrier)).expects(auditEvent, *)
+      (mockAuditHandler.audit(_: AuditEvent)(using _: HeaderCarrier)).expects(auditEvent, *)
   }
 }

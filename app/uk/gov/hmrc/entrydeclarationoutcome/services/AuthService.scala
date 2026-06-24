@@ -17,9 +17,9 @@
 package uk.gov.hmrc.entrydeclarationoutcome.services
 
 import cats.data.EitherT
-import cats.implicits._
+import cats.implicits.*
 import play.api.Logging
-import uk.gov.hmrc.auth.core._
+import uk.gov.hmrc.auth.core.*
 import uk.gov.hmrc.auth.core.retrieve.EmptyRetrieval
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.allEnrolments
 import uk.gov.hmrc.entrydeclarationoutcome.connectors.ApiSubscriptionFieldsConnector
@@ -47,7 +47,7 @@ object UserDetails {
 @Singleton
 class AuthService @Inject()(
   val authConnector: AuthConnector,
-  apiSubscriptionFieldsConnector: ApiSubscriptionFieldsConnector)(implicit ec: ExecutionContext)
+  apiSubscriptionFieldsConnector: ApiSubscriptionFieldsConnector)(using ec: ExecutionContext)
     extends AuthorisedFunctions with Logging {
 
   private val X_CLIENT_ID = "X-Client-Id"
@@ -57,7 +57,7 @@ class AuthService @Inject()(
   private case object NoEori extends AuthError
   private case object AuthFail extends AuthError
 
-  def authenticate()(implicit hc: HeaderCarrier, headers: Headers): Future[Option[UserDetails]] =
+  def authenticate()(using hc: HeaderCarrier, headers: Headers): Future[Option[UserDetails]] =
     authCSP
       .recoverWith {
         case AuthFail | NoClientId => authNonCSP
@@ -65,7 +65,7 @@ class AuthService @Inject()(
       .toOption
       .value
 
-  private def authCSP(implicit hc: HeaderCarrier, headers: Headers): EitherT[Future, AuthError, UserDetails] = {
+  private def authCSP(using hc: HeaderCarrier, headers: Headers): EitherT[Future, AuthError, UserDetails] = {
     def auth: Future[Option[Unit]] =
       authorised(AuthProviders(AuthProvider.PrivilegedApplication))
         .retrieve(EmptyRetrieval) { _ =>
@@ -85,7 +85,7 @@ class AuthService @Inject()(
     } yield CSPUserDetails(eori, clientId)
   }
 
-  private def authNonCSP(implicit hc: HeaderCarrier, headers: Headers): EitherT[Future, AuthError, UserDetails] =
+  private def authNonCSP(using hc: HeaderCarrier): EitherT[Future, AuthError, UserDetails] =
     EitherT(authorised(AuthProviders(AuthProvider.GovernmentGateway))
       .retrieve(allEnrolments) { usersEnrolments =>
         val ssEnrolments =

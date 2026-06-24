@@ -21,7 +21,7 @@ import java.time.temporal.ChronoUnit
 import java.util.UUID
 import org.scalatest.concurrent.{Eventually, IntegrationPatience}
 import org.scalatest.matchers.must.Matchers.not
-import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.*
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.{Assertion, BeforeAndAfterAll}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -32,7 +32,7 @@ import play.api.{Application, Environment, Mode}
 import uk.gov.hmrc.entrydeclarationoutcome.config.AppConfig
 import uk.gov.hmrc.entrydeclarationoutcome.housekeeping.HousekeepingScheduler
 import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
-import uk.gov.hmrc.entrydeclarationoutcome.models._
+import uk.gov.hmrc.entrydeclarationoutcome.models.*
 import uk.gov.hmrc.entrydeclarationoutcome.utils.SaveError
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -64,7 +64,7 @@ class OutcomeRepoISpec
   override protected def afterAll(): Unit =
     super.afterAll()
 
-  override implicit lazy val app: Application = new GuiceApplicationBuilder()
+  override given app: Application = new GuiceApplicationBuilder()
     .in(Environment.simple(mode = Mode.Dev))
     .disable[HousekeepingScheduler]
     .configure(
@@ -75,7 +75,7 @@ class OutcomeRepoISpec
     )
     .build()
 
-  implicit val lc: LoggingContext = LoggingContext("eori", "corrId", "subId")
+  given lc: LoggingContext = LoggingContext("eori", "corrId", "subId")
 
   val listOutcomesLimit         = 2
   val correlationId             = "correlationId"

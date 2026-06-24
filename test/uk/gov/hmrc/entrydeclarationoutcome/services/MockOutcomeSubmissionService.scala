@@ -30,6 +30,6 @@ trait MockOutcomeSubmissionService extends TestSuite with MockFactory {
 
   object MockOutcomeSubmissionService {
     def saveOutcome(outcome: OutcomeReceived): CallHandler[Future[Option[SaveError]]] =
-      (mockOutcomeSubmissionService.saveOutcome(_: OutcomeReceived)(_: LoggingContext)).expects(outcome, *)
+      (mockOutcomeSubmissionService.saveOutcome(_: OutcomeReceived)(using _: LoggingContext)).expects(outcome, *)
   }
 }

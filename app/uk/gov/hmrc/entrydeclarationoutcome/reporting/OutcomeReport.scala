@@ -54,9 +54,9 @@ object OutcomeReport {
       messageType   = outcome.messageType
     )
 
-  implicit val eventSources: EventSources[OutcomeReport] = new EventSources[OutcomeReport] {
+  given eventSources: EventSources[OutcomeReport] = new EventSources[OutcomeReport] {
     override def eventFor(clock: Clock, report: OutcomeReport): Option[Event] = {
-      import report._
+      import report.*
 
       val event = Event(
         eventCode      = eventCode,

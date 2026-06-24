@@ -26,7 +26,7 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import scala.concurrent.ExecutionContext
 
 class TestOutcomeRetrievalController @Inject()(cc: ControllerComponents, service: OutcomeRetrievalService)(
-  implicit ec: ExecutionContext)
+  using ec: ExecutionContext)
     extends BackendController(cc) {
 //  Test method -> no auth
   def getOutcomeXmlBySubmissionId(submissionId: String): Action[AnyContent] = Action.async { _ =>

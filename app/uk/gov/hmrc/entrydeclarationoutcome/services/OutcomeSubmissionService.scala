@@ -31,11 +31,11 @@ import scala.concurrent.{ExecutionContext, Future}
 class OutcomeSubmissionService @Inject()(
   outcomeRepo: OutcomeRepo,
   override val clock: Clock,
-  override val metrics: Metrics)(implicit ec: ExecutionContext)
+  override val metrics: Metrics)(using ec: ExecutionContext)
     extends Timer
     with Logging {
 
-  def saveOutcome(outcome: OutcomeReceived)(implicit lc: LoggingContext): Future[Option[SaveError]] =
+  def saveOutcome(outcome: OutcomeReceived)(using lc: LoggingContext): Future[Option[SaveError]] =
     timeFuture("Service saveOutcome", "saveOutcome.total") {
       outcomeRepo.save(outcome)
     }

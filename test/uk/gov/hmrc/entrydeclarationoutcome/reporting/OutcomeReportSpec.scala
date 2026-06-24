@@ -18,12 +18,12 @@ package uk.gov.hmrc.entrydeclarationoutcome.reporting
 
 import java.time.{Clock, Duration, Instant, ZoneOffset}
 
-import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.*
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsNumber, JsObject, Json}
 import uk.gov.hmrc.entrydeclarationoutcome.models.MessageType
 import uk.gov.hmrc.entrydeclarationoutcome.reporting.events.EventCode
-import uk.gov.hmrc.entrydeclarationoutcome.utils.Values.MkValues
+import uk.gov.hmrc.entrydeclarationoutcome.utils.Enums
 
 class OutcomeReportSpec extends AnyWordSpec {
 
@@ -41,7 +41,7 @@ class OutcomeReportSpec extends AnyWordSpec {
 
   "OutcomeReport" must {
     def correctJson(eventCode: EventCode): Unit = s"have the correct associated JSON event for $eventCode" in {
-      val event = implicitly[EventSources[OutcomeReport]].eventFor(clock, report(eventCode, 1)).get
+      val event = summon[EventSources[OutcomeReport]].eventFor(clock, report(eventCode, 1)).get
 
       Json.toJson(event) shouldBe
         Json.parse(s"""
@@ -57,12 +57,12 @@ class OutcomeReportSpec extends AnyWordSpec {
     }
 
     "all event codes" must {
-      implicitly[MkValues[EventCode]].values.foreach(correctJson)
+      Enums.getAllInstances[EventCode].foreach(correctJson)
     }
 
     "ENS_RESP_ACK" must {
       "have the correct audit event" in {
-        val event = implicitly[EventSources[OutcomeReport]].auditEventFor(report(EventCode.ENS_RESP_ACK, 1)).get
+        val event = summon[EventSources[OutcomeReport]].auditEventFor(report(EventCode.ENS_RESP_ACK, 1)).get
 
         event.auditType       shouldBe "SubmissionAcknowledged"
         event.transactionName shouldBe "ENS submission acknowledged"
@@ -72,7 +72,7 @@ class OutcomeReportSpec extends AnyWordSpec {
 
     "ENS_RESP_READY" must {
       "return an OutcomeReceivedGreaterThanSLA correct audit event" in {
-        val event = implicitly[EventSources[OutcomeReport]].auditEventFor(report(EventCode.ENS_RESP_READY,31)).get
+        val event = summon[EventSources[OutcomeReport]].auditEventFor(report(EventCode.ENS_RESP_READY,31)).get
 
         event.auditType       shouldBe "OutcomeReceivedGreaterThanSLA"
         event.transactionName shouldBe "ENS Outcome Received"
@@ -80,7 +80,7 @@ class OutcomeReportSpec extends AnyWordSpec {
       }
 
       "return an OutcomeReceivedLessThanSLA correct audit event" in {
-        val event = implicitly[EventSources[OutcomeReport]].auditEventFor(report(EventCode.ENS_RESP_READY, 1)).get
+        val event = summon[EventSources[OutcomeReport]].auditEventFor(report(EventCode.ENS_RESP_READY, 1)).get
 
         event.auditType       shouldBe "OutcomeReceivedLessThanSLA"
         event.transactionName shouldBe "ENS Outcome Received"

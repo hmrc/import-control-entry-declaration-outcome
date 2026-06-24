@@ -17,7 +17,7 @@
 package uk.gov.hmrc.entrydeclarationoutcome.utils
 
 import java.time.{Duration, Instant}
-import com.codahale.metrics._
+import com.codahale.metrics.*
 
 import java.time.Clock
 import play.api.Logging
@@ -35,7 +35,7 @@ trait Timer {
   val clock: Clock
 
   def timeFuture[A](name: String, metric: Metric, timerGroup: String = defaultTimerGroup)(block: => Future[A])(
-    implicit ec: ExecutionContext): Future[A] = {
+    using ec: ExecutionContext): Future[A] = {
     val timer = startTimer(metric, timerGroup)
     block andThen { case _ => stopAndLog(name, timer) }
   }

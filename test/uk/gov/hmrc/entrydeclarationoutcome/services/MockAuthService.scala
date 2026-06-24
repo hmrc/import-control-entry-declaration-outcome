@@ -30,10 +30,10 @@ trait MockAuthService extends TestSuite with MockFactory {
 
   object MockAuthService {
     def authenticate(): CallHandler[Future[Option[UserDetails]]] =
-      (mockAuthService.authenticate()(_: HeaderCarrier, _: Headers)).expects(*,*)
+      (mockAuthService.authenticate()(using _: HeaderCarrier, _: Headers)).expects(*,*)
 
     def authenticateCapture()(headerCarrier: CaptureOne[HeaderCarrier]): CallHandler[Future[Option[UserDetails]]] =
-      (mockAuthService.authenticate()(_: HeaderCarrier, _: Headers)).expects(capture(headerCarrier),*)
+      (mockAuthService.authenticate()(using _: HeaderCarrier, _: Headers)).expects(capture(headerCarrier),*)
   }
 
 }

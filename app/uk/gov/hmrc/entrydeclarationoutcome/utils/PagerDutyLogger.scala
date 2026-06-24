@@ -19,9 +19,9 @@ package uk.gov.hmrc.entrydeclarationoutcome.utils
 import uk.gov.hmrc.entrydeclarationoutcome.logging.{ContextLogger, LoggingContext}
 
 class PagerDutyLogger {
-  def logEventFailure(statusCode: Int)(implicit lc: LoggingContext): Unit =
+  def logEventFailure(statusCode: Int)(using lc: LoggingContext): Unit =
     ContextLogger.error(s"Send event failed with status $statusCode")
 
-  def logEventError(e: Throwable)(implicit lc: LoggingContext): Unit =
+  def logEventError(e: Throwable)(using lc: LoggingContext): Unit =
     ContextLogger.error(s"Send event failed with error", e)
 }

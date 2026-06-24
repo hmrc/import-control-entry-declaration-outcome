@@ -16,12 +16,13 @@
 
 package uk.gov.hmrc.entrydeclarationoutcome.reporting.events
 
-import play.api.http.Status._
+import play.api.http.Status.*
 import play.api.libs.json.Json
+import play.api.libs.ws.JsonBodyWritables.writeableOf_JsValue
 import uk.gov.hmrc.entrydeclarationoutcome.config.AppConfig
 import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
 import uk.gov.hmrc.entrydeclarationoutcome.utils.PagerDutyLogger
-import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.HttpReads.Implicits.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 
@@ -30,16 +31,16 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
 trait EventConnector {
-  def sendEvent(event: Event)(implicit hc: HeaderCarrier, lc: LoggingContext): Future[Unit]
+  def sendEvent(event: Event)(using hc: HeaderCarrier, lc: LoggingContext): Future[Unit]
 }
 
 @Singleton
 class EventConnectorImpl @Inject()(client: HttpClientV2, appConfig: AppConfig, pagerDutyLogger: PagerDutyLogger)(
-  implicit executionContext: ExecutionContext)
+  using executionContext: ExecutionContext)
     extends EventConnector {
   val url: String = s"${appConfig.eventsHost}/import-control/event"
 
-  def sendEvent(event: Event)(implicit hc: HeaderCarrier, lc: LoggingContext): Future[Unit] =
+  def sendEvent(event: Event)(using hc: HeaderCarrier, lc: LoggingContext): Future[Unit] =
     client.post(url"$url").withBody(Json.toJson(event)).execute[HttpResponse]
       .map(response =>
         response.status match {

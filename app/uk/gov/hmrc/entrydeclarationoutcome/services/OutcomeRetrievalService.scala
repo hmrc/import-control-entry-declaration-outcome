@@ -34,7 +34,7 @@ class OutcomeRetrievalService @Inject()(
   outcomeRepo: OutcomeRepo,
   appConfig: AppConfig,
   override val clock: Clock,
-  override val metrics: Metrics)(implicit ec: ExecutionContext)
+  override val metrics: Metrics)(using ec: ExecutionContext)
     extends Timer
     with Logging {
   def retrieveOutcomeXml(submissionId: String): Future[Option[OutcomeXml]] =
@@ -51,7 +51,7 @@ class OutcomeRetrievalService @Inject()(
     }
 
   def acknowledgeOutcome(eori: String, correlationId: String)(
-    implicit lc: LoggingContext): Future[Option[OutcomeReceived]] =
+    using lc: LoggingContext): Future[Option[OutcomeReceived]] =
     timeFuture("Service acknowledgeOutcome", "acknowledgeOutcome.total") {
       outcomeRepo.acknowledgeOutcome(eori, correlationId, nowPlusShortTtl)
     }

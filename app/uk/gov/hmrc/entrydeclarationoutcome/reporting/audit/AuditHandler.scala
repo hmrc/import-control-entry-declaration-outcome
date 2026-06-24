@@ -26,9 +26,9 @@ import uk.gov.hmrc.play.audit.model.ExtendedDataEvent
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class AuditHandler @Inject()(auditConnector: AuditConnector, appConfig: AppConfig)(implicit ec: ExecutionContext) {
+class AuditHandler @Inject()(auditConnector: AuditConnector, appConfig: AppConfig)(using ec: ExecutionContext) {
 
-  def audit(auditEvent: AuditEvent)(implicit hc: HeaderCarrier): Future[Unit] = {
+  def audit(auditEvent: AuditEvent)(using hc: HeaderCarrier): Future[Unit] = {
 
     val eventTags = AuditExtensions.auditHeaderCarrier(hc).toAuditTags() +
       ("transactionName" -> auditEvent.transactionName)

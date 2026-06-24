@@ -19,7 +19,7 @@ package uk.gov.hmrc.entrydeclarationoutcome.connectors
 import play.api.Logging
 import play.api.libs.json.JsObject
 import uk.gov.hmrc.entrydeclarationoutcome.config.AppConfig
-import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.HttpReads.Implicits.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 
@@ -29,14 +29,14 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ApiSubscriptionFieldsConnector @Inject()(client: HttpClientV2, appConfig: AppConfig)(
-  implicit ec: ExecutionContext) extends Logging {
+  using ec: ExecutionContext) extends Logging {
 
   def getAuthenticatedEoriField(clientId: String): Future[Option[String]] = {
     val url: String =
       s"${appConfig.apiSubscriptionFieldsHost}/field/application/$clientId/context/${URLEncoder.encode(appConfig.apiGatewayContext, "UTF-8")}/version/1.0"
     logger.info(s"sending GET request to $url")
 
-    implicit val hc: HeaderCarrier = HeaderCarrier()
+    given hc: HeaderCarrier = HeaderCarrier()
 
     client.get(url"$url").execute[Option[JsObject]]
       .map {
