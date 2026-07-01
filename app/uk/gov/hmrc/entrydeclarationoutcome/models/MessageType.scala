@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.entrydeclarationoutcome.models
 
+import cats.Show
 import play.api.libs.json.Format
 import uk.gov.hmrc.entrydeclarationoutcome.utils.Enums
 
@@ -32,5 +33,7 @@ object MessageType {
 
   case object IE305 extends MessageType
 
-  implicit val formats: Format[MessageType] = Enums.format[MessageType]
+  given shows: Show[MessageType] = Show.show(_.toString)
+  
+  given formats: Format[MessageType] = Enums.format[MessageType]
 }

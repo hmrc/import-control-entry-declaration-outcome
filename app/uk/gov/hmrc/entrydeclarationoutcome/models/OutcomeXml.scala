@@ -21,5 +21,5 @@ import play.api.libs.json.{Reads, __}
 case class OutcomeXml(value: String) extends AnyVal
 
 object OutcomeXml {
-  implicit val reads: Reads[OutcomeXml] = (__ \ "outcomeXml").read[String].map(OutcomeXml.apply)
+  given reads: Reads[OutcomeXml] = (__ \ "outcomeXml").read[String].map(OutcomeXml.apply)
 }

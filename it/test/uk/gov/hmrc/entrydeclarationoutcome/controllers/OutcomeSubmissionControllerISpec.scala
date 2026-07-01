@@ -16,13 +16,14 @@
 
 package uk.gov.hmrc.entrydeclarationoutcome.controllers
 
-import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.*
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import play.api.http.HeaderNames._
+import play.api.http.HeaderNames.*
 import play.api.http.MimeTypes
-import play.api.http.Status._
+import play.api.http.Status.*
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.libs.ws.DefaultBodyWritables.writeableOf_String
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import play.api.{Application, Environment, Mode}
@@ -33,7 +34,7 @@ class OutcomeSubmissionControllerISpec extends AnyWordSpec with GuiceOneServerPe
 
   val url = s"http://localhost:$port/import-control/outcome"
 
-  override implicit lazy val app: Application = new GuiceApplicationBuilder()
+  override given app: Application = new GuiceApplicationBuilder()
     .in(Environment.simple(mode = Mode.Dev))
     .configure("metrics.enabled" -> "false", "auditing.enabled" -> "false")
     .build()

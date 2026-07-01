@@ -21,7 +21,7 @@ import play.api.libs.json.{Reads, __}
 case class OutcomeMetadata(correlationId: String, movementReferenceNumber: Option[String] = None)
 
 object OutcomeMetadata {
-  implicit val reads: Reads[OutcomeMetadata] = for {
+  given reads: Reads[OutcomeMetadata] = for {
     correlationId <- (__ \ "correlationId").read[String]
     mrn           <- (__ \ "movementReferenceNumber").readNullable[String]
   } yield OutcomeMetadata(correlationId, mrn)

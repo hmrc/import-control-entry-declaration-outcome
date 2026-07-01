@@ -31,5 +31,5 @@ case class OutcomeReceived(
     extends Outcome
 
 object OutcomeReceived extends InstantFormatter {
-  implicit val format: Format[OutcomeReceived] = Json.format[OutcomeReceived]
+  given format: Format[OutcomeReceived] = Json.format[OutcomeReceived]
 }

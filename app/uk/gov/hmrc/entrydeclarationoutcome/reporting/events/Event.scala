@@ -32,5 +32,5 @@ case class Event(
 )
 
 object Event {
-  implicit val writes: Writes[Event] = Json.writes[Event]
+  given writes: Writes[Event] = Json.writes[Event]
 }

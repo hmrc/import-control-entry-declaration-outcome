@@ -25,7 +25,7 @@ trait InstantFormatter {
   val dateTimeWithMillis: DateTimeFormatter =
     DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSS'Z'").withZone(ZoneOffset.UTC)
 
-  implicit val instantWrites: Format[Instant] = {
+  given instantWrites: Format[Instant] = {
     Format(Reads.DefaultInstantReads, Writes.temporalWrites[Instant, DateTimeFormatter](dateTimeWithMillis))
   }
 }

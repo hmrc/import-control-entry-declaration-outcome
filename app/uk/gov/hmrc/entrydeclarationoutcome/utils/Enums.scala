@@ -17,27 +17,38 @@
 package uk.gov.hmrc.entrydeclarationoutcome.utils
 
 import cats.Show
-import play.api.libs.json._
-import uk.gov.hmrc.entrydeclarationoutcome.utils.Values.MkValues
+import play.api.libs.json.{Format, JsString, JsonValidationError, Reads, Writes}
 
 import scala.reflect.ClassTag
-
-object Shows {
-  implicit def toStringShow[E]: Show[E] = Show.show(_.toString)
-}
+import scala.deriving.Mirror
 
 object Enums {
-  private def typeName[E: ClassTag]: String = implicitly[ClassTag[E]].runtimeClass.getSimpleName
 
-  def parser[E: MkValues](implicit ev: Show[E] = Shows.toStringShow[E]): PartialFunction[String, E] =
-    implicitly[MkValues[E]].values.map(e => ev.show(e) -> e).toMap
+  inline def getAllInstances[E](using m: Mirror.SumOf[E]): List[E] =
+    allInstances[m.MirroredElemTypes, m.MirroredType]
 
-  def reads[E: MkValues: ClassTag](implicit ev: Show[E] = Shows.toStringShow[E]): Reads[E] =
-    implicitly[Reads[String]].collect(JsonValidationError(s"error.expected.$typeName"))(parser)
+  inline def allInstances[ET <: Tuple, E]: List[E] = {
+    import scala.compiletime.*
 
-  def writes[E: MkValues](implicit ev: Show[E] = Shows.toStringShow[E]): Writes[E] =
-    Writes[E](e => JsString(ev.show(e)))
+    inline erasedValue[ET] match
+    {
+      case _: EmptyTuple => Nil
+      case _: (t *: ts) => summonInline[ValueOf[t]].value.asInstanceOf[E] :: allInstances[ts, E]
+    }
+  }
 
-  def format[E: MkValues: ClassTag](implicit ev: Show[E] = Shows.toStringShow[E]): Format[E] =
+  inline def format[E: ClassTag : Show : Mirror.SumOf]: Format[E] =
     Format(reads, writes)
+
+  inline def reads[E: ClassTag : Show : Mirror.SumOf]: Reads[E] =
+    summon[Reads[String]].collect(JsonValidationError(s"error.expected.$typeName"))(parser)
+
+  private def typeName[E: ClassTag]: String = summon[ClassTag[E]].runtimeClass.getSimpleName
+
+  inline def parser[E: Mirror.SumOf](using show: Show[E]): PartialFunction[String, E] =
+    getAllInstances[E].map(e => show.show(e) -> e).toMap
+
+  def writes[E](using show: Show[E]): Writes[E] = {
+    Writes(e => JsString(show.show(e)))
+  }
 }

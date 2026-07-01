@@ -17,7 +17,7 @@
 package uk.gov.hmrc.entrydeclarationoutcome.controllers
 
 import javax.inject.Inject
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import play.api.mvc.{Action, AnyContent, ControllerComponents, Request}
 import play.mvc.Http.MimeTypes
 import uk.gov.hmrc.entrydeclarationoutcome.logging.{ContextLogger, LoggingContext}
 import uk.gov.hmrc.entrydeclarationoutcome.models.{OutcomeMetadata, StandardError}
@@ -31,12 +31,12 @@ class OutcomeRetrievalController @Inject()(
   val authService: AuthService,
   cc: ControllerComponents,
   service: OutcomeRetrievalService,
-  reportSender: ReportSender)(implicit ec: ExecutionContext)
+  reportSender: ReportSender)(using ec: ExecutionContext)
     extends AuthorisedController(cc) {
 
-  def listOutcomes(): Action[AnyContent] = authorisedAction().async { userRequest =>
+  def listOutcomes: Action[AnyContent] = authorisedAction().async { userRequest =>
     val eori = userRequest.userDetails.eori
-    implicit val lc: LoggingContext = LoggingContext(eori = Some(eori))
+    given lc: LoggingContext = LoggingContext(eori = Some(eori))
 
     ContextLogger.info("Listing outcomes")
 
@@ -46,9 +46,10 @@ class OutcomeRetrievalController @Inject()(
     }
   }
 
-  def getOutcome(correlationId: String): Action[AnyContent] = authorisedAction().async { implicit userRequest =>
+  def getOutcome(correlationId: String): Action[AnyContent] = authorisedAction().async { userRequest =>
+    given Request[AnyContent] = userRequest
     val eori = userRequest.userDetails.eori
-    implicit val lc: LoggingContext = LoggingContext(eori = Some(eori), correlationId = Some(correlationId))
+    given lc: LoggingContext = LoggingContext(eori = Some(eori), correlationId = Some(correlationId))
 
     ContextLogger.info("Fetching outcome")
 
@@ -63,9 +64,10 @@ class OutcomeRetrievalController @Inject()(
     }
   }
 
-  def acknowledgeOutcome(correlationId: String): Action[AnyContent] = authorisedAction().async { implicit userRequest =>
+  def acknowledgeOutcome(correlationId: String): Action[AnyContent] = authorisedAction().async { userRequest =>
+    given Request[AnyContent] = userRequest
     val eori = userRequest.userDetails.eori
-    implicit val lc: LoggingContext = LoggingContext(eori = Some(eori), correlationId = Some(correlationId))
+    given lc: LoggingContext = LoggingContext(eori = Some(eori), correlationId = Some(correlationId))
 
     ContextLogger.info("Acknowledging outcome")
 

@@ -19,7 +19,7 @@ package uk.gov.hmrc.entrydeclarationoutcome.controllers
 import javax.inject.{Inject, Singleton}
 import play.api.Logging
 import play.api.libs.json.{JsError, JsSuccess, JsValue}
-import play.api.mvc.{Action, ControllerComponents}
+import play.api.mvc.{Action, ControllerComponents, Request}
 import uk.gov.hmrc.entrydeclarationoutcome.logging.{ContextLogger, LoggingContext}
 import uk.gov.hmrc.entrydeclarationoutcome.models.OutcomeReceived
 import uk.gov.hmrc.entrydeclarationoutcome.reporting.events.EventCode
@@ -35,14 +35,15 @@ class OutcomeSubmissionController @Inject()(
   cc: ControllerComponents,
   service: OutcomeSubmissionService,
   reportSender: ReportSender
-)(implicit ec: ExecutionContext)
+)(using ec: ExecutionContext)
     extends BackendController(cc)
     with Logging {
 
-  val postOutcome: Action[JsValue] = Action.async(parse.json) { implicit request =>
+  val postOutcome: Action[JsValue] = Action.async(parse.json) { request =>
+    given Request[JsValue] = request
     request.body.validate[OutcomeReceived] match {
       case JsSuccess(outcomeReceived, _) =>
-        implicit val lc: LoggingContext =
+        given lc: LoggingContext =
           LoggingContext(
             eori          = outcomeReceived.eori,
             correlationId = outcomeReceived.correlationId,

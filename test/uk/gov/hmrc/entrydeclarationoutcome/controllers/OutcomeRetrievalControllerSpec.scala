@@ -17,10 +17,10 @@
 package uk.gov.hmrc.entrydeclarationoutcome.controllers
 
 import java.time.Instant
-import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.*
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.MimeTypes
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.entrydeclarationoutcome.models.{MessageType, OutcomeMetadata, OutcomeReceived, OutcomeXml}
 import uk.gov.hmrc.entrydeclarationoutcome.reporting.events.EventCode

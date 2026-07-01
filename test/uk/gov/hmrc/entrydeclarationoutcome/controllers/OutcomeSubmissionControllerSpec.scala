@@ -18,7 +18,7 @@ package uk.gov.hmrc.entrydeclarationoutcome.controllers
 
 import java.time.Duration
 
-import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.*
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
 import play.api.test.Helpers.{contentType, _}

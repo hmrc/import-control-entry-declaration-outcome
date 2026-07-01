@@ -19,7 +19,7 @@ package uk.gov.hmrc.entrydeclarationoutcome.utils
 import java.time.{Clock, Duration, Instant, ZoneOffset}
 import com.codahale.metrics.MetricRegistry
 import org.scalatest.matchers.must.Matchers.be
-import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.*
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Logging
 import play.api.test.Helpers.{await, defaultAwaitTimeout}

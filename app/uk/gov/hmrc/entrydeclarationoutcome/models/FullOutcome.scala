@@ -27,7 +27,7 @@ case class FullOutcome(
 )
 
 object FullOutcome extends InstantFormatter {
-  implicit val writes: Writes[FullOutcome] = Writes { fullOutcome =>
+  given writes: Writes[FullOutcome] = Writes { fullOutcome =>
     val outcomeReceivedJson = Json.toJson(fullOutcome.outcomeReceived).as[JsObject]
 
     JsObject(outcomeReceivedJson.fields) ++

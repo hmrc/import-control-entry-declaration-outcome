@@ -18,7 +18,7 @@ package uk.gov.hmrc.entrydeclarationoutcome.reporting
 
 import java.time.{Clock, Duration, Instant, ZoneOffset}
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.*
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.JsObject
 import uk.gov.hmrc.entrydeclarationoutcome.logging.LoggingContext
@@ -43,8 +43,8 @@ class ReportSenderSpec extends AnyWordSpec with MockAuditHandler with MockEventC
   val event: Event           = Event(EventCode.ENS_RESP_READY, now, "subId", "eori", "corrId", MessageType.IE305, None)
   val auditEvent: AuditEvent = AuditEvent("type", "trans", JsObject.empty)
 
-  implicit val hc: HeaderCarrier  = HeaderCarrier()
-  implicit val lc: LoggingContext = LoggingContext("eori", "corrId", "subId")
+  given hc: HeaderCarrier  = HeaderCarrier()
+  given lc: LoggingContext = LoggingContext("eori", "corrId", "subId")
 
   val mockedMetrics: Metrics = new MockMetrics
 
@@ -53,7 +53,7 @@ class ReportSenderSpec extends AnyWordSpec with MockAuditHandler with MockEventC
   "ReportSender" must {
     object Report
 
-    implicit val sources: EventSources[Report.type] = new EventSources[Report.type] {
+    given sources: EventSources[Report.type] = new EventSources[Report.type] {
       override def eventFor(clock: Clock, report: Report.type): Option[Event] = Some(event)
       override def auditEventFor(report: Report.type): Option[AuditEvent]     = Some(auditEvent)
     }
@@ -83,7 +83,7 @@ class ReportSenderSpec extends AnyWordSpec with MockAuditHandler with MockEventC
 
       object Report
 
-      implicit val sources: EventSources[Report.type] = new EventSources[Report.type] {
+      given sources: EventSources[Report.type] = new EventSources[Report.type] {
         override def eventFor(clock: Clock, report: Report.type): Option[Event] = None
         override def auditEventFor(report: Report.type): Option[AuditEvent]     = Some(auditEvent)
       }
@@ -97,7 +97,7 @@ class ReportSenderSpec extends AnyWordSpec with MockAuditHandler with MockEventC
 
       object Report
 
-      implicit val sources: EventSources[Report.type] = new EventSources[Report.type] {
+      given sources: EventSources[Report.type] = new EventSources[Report.type] {
         override def eventFor(clock: Clock, report: Report.type): Option[Event] = Some(event)
         override def auditEventFor(report: Report.type): Option[AuditEvent]     = None
       }

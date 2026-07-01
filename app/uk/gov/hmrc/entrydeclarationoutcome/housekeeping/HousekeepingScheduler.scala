@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.Duration
 import uk.gov.hmrc.entrydeclarationoutcome.config.AppConfig
 import uk.gov.hmrc.entrydeclarationoutcome.repositories.LockRepositoryProvider
-import uk.gov.hmrc.mongo.lock._
+import uk.gov.hmrc.mongo.lock.*
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 import scala.util.Failure
@@ -33,7 +33,7 @@ class HousekeepingScheduler @Inject()(
   housekeeper: Housekeeper,
   lockProvider: LockRepositoryProvider,
   appConfig: AppConfig
-)(implicit ec: ExecutionContext) extends Logging {
+)(using ec: ExecutionContext) extends Logging {
 
   private val exclusiveTimePeriodLock: TimePeriodLockService =
     TimePeriodLockService(lockProvider.lockRepository,

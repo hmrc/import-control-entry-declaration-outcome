@@ -35,7 +35,7 @@ class HousekeepingService @Inject()(
   housekeepingRepo: HousekeepingRepo,
   override val clock: Clock,
   appConfig: AppConfig,
-  override val metrics: Metrics)(implicit ec: ExecutionContext)
+  override val metrics: Metrics)(using ec: ExecutionContext)
     extends Housekeeper
     with Timer
     with Logging {

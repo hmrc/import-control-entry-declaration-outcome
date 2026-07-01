@@ -18,14 +18,13 @@ package uk.gov.hmrc.entrydeclarationoutcome.repositories
 
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
-import org.mongodb.scala._
-import org.mongodb.scala.model.Filters._
-import org.mongodb.scala.model.Updates._
-import org.mongodb.scala.model._
-import uk.gov.hmrc.mongo._
+import org.mongodb.scala.model.Filters.*
+import org.mongodb.scala.model.Updates.*
+import org.mongodb.scala.model.*
+import uk.gov.hmrc.mongo.*
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.entrydeclarationoutcome.models.HousekeepingStatus
-import uk.gov.hmrc.play.http.logging.Mdc
+import uk.gov.hmrc.mdc.Mdc
 import scala.concurrent.{ExecutionContext, Future}
 
 trait HousekeepingRepo {
@@ -34,8 +33,8 @@ trait HousekeepingRepo {
 }
 
 @Singleton
-class HousekeepingRepoImpl @Inject()(
-  implicit mongo: MongoComponent,
+class HousekeepingRepoImpl @Inject()()(
+  using mongo: MongoComponent,
   ec: ExecutionContext
 ) extends PlayMongoRepository[HousekeepingStatus] (
   collectionName = "houskeeping-status",

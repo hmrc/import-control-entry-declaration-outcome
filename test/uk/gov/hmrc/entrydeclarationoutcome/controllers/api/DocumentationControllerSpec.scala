@@ -19,12 +19,12 @@ package uk.gov.hmrc.entrydeclarationoutcome.controllers.api
 import controllers.Assets
 import org.scalatest.Assertion
 import org.scalatest.matchers.must.Matchers.have
-import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.*
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.JsValue
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import play.api.test.{FakeRequest, Helpers, Injecting}
 import play.api.{Application, Environment, Mode}
 import play.mvc.Http.MimeTypes
